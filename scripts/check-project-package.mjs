@@ -15,6 +15,14 @@ const run = (command, args, cwd = temp, env = {}) =>
     timeout: 180000,
   })
 try {
+  const python = process.env.GEAR_TRAINING_TEST_PYTHON ?? 'python3'
+  const version = JSON.parse(
+    run(python, ['-I', '-c', 'import json,sys; print(json.dumps(list(sys.version_info[:2])))']),
+  )
+  assert.ok(
+    version[0] > 3 || (version[0] === 3 && version[1] >= 10),
+    `Python >= 3.10 is required; found ${version.join('.')}. Set GEAR_TRAINING_TEST_PYTHON to a supported interpreter.`,
+  )
   const packed = JSON.parse(run('npm', ['pack', '--json', '--ignore-scripts', '--pack-destination', temp], root))[0]
   await writeFile(
     join(temp, 'package.json'),
@@ -59,7 +67,6 @@ try {
   `,
   )
   run(process.execPath, [join(temp, 'journey.mjs')])
-  const python = process.env.GEAR_TRAINING_TEST_PYTHON ?? 'python3'
   const wheels = join(temp, 'wheels')
   await mkdir(wheels)
   run(python, ['-m', 'pip', 'wheel', '--no-deps', '--wheel-dir', wheels, join(temp, 'node_modules/rsi-gear/python')])

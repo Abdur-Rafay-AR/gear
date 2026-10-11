@@ -318,6 +318,28 @@ describe('durable project runtime', () => {
     await expect(f.runtime.start(f.plan, signal())).rejects.toMatchObject({ details: { code: 'budget-exhausted' } })
     expect(f.submissions).toHaveLength(0)
   })
+  it('preflights the whole algorithm-selected seed scope and retains its decision on budget exhaustion', async () => {
+    const f = fixture()
+    f.plan.benchmark.tasks.push({ ...f.plan.benchmark.tasks[0]!, id: 'seed-2' })
+    f.plan.maxEvaluations = 3
+    f.algorithm.step = async (view) => ({
+      state: { planned: true },
+      reason: 'Evaluate a two-task scope',
+      operations: [
+        { kind: 'generate', candidate: 'next', parent: 'initial', tasks: [] },
+        { kind: 'evaluate_seed', candidate: 'next', parent: '', tasks: view.seed_tasks },
+      ],
+    })
+    await expect(f.runtime.start(f.plan, signal())).rejects.toMatchObject({ details: { code: 'budget-exhausted' } })
+    const saved = f.store.run
+    expect(saved.trials).toHaveLength(2)
+    expect(saved.trials.every((trial) => trial.candidate === 'initial')).toBe(true)
+    expect(saved.decisions[0]?.done).toBe(false)
+    await expect(f.runtime.resume(saved.id, signal())).rejects.toMatchObject({ details: { code: 'budget-exhausted' } })
+    expect(f.store.run.operations).toEqual(saved.operations)
+    expect(f.store.run.decisions).toEqual(saved.decisions)
+    expect(f.submissions).toHaveLength(2)
+  })
   it('commits batched decisions with distinct operation IDs and passes only seed diagnosis to Meta', async () => {
     const f = fixture()
     f.plan.maxCandidates = 2

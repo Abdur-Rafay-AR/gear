@@ -503,8 +503,9 @@ export class ProjectRuntime {
       }
       await this.store.write(run.id, run)
     } else if (op.kind === 'evaluate_seed') {
-      for (const task of run.plan.benchmark.tasks.filter((t) => t.split === 'seed' && op.tasks.includes(t.id)))
-        await this.evaluate(run, op.candidate, task, signal)
+      const tasks = run.plan.benchmark.tasks.filter((t) => t.split === 'seed' && op.tasks.includes(t.id))
+      await this.ensureBudget(run, [op.candidate], tasks)
+      for (const task of tasks) await this.evaluate(run, op.candidate, task, signal)
       run.completed[receiptId] = {
         kind: 'evaluate_seed',
         candidate: op.candidate,
