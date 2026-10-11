@@ -4,20 +4,19 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { delimiter, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { isDeepStrictEqual } from 'node:util'
 import type { HitchConfig } from '../config.js'
 import { digestJson } from '../state/digest.js'
 import { digestDatasetRef } from '../state/dataset.js'
 import type { EvaluationRequest, EvaluationRerunResult, EvaluationRerunSelector, EvaluationReservation, EvaluationSubmissionIntent, HitchCapabilities, HitchEvaluationEvidence, HitchTrajectoryAnalysis, HitchTrajectoryEventsPage, HitchTrajectoryEventsQuery, HitchTrajectoryReader, HitchVerifierDiagnosticPage, HitchVerifierDiagnosticPageQuery, HitchVerifierEvidence, RefineEvaluator, RefinementRound, RoundEvaluationAttempt } from '../types.js'
-import { isExactGitCommit } from '../types.js'
 import { EvaluationCleanupError } from './cleanup.js'
 import type { EvaluationRerunReservation } from '../types.js'
 import { type ProcessResult, type HitchEvaluationIdentity, type JsonRecord, HitchEvaluationError } from '../adapters/hitch/contracts.js'
-import { exactFields, record, string, integer, optionalFinite, optionalString, jsonValue, stringArray, digest, redactions, trialSlots, sha256, memorySizeBytes, validMemorySize, excerpt, structuredCliError } from '../adapters/hitch/wire-primitives.js'
+import { exactFields, record, string, integer, optionalFinite, optionalString, jsonValue, stringArray, digest, redactions, trialSlots, sha256, validMemorySize, excerpt, structuredCliError } from '../adapters/hitch/wire-primitives.js'
 import { verifierDiagnostics, evaluationTrialScores, verifierProcessEvidence, verifierFeedback, verifierStructuredArtifact } from '../adapters/hitch/verifier-wire.js'
 import { parseTrajectoryAnalysis, parseTrajectoryEventsPage } from '../adapters/hitch/trajectory-wire.js'
 import { parseResult } from '../adapters/hitch/result-wire.js'
 import { runHitch } from '../adapters/hitch/transport.js'
+import { HitchExecutionContract } from '../adapters/hitch/execution-contract.js'
 export { HitchEvaluationError } from '../adapters/hitch/contracts.js'
 
 export interface HitchCliEvaluatorOptions extends HitchConfig {
@@ -30,26 +29,19 @@ interface SharedTrajectoryLoad {
   waiters: number
   settled: boolean
 }
-type HitchControlPlaneOptions = NonNullable<HitchConfig['controlPlane']>
 
 export class HitchCliEvaluator implements RefineEvaluator, HitchTrajectoryReader {
   readonly repositoryPath: string
+  private readonly execution: HitchExecutionContract
   private executablePathPromise?: Promise<string>
   private readonly trajectoryCache = new Map<string, { analysis: HitchTrajectoryAnalysis; bytes: number }>()
   private readonly trajectoryDigestByRun = new Map<string, string>()
   private readonly trajectoryLoads = new Map<string, SharedTrajectoryLoad>()
   private trajectoryCacheBytes = 0
 
-  private get controlPlane(): HitchControlPlaneOptions {
-    return { mode: 'direct', requireModelCapture: false, ...this.options.controlPlane }
-  }
-
-  private get daemonMode(): boolean {
-    return this.controlPlane.mode === 'daemon'
-  }
-
   constructor(readonly options: HitchCliEvaluatorOptions) {
     this.repositoryPath = resolve(options.repositoryPath)
+    this.execution = new HitchExecutionContract(options, this.repositoryPath)
     if (options.executable.length === 0) throw new TypeError('hitch.executable must not be empty')
     if (!/^[a-z0-9][a-z0-9_-]*$/u.test(options.harnessId)) throw new TypeError('hitch.harnessId is invalid')
     if (!Number.isSafeInteger(options.attempts) || options.attempts <= 0) throw new TypeError('hitch.attempts must be a positive integer')
@@ -77,7 +69,7 @@ export class HitchCliEvaluator implements RefineEvaluator, HitchTrajectoryReader
       throw new TypeError('hitch.trajectoryCacheBytes must be positive')
     }
     if (options.passEnv.some(name => !/^[A-Z_][A-Z0-9_]*$/u.test(name))) throw new TypeError('hitch.passEnv contains an invalid environment variable name')
-    const controlPlane = this.controlPlane
+    const controlPlane = this.execution.controlPlane
     if (controlPlane.mode !== 'direct' && controlPlane.mode !== 'daemon') throw new TypeError('hitch.controlPlane.mode is invalid')
     if (controlPlane.provider !== undefined && (!controlPlane.provider.trim() || /[\0\r\n]/u.test(controlPlane.provider))) {
       throw new TypeError('hitch.controlPlane.provider is invalid')
@@ -100,14 +92,14 @@ export class HitchCliEvaluator implements RefineEvaluator, HitchTrajectoryReader
     if (controlPlane.modelCapture === 'off' && controlPlane.requireModelCapture) {
       throw new TypeError('hitch.controlPlane.modelCapture=off cannot be required')
     }
-    if (controlPlane.mode === 'direct' && this.controlPlanePolicyIsExplicit()) {
+    if (controlPlane.mode === 'direct' && this.execution.controlPlanePolicyIsExplicit()) {
       throw new TypeError('hitch.controlPlane execution policy requires mode=daemon')
     }
   }
 
   async preflight(): Promise<void> {
     await this.checkVersion()
-    if (this.daemonMode) await this.checkDaemon()
+    if (this.execution.daemonMode) await this.checkDaemon()
     await this.inspectCapabilities(new AbortController().signal)
   }
 
@@ -139,14 +131,14 @@ export class HitchCliEvaluator implements RefineEvaluator, HitchTrajectoryReader
       throw new HitchEvaluationError(`unsupported Hitch CLI version output: ${output}`, 'unsupported_hitch_version')
     }
     const [major, minor, patch] = match.slice(1, 4).map(Number) as [number, number, number]
-    const minimumPatch = this.daemonMode ? 6 : 5
+    const minimumPatch = this.execution.daemonMode ? 6 : 5
     const coreAboveMinimum = major > 0 || (major === 0 && (minor > 2 || (minor === 2 && patch > minimumPatch)))
     const coreAtMinimum = major === 0 && minor === 2 && patch === minimumPatch
     const supported = coreAboveMinimum || (coreAtMinimum && match[4] === undefined)
     if (!supported) {
       const minimum = `0.2.${minimumPatch}`
       throw new HitchEvaluationError(
-        `unsupported Hitch CLI ${match[0].trim()}; Gear requires agent-hitch >= ${minimum}${this.daemonMode ? ' for daemon eval control-plane support' : ' for stable eval identity and multi-attempt rerun'}`,
+        `unsupported Hitch CLI ${match[0].trim()}; Gear requires agent-hitch >= ${minimum}${this.execution.daemonMode ? ' for daemon eval control-plane support' : ' for stable eval identity and multi-attempt rerun'}`,
         'unsupported_hitch_version',
       )
     }
@@ -182,21 +174,21 @@ export class HitchCliEvaluator implements RefineEvaluator, HitchTrajectoryReader
       )
     }
     const policy = record(health.resource_policy, 'Hitch daemon resource policy')
-    this.parseResourceVector(policy.eval_trial, 'Hitch daemon eval trial policy')
+    this.execution.parseResourceVector(policy.eval_trial, 'Hitch daemon eval trial policy')
   }
 
   prepareSubmission(
     round: Readonly<RefinementRound>,
     request: Readonly<EvaluationRequest>,
   ): EvaluationSubmissionIntent | undefined {
-    if (!this.daemonMode) return undefined
-    this.assertEvaluationRequest(round, request)
+    if (!this.execution.daemonMode) return undefined
+    this.execution.assertEvaluationRequest(round, request)
     return {
       provider: 'hitch-cli',
-      idempotencyKey: this.daemonIdempotencyKey(round, request),
+      idempotencyKey: this.execution.daemonIdempotencyKey(round, request),
       parameters: {
         root: this.options.root,
-        args: [...this.controlPlaneArgs(), ...this.evalRequestArgs(round, request)],
+        args: [...this.execution.controlPlaneArgs(), ...this.evalRequestArgs(round, request)],
       },
     }
   }
@@ -210,7 +202,7 @@ export class HitchCliEvaluator implements RefineEvaluator, HitchTrajectoryReader
     signal?.throwIfAborted()
     // A stored intent must remain recoverable even if the configured mode changed.
     if (intent !== undefined) return this.reserveDaemonEvaluation(round, intent, signal)
-    if (this.daemonMode) throw new TypeError('Hitch daemon submission requires a persisted submission intent')
+    if (this.execution.daemonMode) throw new TypeError('Hitch daemon submission requires a persisted submission intent')
     return { provider: 'hitch-cli', evalId: `eval_${randomUUID().replaceAll('-', '')}` }
   }
 
@@ -301,26 +293,8 @@ export class HitchCliEvaluator implements RefineEvaluator, HitchTrajectoryReader
     await this.cancelDaemonEvaluation(reservation.evalId, this.repositoryPath, root)
   }
 
-  private controlPlanePolicyIsExplicit(): boolean {
-    const policy = this.controlPlane
-    return policy.provider !== undefined || policy.cpuPerTrial !== undefined || policy.memoryPerTrial !== undefined
-      || policy.buildMode !== undefined || policy.modelCapture !== undefined || policy.requireModelCapture
-  }
-
   private rootArgs(): string[] {
     return this.options.root.length === 0 ? [] : ['--root', this.options.root]
-  }
-
-  private controlPlaneArgs(): string[] {
-    const policy = this.controlPlane
-    return [
-      ...(policy.provider === undefined ? [] : ['--provider', policy.provider]),
-      ...(policy.cpuPerTrial === undefined ? [] : ['--cpu-per-trial', String(policy.cpuPerTrial)]),
-      ...(policy.memoryPerTrial === undefined ? [] : ['--memory-per-trial', policy.memoryPerTrial]),
-      ...(policy.buildMode === undefined ? [] : ['--build-mode', policy.buildMode]),
-      ...(policy.modelCapture === undefined ? [] : ['--model-capture', policy.modelCapture]),
-      ...(policy.requireModelCapture ? ['--require-model-capture'] : []),
-    ]
   }
 
   private evalRequestArgs(round: Readonly<RefinementRound>, request: Readonly<EvaluationRequest>): string[] {
@@ -339,64 +313,6 @@ export class HitchCliEvaluator implements RefineEvaluator, HitchTrajectoryReader
     ]
   }
 
-  private assertEvaluationRequest(round: Readonly<RefinementRound>, request: Readonly<EvaluationRequest>): void {
-    if (!isExactGitCommit(request.harnessRef)) throw new TypeError('Hitch evaluation requires a full Git commit OID')
-    if (request.dataset.length === 0) throw new TypeError('Hitch evaluation dataset must not be empty')
-    if (request.condition.dataset.ref !== request.dataset || request.condition.timeoutMs !== round.taskBudgetMs) {
-      throw new TypeError('Hitch evaluation request does not match its resolved condition')
-    }
-    if (request.condition.seeds !== undefined) throw new TypeError('Hitch CLI adapter does not support typed rollout seeds')
-    if (request.condition.sampling.temperature !== undefined) {
-      throw new TypeError('Hitch CLI adapter does not support typed rollout temperature')
-    }
-  }
-
-  private daemonIdempotencyKey(round: Readonly<RefinementRound>, request: Readonly<EvaluationRequest>): string {
-    return `gear-eval-v1-${sha256(JSON.stringify({
-      evolutionId: round.evolutionId,
-      roundId: round.roundId,
-      phase: request.phase,
-      conditionId: request.condition.conditionId,
-      dataset: request.dataset,
-      harnessRef: request.harnessRef,
-      model: request.condition.model,
-      repetitions: request.condition.repetitions,
-      invocation: this.baseParity(round, request),
-    })).slice('sha256:'.length)}`
-  }
-
-  private baseParity(round: Readonly<RefinementRound>, request: Readonly<EvaluationRequest>): JsonRecord {
-    return {
-      conditionId: request.condition.conditionId,
-      executable: this.options.executable,
-      hitchRoot: this.options.root,
-      repositoryPath: this.repositoryPath,
-      backend: 'harbor',
-      dataset: request.dataset,
-      harnessId: this.options.harnessId,
-      model: request.condition.model,
-      attempts: request.condition.repetitions,
-      maxConcurrent: this.options.maxConcurrent,
-      timeoutMs: round.taskBudgetMs,
-      setupTimeoutMs: this.options.setupTimeoutMs,
-      agentArgs: this.options.agentArgs,
-      passEnv: this.options.passEnv,
-      sandboxProfileRef: round.sandboxProfileRef,
-      ...(this.daemonMode ? { executionMode: 'daemon' } : {}),
-    }
-  }
-
-  private parseResourceVector(value: unknown, label: string): JsonRecord {
-    const resources = record(value, label)
-    for (const field of ['cpu_millis', 'memory_bytes', 'container_slots', 'build_slots']) {
-      integer(resources[field], `${label}.${field}`)
-    }
-    for (const field of ['gpu_count', 'ephemeral_disk_bytes']) {
-      if (resources[field] !== undefined) integer(resources[field], `${label}.${field}`)
-    }
-    return resources
-  }
-
   async evaluationIdentity(
     round: Readonly<RefinementRound>,
     request: Readonly<EvaluationRequest>,
@@ -405,7 +321,7 @@ export class HitchCliEvaluator implements RefineEvaluator, HitchTrajectoryReader
     signal?.throwIfAborted()
     // Daemon defaults are frozen at submission; prior evidence cannot be reused
     // until the current execution policy can be resolved before submission.
-    if (this.daemonMode) return undefined
+    if (this.execution.daemonMode) return undefined
     // Settled evidence has already passed Hitch planning. Verify that the whole
     // compiled dataset, including its adapter/scoring manifest, is unchanged.
     // Unknown legacy identities stay unresolved; the service must block reuse
@@ -442,24 +358,24 @@ export class HitchCliEvaluator implements RefineEvaluator, HitchTrajectoryReader
     round: Readonly<RefinementRound>, request: Readonly<EvaluationRequest>, reservation: Readonly<EvaluationReservation>,
     signal: AbortSignal, intent?: Readonly<EvaluationSubmissionIntent>,
   ): Promise<(HitchEvaluationIdentity & { cohortDigest: string }) | undefined> {
-    if (!this.daemonMode) return undefined
-    this.assertEvaluationRequest(round, request)
+    if (!this.execution.daemonMode) return undefined
+    this.execution.assertEvaluationRequest(round, request)
     if (reservation.provider !== 'hitch-cli' || !/^eval_[0-9a-f]{32}$/u.test(reservation.evalId)) throw new TypeError('invalid evaluation reservation')
     const inspection = await this.inspectEvaluation(reservation.evalId, round.workspaceRoot, signal, 'hitch_eval_inspect_failed',
       intent === undefined ? this.options.root : this.submissionParameters(intent).root)
-    const identity = this.daemonEvaluationIdentity(round, request, inspection, await this.resolveEvaluationIdentity(round, request, signal))
+    const identity = this.execution.daemonEvaluationIdentity(round, request, inspection, await this.resolveEvaluationIdentity(round, request, signal))
     const submission = record(inspection.submission, 'Hitch eval submission')
     // Task projections and candidate commits vary within one paired cohort.
     // All other submitted execution parameters (including daemon defaults) must agree.
     const { dataset: _dataset, harness_ref: _harness, attempts: _attempts,
       benchmark_id: _benchmark, benchmark_revision: _revision, ...submittedConfig } = record(submission.request, 'Hitch eval submitted request')
-    const { conditionId: _condition, dataset: _projection, attempts: _repetitions, ...invocation } = this.baseParity(round, request)
+    const { conditionId: _condition, dataset: _projection, attempts: _repetitions, ...invocation } = this.execution.baseParity(round, request)
     const runtime = await this.runtimeIdentity(signal)
     // Also bind Gear's invocation controls, such as setup timeout and output limits,
     // without including the per-batch conditionId in the common identity.
     return { ...identity, cohortDigest: digestJson({ provider: identity.provider, executionMode: 'daemon', execution: submission.execution,
       request: submittedConfig, scoringContract: 'benchmark-scores-v1',
-      invocationFingerprint: this.invocationFingerprint(digestJson(invocation), runtime) }) }
+      invocationFingerprint: this.execution.invocationFingerprint(digestJson(invocation), runtime) }) }
   }
 
   private async hasStandardBenchmarkManifest(
@@ -483,8 +399,8 @@ export class HitchCliEvaluator implements RefineEvaluator, HitchTrajectoryReader
     signal?.throwIfAborted()
     const hitchRuntimeIdentity = await this.runtimeIdentity(signal)
     signal?.throwIfAborted()
-    const effectiveConfigDigest = this.effectiveConfigDigest(round, request)
-    const invocationFingerprint = this.invocationFingerprint(effectiveConfigDigest, hitchRuntimeIdentity)
+    const effectiveConfigDigest = this.execution.effectiveConfigDigest(round, request)
+    const invocationFingerprint = this.execution.invocationFingerprint(effectiveConfigDigest, hitchRuntimeIdentity)
     return {
       provider: 'hitch-cli',
       effectiveConfigDigest,
@@ -1074,17 +990,17 @@ export class HitchCliEvaluator implements RefineEvaluator, HitchTrajectoryReader
     reservation?: Readonly<EvaluationReservation>,
   ): Promise<HitchEvaluationEvidence> {
     try {
-      this.assertEvaluationRequest(round, request)
+      this.execution.assertEvaluationRequest(round, request)
       if (reservation !== undefined
         && (reservation.provider !== 'hitch-cli' || !/^eval_[0-9a-f]{32}$/u.test(reservation.evalId))) {
         throw new TypeError('Hitch evaluation reservation is invalid')
       }
-      if (this.daemonMode && reservation === undefined) {
+      if (this.execution.daemonMode && reservation === undefined) {
         throw new TypeError('Hitch daemon evaluation requires a durable reservation')
       }
       const args = [
         ...this.rootArgs(),
-        ...(this.daemonMode
+        ...(this.execution.daemonMode
           ? ['eval', 'watch', (reservation as EvaluationReservation).evalId]
           : ['eval', 'run', ...(reservation === undefined ? [] : ['--eval-id', reservation.evalId]), ...this.evalRequestArgs(round, request)]),
         '--output', 'json',
@@ -1101,14 +1017,14 @@ export class HitchCliEvaluator implements RefineEvaluator, HitchTrajectoryReader
         )
       }
       let inspection: JsonRecord | undefined
-      if (this.daemonMode) {
+      if (this.execution.daemonMode) {
         inspection = await this.inspectEvaluation(
           (reservation as EvaluationReservation).evalId,
           round.workspaceRoot,
           signal,
           'hitch_eval_inspect_failed',
         )
-        identity = this.daemonEvaluationIdentity(round, request, inspection, identity)
+        identity = this.execution.daemonEvaluationIdentity(round, request, inspection, identity)
       }
       const evidence = parseResult(this.options.harnessId, parsed, processResult, request, identity, true)
       if (reservation !== undefined
@@ -1121,10 +1037,10 @@ export class HitchCliEvaluator implements RefineEvaluator, HitchTrajectoryReader
         signal,
         'hitch_eval_inspect_failed',
       )
-      const benchmark = this.assertCompleteTrialSlots(inspection, evidence, request)
+      const benchmark = this.execution.assertCompleteTrialSlots(inspection, evidence, request)
       return { ...evidence, benchmark }
     } catch (error) {
-      if (this.daemonMode && reservation !== undefined) {
+      if (this.execution.daemonMode && reservation !== undefined) {
         try {
           await this.cancelReservation(reservation)
         } catch (cancelError) {
@@ -1139,7 +1055,7 @@ export class HitchCliEvaluator implements RefineEvaluator, HitchTrajectoryReader
     round: Readonly<RefinementRound>, request: Readonly<EvaluationRequest>, reservation: Readonly<EvaluationReservation>,
     signal: AbortSignal, intent?: Readonly<EvaluationSubmissionIntent>,
   ): Promise<import('../types.js').EvaluationInspection> {
-    this.assertEvaluationRequest(round, request)
+    this.execution.assertEvaluationRequest(round, request)
     if (reservation.provider !== 'hitch-cli' || !/^eval_[0-9a-f]{32}$/u.test(reservation.evalId)) throw new TypeError('invalid evaluation reservation')
     const inspection = await this.inspectEvaluation(reservation.evalId, round.workspaceRoot, signal, 'hitch_eval_recovery_inspect_failed',
       intent === undefined ? this.options.root : this.submissionParameters(intent).root)
@@ -1163,9 +1079,9 @@ export class HitchCliEvaluator implements RefineEvaluator, HitchTrajectoryReader
     }
     const identity = await this.resolveEvaluationIdentity(round, request, signal)
     const evidence = parseResult(this.options.harnessId, result, { stdout: JSON.stringify(result), stderr: '', exitCode: integer(result.exit_code, 'exit_code') }, request,
-      this.daemonMode ? this.daemonEvaluationIdentity(round, request, inspection, identity) : identity, true)
+      this.execution.daemonMode ? this.execution.daemonEvaluationIdentity(round, request, inspection, identity) : identity, true)
     if (evidence.evalId !== reservation.evalId) throw new HitchEvaluationError('recovered evaluation identity changed', 'hitch_eval_identity_mismatch')
-    return { status: 'complete', evidence: { ...evidence, benchmark: this.assertCompleteTrialSlots(inspection, evidence, request) } }
+    return { status: 'complete', evidence: { ...evidence, benchmark: this.execution.assertCompleteTrialSlots(inspection, evidence, request) } }
   }
 
   prepareRerun(
@@ -1174,7 +1090,7 @@ export class HitchCliEvaluator implements RefineEvaluator, HitchTrajectoryReader
     attempt: Readonly<RoundEvaluationAttempt>,
     _selector: Readonly<EvaluationRerunSelector>,
   ): EvaluationRerunReservation | undefined {
-    if (!this.daemonMode) return undefined
+    if (!this.execution.daemonMode) return undefined
     return {
       provider: 'hitch-cli', evalId: attempt.evalId,
       rerunId: `rerun_${randomUUID().replaceAll('-', '')}`,
@@ -1220,7 +1136,7 @@ export class HitchCliEvaluator implements RefineEvaluator, HitchTrajectoryReader
       || attempt.requestedModelId !== request.condition.model) {
       throw new TypeError('Hitch evaluation rerun request does not match the original attempt')
     }
-    if (this.daemonMode && reservation === undefined) throw new TypeError('Hitch daemon rerun requires a persisted rerun reservation')
+    if (this.execution.daemonMode && reservation === undefined) throw new TypeError('Hitch daemon rerun requires a persisted rerun reservation')
     const root = reservation === undefined ? this.options.root : this.rerunRoot(reservation)
     if (reservation !== undefined && reservation.evalId !== attempt.evalId) throw new TypeError('Hitch rerun reservation does not match its source eval')
     try {
@@ -1275,14 +1191,14 @@ export class HitchCliEvaluator implements RefineEvaluator, HitchTrajectoryReader
         result,
         { stdout: JSON.stringify(result), stderr: '', exitCode: integer(result.exit_code, 'exit_code') },
         request,
-        this.daemonMode ? this.daemonEvaluationIdentity(round, request, inspection, identity) : identity,
+        this.execution.daemonMode ? this.execution.daemonEvaluationIdentity(round, request, inspection, identity) : identity,
         true,
       )
       if (evidence.evalId !== attempt.evalId) throw new HitchEvaluationError('repaired evidence eval id changed', 'hitch_eval_identity_mismatch')
       if ((envelope.eval_status === 'succeeded') !== (evidence.completeness === 'complete')) {
         throw new HitchEvaluationError('Hitch rerun status does not match repaired evidence completeness', 'invalid_hitch_result')
       }
-      const benchmark = this.assertCompleteTrialSlots(inspection, evidence, request)
+      const benchmark = this.execution.assertCompleteTrialSlots(inspection, evidence, request)
       return {
         provider: 'hitch-cli',
         evalId: attempt.evalId,
@@ -1345,208 +1261,6 @@ export class HitchCliEvaluator implements RefineEvaluator, HitchTrajectoryReader
       || !new Set(['cancelling', 'cancelled', 'succeeded', 'failed']).has(cancelled.status as string)) {
       throw new HitchEvaluationError('Hitch eval cancellation identity/status is invalid', 'invalid_hitch_result')
     }
-  }
-
-  private daemonEvaluationIdentity(
-    round: Readonly<RefinementRound>,
-    request: Readonly<EvaluationRequest>,
-    inspection: JsonRecord,
-    identity: HitchEvaluationIdentity,
-  ): HitchEvaluationIdentity {
-    const evalId = string(inspection.eval_id, 'Hitch eval inspection eval_id')
-    const submission = record(inspection.submission, 'Hitch eval submission record')
-    if (submission.schema_version !== '1' || submission.eval_id !== evalId) {
-      throw new HitchEvaluationError('Hitch eval submission identity is invalid', 'invalid_hitch_result')
-    }
-    const inspectedRequest = record(inspection.request, 'Hitch eval request')
-    const submittedRequest = record(submission.request, 'Hitch eval submitted request')
-    if (!isDeepStrictEqual(submittedRequest, inspectedRequest)) {
-      throw new HitchEvaluationError('Hitch submitted request differs from the eval request', 'invalid_hitch_result')
-    }
-    const idempotencyKeyHash = string(submission.idempotency_key_hash, 'Hitch eval idempotency key hash')
-    if (idempotencyKeyHash !== sha256(this.daemonIdempotencyKey(round, request))) {
-      throw new HitchEvaluationError('Hitch eval idempotency identity differs from the Gear reservation', 'invalid_hitch_result')
-    }
-    const execution = this.assertDaemonExecutionPolicy(submission.execution)
-    const submissionDigest = string(submission.submission_digest, 'Hitch eval submission digest')
-    if (submissionDigest !== digestJson({ request: submittedRequest, execution })) {
-      throw new HitchEvaluationError('Hitch eval submission digest does not match its frozen request and execution policy', 'invalid_hitch_result')
-    }
-    const submittedAt = string(submission.submitted_at, 'Hitch eval submission timestamp')
-    if (!Number.isFinite(Date.parse(submittedAt))) {
-      throw new HitchEvaluationError('Hitch eval submission timestamp is invalid', 'invalid_hitch_result')
-    }
-    const effectiveConfigDigest = digestJson({
-      effectiveConfigDigest: identity.effectiveConfigDigest,
-      executionMode: 'daemon',
-      execution,
-    })
-    return {
-      provider: 'hitch-cli',
-      effectiveConfigDigest,
-      invocationFingerprint: this.daemonInvocationFingerprint(effectiveConfigDigest, identity.invocationFingerprint),
-    }
-  }
-
-  private assertDaemonExecutionPolicy(value: unknown): JsonRecord {
-    const execution = record(value, 'Hitch eval execution policy')
-    const provider = string(execution.provider, 'Hitch eval execution policy provider')
-    const maxParallelism = integer(execution.max_parallelism, 'Hitch eval execution policy max_parallelism')
-    if (maxParallelism !== this.options.maxConcurrent) {
-      throw new HitchEvaluationError('Hitch eval execution parallelism differs from the Gear condition', 'invalid_hitch_result')
-    }
-    if (this.controlPlane.provider !== undefined && provider !== this.controlPlane.provider) {
-      throw new HitchEvaluationError('Hitch eval execution provider differs from Gear configuration', 'invalid_hitch_result')
-    }
-    const resources = record(execution.resources, 'Hitch eval execution resources')
-    const trial = this.parseResourceVector(resources.default_trial, 'Hitch eval default trial resources')
-    if (this.controlPlane.cpuPerTrial !== undefined
-      && trial.cpu_millis !== this.controlPlane.cpuPerTrial * 1_000) {
-      throw new HitchEvaluationError('Hitch eval CPU reservation differs from Gear configuration', 'invalid_hitch_result')
-    }
-    if (this.controlPlane.memoryPerTrial !== undefined
-      && trial.memory_bytes !== memorySizeBytes(this.controlPlane.memoryPerTrial)) {
-      throw new HitchEvaluationError('Hitch eval memory reservation differs from Gear configuration', 'invalid_hitch_result')
-    }
-    if (resources.setup !== undefined) this.parseResourceVector(resources.setup, 'Hitch eval setup resources')
-    const build = record(execution.build, 'Hitch eval build policy')
-    const buildMode = string(build.mode, 'Hitch eval build mode')
-    if (!new Set(['backend', 'prebuild-preferred', 'prebuild-required']).has(buildMode)
-      || (this.controlPlane.buildMode !== undefined && buildMode !== this.controlPlane.buildMode)) {
-      throw new HitchEvaluationError('Hitch eval build policy differs from Gear configuration', 'invalid_hitch_result')
-    }
-    const capture = record(execution.model_capture, 'Hitch eval model capture policy')
-    const captureMode = string(capture.mode, 'Hitch eval model capture mode')
-    if (!new Set(['off', 'native', 'proxy', 'hybrid']).has(captureMode)
-      || typeof capture.required !== 'boolean'
-      || (this.controlPlane.modelCapture !== undefined && captureMode !== this.controlPlane.modelCapture)
-      || capture.required !== this.controlPlane.requireModelCapture) {
-      throw new HitchEvaluationError('Hitch eval model capture policy differs from Gear configuration', 'invalid_hitch_result')
-    }
-    return execution
-  }
-
-  private assertCompleteTrialSlots(
-    inspection: JsonRecord,
-    evidence: HitchEvaluationEvidence,
-    request: Readonly<EvaluationRequest>,
-  ): { id: string; revision: string } {
-    const plan = record(inspection.plan, 'Hitch eval plan')
-    if (plan.schema_version !== '1' || plan.eval_id !== evidence.evalId) {
-      throw new HitchEvaluationError('Hitch eval plan identity is invalid', 'invalid_hitch_result')
-    }
-    const inspectedRequest = record(inspection.request, 'Hitch eval request')
-    if (inspectedRequest.schema_version !== '1' || inspectedRequest.backend !== 'harbor'
-      || inspectedRequest.dataset !== request.dataset
-      || inspectedRequest.model !== request.condition.model) {
-      throw new HitchEvaluationError('Hitch eval request does not match the frozen Gear condition', 'invalid_hitch_result')
-    }
-    const attempts = integer(plan.attempts, 'plan.attempts')
-    const requestedAttempts = integer(inspectedRequest.attempts, 'request.attempts')
-    if (attempts <= 0 || attempts !== request.condition.repetitions || requestedAttempts !== attempts) {
-      throw new HitchEvaluationError('Hitch eval plan attempts do not match the frozen condition', 'invalid_hitch_result')
-    }
-    const attemptExecution = plan.attempt_execution
-    const stableAttemptExecution = attemptExecution === 'harbor-attempt-shards-v1'
-      || attemptExecution === 'harbor-task-slots-v1'
-    if ((attemptExecution !== undefined && !stableAttemptExecution)
-      || (attempts > 1 && !stableAttemptExecution)) {
-      throw new HitchEvaluationError('Hitch eval plan has no stable logical-attempt identity', 'invalid_hitch_result')
-    }
-    const benchmarkId = string(inspectedRequest.benchmark_id, 'request.benchmark_id')
-    const benchmarkRevision = string(inspectedRequest.benchmark_revision, 'request.benchmark_revision')
-    if (plan.backend !== 'harbor' || plan.dataset !== inspectedRequest.dataset
-      || plan.benchmark_id !== benchmarkId || plan.benchmark_revision !== benchmarkRevision) {
-      throw new HitchEvaluationError('Hitch eval request and plan dataset identity differ', 'invalid_hitch_result')
-    }
-    const candidate = record(plan.candidate, 'plan.candidate')
-    const requestedHarnessRef = string(inspectedRequest.harness_ref, 'request.harness_ref')
-    if (candidate.requested_harness_ref !== requestedHarnessRef
-      || candidate.harness_id !== this.options.harnessId
-      || candidate.revision_identity !== evidence.revisionIdentity) {
-      throw new HitchEvaluationError('Hitch eval plan candidate identity differs from the result', 'invalid_hitch_result')
-    }
-    const lockedHarnessRef = string(candidate.harness_ref, 'plan.candidate.harness_ref')
-    const lockedCommit = lockedHarnessRef.match(/@commit:([0-9a-f]{40}|[0-9a-f]{64})$/u)?.[1]
-    if (lockedCommit !== request.harnessRef || lockedCommit !== evidence.actualCommit
-      || lockedHarnessRef !== `${this.options.harnessId}@commit:${lockedCommit}`) {
-      throw new HitchEvaluationError('Hitch eval plan candidate commit differs from the request', 'invalid_hitch_result')
-    }
-    const tasks = stringArray(plan.tasks, 'plan.tasks')
-    const plannedTasks = new Set(tasks)
-    if (tasks.length === 0 || plannedTasks.size !== tasks.length) {
-      throw new HitchEvaluationError('Hitch eval plan tasks must be non-empty and unique', 'invalid_hitch_result')
-    }
-    const expectedTrials = tasks.length * attempts
-    if (!Number.isSafeInteger(expectedTrials)) {
-      throw new HitchEvaluationError('Hitch eval plan trial count exceeds the safe integer range', 'invalid_hitch_result')
-    }
-    const slots = new Set<string>()
-    for (const trial of [...evidence.trials, ...evidence.invalidTrials]) {
-      if (!plannedTasks.has(trial.taskName)) {
-        throw new HitchEvaluationError(`Hitch evidence contains task outside the frozen plan: ${trial.taskName}`, 'invalid_hitch_result')
-      }
-      const logicalAttempt = trial.attempt ?? (attempts === 1 ? 1 : undefined)
-      if (logicalAttempt === undefined || !Number.isSafeInteger(logicalAttempt)
-        || logicalAttempt < 1 || logicalAttempt > attempts) {
-        throw new HitchEvaluationError(
-          `Hitch evidence attempt is outside frozen range 1..${attempts}: ${trial.taskName}#${String(trial.attempt)}`,
-          'invalid_hitch_result',
-        )
-      }
-      const slot = `${trial.taskName}\0${logicalAttempt}`
-      if (slots.has(slot)) {
-        throw new HitchEvaluationError(`Hitch evidence contains duplicate logical slot: ${trial.taskName}#${logicalAttempt}`, 'invalid_hitch_result')
-      }
-      slots.add(slot)
-    }
-    if (slots.size !== expectedTrials) {
-      const missing: string[] = []
-      for (const task of tasks) {
-        for (let attempt = 1; attempt <= attempts; attempt += 1) {
-          if (!slots.has(`${task}\0${attempt}`)) missing.push(`${task}#${attempt}`)
-        }
-      }
-      throw new HitchEvaluationError(
-        `Hitch evidence is missing frozen logical slots: ${missing.join(', ')}`,
-        'invalid_hitch_result',
-      )
-    }
-    return { id: benchmarkId, revision: benchmarkRevision }
-  }
-
-  private effectiveConfigDigest(
-    round: Readonly<RefinementRound>,
-    request: Readonly<EvaluationRequest>,
-  ): string {
-    return sha256(JSON.stringify({
-      provider: 'hitch-cli',
-      // Evidence collected before this contract lacks benchmark identity and
-      // cannot be paired with current scores, even for legacy datasets.
-      scoringContract: 'benchmark-scores-v1',
-      conditionId: request.condition.conditionId,
-      backend: 'harbor',
-      harnessId: this.options.harnessId,
-      sandboxProfileRef: round.sandboxProfileRef,
-    }))
-  }
-
-  private invocationFingerprint(effectiveConfigDigest: string, hitchRuntimeIdentity: string): string {
-    return sha256(JSON.stringify({
-      effectiveConfigDigest,
-      hitchRuntimeIdentity,
-      maxConcurrent: this.options.maxConcurrent,
-      setupTimeoutMs: this.options.setupTimeoutMs,
-      terminationGraceMs: this.options.terminationGraceMs,
-      maxOutputBytes: this.options.maxOutputBytes,
-      maxTrajectoryOutputBytes: this.options.maxTrajectoryOutputBytes,
-      maxTrajectoryAnalysisBytes: this.options.maxTrajectoryAnalysisBytes ?? 16 * 1024 * 1024,
-      maxTrajectoryEventsBytes: this.options.maxTrajectoryEventsBytes ?? 4 * 1024 * 1024,
-    }))
-  }
-
-  private daemonInvocationFingerprint(effectiveConfigDigest: string, directInvocationFingerprint: string): string {
-    return sha256(JSON.stringify({ effectiveConfigDigest, directInvocationFingerprint }))
   }
 
   private executablePath(): Promise<string> {

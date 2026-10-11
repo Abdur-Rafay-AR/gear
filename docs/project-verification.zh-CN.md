@@ -2,6 +2,8 @@
 
 基线：`origin/dev` 的 `9a1281dba7495ea454c637d1bbad4e1605f52db6`。2026-10-11 再次查询远端，dev 仍为此提交。实现分支 `codex/benchmark-refactor`；原工作区和所有 README 保持不变。
 
+完整阶段与验收缺口见 [目标跟踪表](project-refactor-status.zh-CN.md)。
+
 ## 自动化证据
 
 | 检查 | 结果与边界 |
@@ -56,6 +58,14 @@
 14 项 Python 作者测试验证本地依赖封存、直接脚本/包导入、源码变更、篡改拒绝、嵌套配置、输入不可变、重放一致、完整 seed 提名、非阻塞调用与取消回收。3 项新 TypeScript 测试验证 CLI 转发、参数合同、可读结果、冻结运行配置与终态恢复。全量 Python 330 项中 326 通过、4 跳过；项目 87 项通过；Ruff、23 个公共模块的 Mypy strict、typecheck、Biome、203 模块边界及协议检查通过。
 
 真实 macOS sandbox 两项通过：既有凭据/文件/网络隔离，及 SDK 封存策略的实际执行。修改原作者文件后仍使用冻结策略，修改已封存文件后拒绝执行。独立 tgz/wheel 检查通过，新增从安装包运行单文件父代、GEPA factory 和独立 `OneShot` 算法；Python 与 Node CLI 决策摘要一致；同步/异步 SDK 和源码封存均通过。此轮没有新增模型调用。完整历史 GEPA 等价、迁移与人工验收仍未完成。
+
+## Hitch 执行合同拆分
+
+将执行策略、请求 admission、幂等键、执行条件摘要、daemon submission 核验和完整 trial 槽位校验移入 `adapters/hitch/execution-contract.ts`，移除 evaluator 中的原实现。evaluator 从 1609 行降至 1323 行，继续负责 IO、提交、取消和恢复；合同模块不拥有副作用或运行状态。完整槽位检查保留在一个函数中，以同一冻结 plan 校验身份、attempt 范围、重复与缺失，未为行数拆散该不变量。
+
+拆分前从 `b1f147e` 的正式构建冻结了三组执行条件固定值（`test-contracts/hitch-execution-v1.json`），覆盖 direct 默认值、daemon capture、资源和输出上限；新模块的参数、幂等键、条件摘要与调用指纹保持一致。组件实现摘要正常更新为新源码闭包，新模块本身纳入摘要；历史 fixture、身份规则和数据未修改。源码版与正式构建身份一致，修改新模块只改变 Hitch 组件身份，相关篡改测试通过。
+
+定向 evaluator/identity 合同共 127 项：初次执行有 1 项当前实现摘要快照因预期源码变化失败；确认构建版与源码版均生成同一新摘要后，更新当前快照并复验该文件 7 项全部通过，其余 120 项在首轮通过。typecheck、Biome、204 模块依赖检查通过；独立搜索包合同、tgz/wheel 项目旅程均通过。没有替换或重算历史数据中的身份。剩余执行层拆分仍见目标跟踪表。
 
 ## Luna 项目闭环
 

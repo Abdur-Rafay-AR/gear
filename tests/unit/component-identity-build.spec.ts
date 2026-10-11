@@ -155,6 +155,22 @@ describe('component identity across formal builds', () => {
     expect((await loadBuilt(root)).hitchCliImplementation()).toEqual(sourceApi.hitchCliImplementation())
   })
 
+  it('includes the extracted execution contract in Hitch implementation identity', async () => {
+    const root = await packageCopy()
+    const path = join(root, 'src/adapters/hitch/execution-contract.ts')
+    const source = await readFile(path, 'utf8')
+    const changed = source.replace("'benchmark-scores-v1'", "'benchmark-scores-v2'")
+    expect(changed).not.toBe(source)
+    await writeFile(path, changed)
+    await compile(root)
+    const actual = allIdentities(await loadBuilt(root))
+    const expected = allIdentities(sourceApi)
+    expect(actual.hitch).not.toEqual(expected.hitch)
+    delete actual.hitch
+    delete expected.hitch
+    expect(actual).toEqual(expected)
+  })
+
   it.each([
     ['evaluate', (source: string) => source.replace(
       'Hitch daemon evaluation requires a durable reservation',
@@ -162,8 +178,8 @@ describe('component identity across formal builds', () => {
     )],
     ['evaluation helper', (source: string) => source.replace("'--max-concurrent'", "'--parallelism'")],
     ['evaluation call to diagnostic reader', (source: string) => source.replace(
-      '    try {\n      this.assertEvaluationRequest(round, request)',
-      '    try {\n      void this.inspectVerifierDiagnosticPage\n      this.assertEvaluationRequest(round, request)',
+      '    try {\n      this.execution.assertEvaluationRequest(round, request)',
+      '    try {\n      void this.inspectVerifierDiagnosticPage\n      this.execution.assertEvaluationRequest(round, request)',
     )],
   ] as const)('changes Hitch rollout identity for an %s mutation', async (_label, mutate) => {
     const root = await packageCopy()

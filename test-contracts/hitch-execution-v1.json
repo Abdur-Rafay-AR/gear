@@ -1,0 +1,202 @@
+{
+  "version": 1,
+  "provenance": {
+    "sourceCommit": "b1f147e",
+    "implementation": "Unchanged HitchCliEvaluator methods from its formal lib build; computed before extraction",
+    "purpose": "Keep execution-condition hashes and idempotency formulas stable; component implementation identity must still change"
+  },
+  "options": {
+    "executable": "hitch",
+    "harnessId": "dsh",
+    "root": "/fixture/hitch",
+    "model": "fixture-model",
+    "attempts": 2,
+    "maxConcurrent": 3,
+    "setupTimeoutMs": 15000,
+    "terminationGraceMs": 2000,
+    "maxOutputBytes": 1048576,
+    "maxTrajectoryOutputBytes": 4194304,
+    "sampling": {},
+    "agentArgs": [
+      "--sample",
+      "fixed"
+    ],
+    "passEnv": [
+      "MODEL_TOKEN"
+    ],
+    "repositoryPath": "/fixture/repository"
+  },
+  "round": {
+    "evolutionId": "fixture-evolution",
+    "roundId": "fixture-round",
+    "taskBudgetMs": 60000,
+    "sandboxProfileRef": "fixture-sandbox"
+  },
+  "request": {
+    "phase": "seed-baseline",
+    "dataset": "fixture/tasks",
+    "harnessRef": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "condition": {
+      "conditionId": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "dataset": {
+        "ref": "fixture/tasks",
+        "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "timeoutMs": 60000,
+      "sampling": {},
+      "repetitions": 2,
+      "model": "fixture-model"
+    }
+  },
+  "cases": [
+    {
+      "name": "direct-defaults",
+      "options": {},
+      "expected": {
+        "controlPlane": {
+          "mode": "direct",
+          "requireModelCapture": false
+        },
+        "controlPlaneArgs": [],
+        "baseParity": {
+          "conditionId": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+          "executable": "hitch",
+          "hitchRoot": "/fixture/hitch",
+          "repositoryPath": "/fixture/repository",
+          "backend": "harbor",
+          "dataset": "fixture/tasks",
+          "harnessId": "dsh",
+          "model": "fixture-model",
+          "attempts": 2,
+          "maxConcurrent": 3,
+          "timeoutMs": 60000,
+          "setupTimeoutMs": 15000,
+          "agentArgs": [
+            "--sample",
+            "fixed"
+          ],
+          "passEnv": [
+            "MODEL_TOKEN"
+          ],
+          "sandboxProfileRef": "fixture-sandbox"
+        },
+        "idempotencyKey": "gear-eval-v1-5692ab883a32f92461119af505582930107618eb060a80254efcfda8ed192f36",
+        "effectiveConfigDigest": "sha256:f162ff8699c7b2e0de3ae07d5d5d1c46e53b9dfa98a391cb69997831af912129",
+        "invocationFingerprint": "sha256:b0d4c3d818b2346e0fe5a7919f4179c1911b8f6116d48fcfc4e633f33f5676c3"
+      }
+    },
+    {
+      "name": "daemon-native",
+      "options": {
+        "controlPlane": {
+          "mode": "daemon",
+          "requireModelCapture": true,
+          "modelCapture": "native"
+        }
+      },
+      "expected": {
+        "controlPlane": {
+          "mode": "daemon",
+          "requireModelCapture": true,
+          "modelCapture": "native"
+        },
+        "controlPlaneArgs": [
+          "--model-capture",
+          "native",
+          "--require-model-capture"
+        ],
+        "baseParity": {
+          "conditionId": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+          "executable": "hitch",
+          "hitchRoot": "/fixture/hitch",
+          "repositoryPath": "/fixture/repository",
+          "backend": "harbor",
+          "dataset": "fixture/tasks",
+          "harnessId": "dsh",
+          "model": "fixture-model",
+          "attempts": 2,
+          "maxConcurrent": 3,
+          "timeoutMs": 60000,
+          "setupTimeoutMs": 15000,
+          "agentArgs": [
+            "--sample",
+            "fixed"
+          ],
+          "passEnv": [
+            "MODEL_TOKEN"
+          ],
+          "sandboxProfileRef": "fixture-sandbox",
+          "executionMode": "daemon"
+        },
+        "idempotencyKey": "gear-eval-v1-cd581d35bce397a230f0e18da623155604bef9bdfd156cdd7fb7353833701f75",
+        "effectiveConfigDigest": "sha256:f162ff8699c7b2e0de3ae07d5d5d1c46e53b9dfa98a391cb69997831af912129",
+        "invocationFingerprint": "sha256:b0d4c3d818b2346e0fe5a7919f4179c1911b8f6116d48fcfc4e633f33f5676c3"
+      }
+    },
+    {
+      "name": "daemon-resources-and-limits",
+      "options": {
+        "maxTrajectoryAnalysisBytes": 8000000,
+        "maxTrajectoryEventsBytes": 2000000,
+        "controlPlane": {
+          "mode": "daemon",
+          "provider": "docker",
+          "cpuPerTrial": 2,
+          "memoryPerTrial": "2GiB",
+          "buildMode": "prebuild-required",
+          "modelCapture": "hybrid",
+          "requireModelCapture": false
+        }
+      },
+      "expected": {
+        "controlPlane": {
+          "mode": "daemon",
+          "requireModelCapture": false,
+          "provider": "docker",
+          "cpuPerTrial": 2,
+          "memoryPerTrial": "2GiB",
+          "buildMode": "prebuild-required",
+          "modelCapture": "hybrid"
+        },
+        "controlPlaneArgs": [
+          "--provider",
+          "docker",
+          "--cpu-per-trial",
+          "2",
+          "--memory-per-trial",
+          "2GiB",
+          "--build-mode",
+          "prebuild-required",
+          "--model-capture",
+          "hybrid"
+        ],
+        "baseParity": {
+          "conditionId": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+          "executable": "hitch",
+          "hitchRoot": "/fixture/hitch",
+          "repositoryPath": "/fixture/repository",
+          "backend": "harbor",
+          "dataset": "fixture/tasks",
+          "harnessId": "dsh",
+          "model": "fixture-model",
+          "attempts": 2,
+          "maxConcurrent": 3,
+          "timeoutMs": 60000,
+          "setupTimeoutMs": 15000,
+          "agentArgs": [
+            "--sample",
+            "fixed"
+          ],
+          "passEnv": [
+            "MODEL_TOKEN"
+          ],
+          "sandboxProfileRef": "fixture-sandbox",
+          "executionMode": "daemon"
+        },
+        "idempotencyKey": "gear-eval-v1-cd581d35bce397a230f0e18da623155604bef9bdfd156cdd7fb7353833701f75",
+        "effectiveConfigDigest": "sha256:f162ff8699c7b2e0de3ae07d5d5d1c46e53b9dfa98a391cb69997831af912129",
+        "invocationFingerprint": "sha256:d570709da8cc43f2852ea4f753c3fecb67f6f06f2b8b1e75234c1f85d62b0502"
+      }
+    }
+  ]
+}

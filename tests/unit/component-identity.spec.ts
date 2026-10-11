@@ -182,10 +182,12 @@ describe('component implementation identity', () => {
     expect(generator).toMatchObject({ package: 'dsh-plugin-refine/components', version: '2.0.0' })
     expect(generator.integrity).toMatch(/^sha256:[0-9a-f]{64}$/u)
     expect(generator.integrity).not.toBe(sampler.integrity)
+    // The extracted execution module is part of the new implementation closure.
+    // Historical component identities remain verified against their own fixtures.
     expect(hitchCliImplementation()).toEqual({
       package: generator.package,
       version: generator.version,
-      integrity: 'sha256:76a61c202add5aa9e593a386a0b3fac36603547c325a8adcb79b9d8e7dda4954',
+      integrity: 'sha256:1ccadb2e32eabccfaf21a28f33b93bc9e3d11a5ddf521353c22381b3a7056fab',
     })
     expect(stableLlmVerifierImplementation()).toMatchObject({ package: generator.package, version: generator.version })
   })
