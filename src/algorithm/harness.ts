@@ -30,3 +30,6 @@ export * from './providers/workspace-edit.js';
 export * from './providers/workspace-edit-host.js';
 export * from './data/fresh-seed.js';
 export * from './data/fresh-rollout-context.js';
+
+export * from './author/host.js';
+export * from './author/dsh-model-services.js';

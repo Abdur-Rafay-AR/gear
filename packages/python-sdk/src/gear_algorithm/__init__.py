@@ -1,4 +1,5 @@
-"""Gear algorithm author SDK (experimental). No training dependencies."""
+"""Explicit-state algorithm authors and host capabilities. No training dependencies."""
+from .author import Algorithm, Archive, Candidate, Context, Evaluation, Proposals, Result, TaskSelection, algorithm, services
 from .errors import GearAlgorithmError, ProtocolError, ValidationError
 from .manifest import API_VERSION, AlgorithmManifest, Component, ComponentManifest, ProviderManifest, component
 from .protocol import (AlgorithmDecision, ArtifactRef, BindingSetRef, OperationIntent,
@@ -10,6 +11,7 @@ from .recipes.workflow import WorkflowStep, define_workflow
 from .testkit import MemoryArtifactBridge, check_durable_provider, check_repeated_usage, check_unreleased_cancel
 
 __all__ = [
+    "Algorithm", "Archive", "Candidate", "Context", "Evaluation", "Proposals", "Result", "TaskSelection", "algorithm", "services",
     "API_VERSION", "AlgorithmDecision", "AlgorithmManifest", "ArtifactClient", "ArtifactRef", "BindingSetRef",
     "Component", "ComponentManifest", "DurableLocalProvider", "GearAlgorithmError", "LocalProvider",
     "MemoryArtifactBridge", "NamedStep", "TaskStep", "OperationIntent", "ProtocolError", "Provider", "ProviderManifest",

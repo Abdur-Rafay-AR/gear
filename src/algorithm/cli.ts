@@ -1,28 +1,35 @@
 /** Experimental standalone CLI; gear-refine forwarding is wired separately. */
 import { createHash, randomUUID } from 'node:crypto';
-import { createRequire } from 'node:module';
+import { createRequire, registerHooks } from 'node:module';
+import { readFileSync } from 'node:fs';
+import ts from 'typescript';
 import { readFile, readdir, mkdir, writeFile, stat } from 'node:fs/promises';
 import { dirname, isAbsolute, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { Algorithm, AlgorithmManifest, ArtifactRef, CampaignSpec, ComponentManifest, OperationProvider } from './contracts.js';
 import { ALGORITHM_API_VERSION } from './contracts.js';
 import { FileArtifactStore } from './artifacts.js';
 import { BindingStore } from './bindings.js';
 import { PythonOperationProvider, PythonPolicyProvider, TypeScriptPolicyProvider } from './components.js';
-import { loadPythonAlgorithm, loadPythonComponent, loadPythonProvider, pythonHostBridgeDigest, sourceTreeDigest, type PythonEntry } from './loader.js';
+import { loadPythonAlgorithm, loadPythonStepAlgorithm, loadPythonComponent, loadPythonProvider, pythonHostBridgeDigest, sourceTreeDigest, type PythonEntry } from './loader.js';
 import { AlgorithmRuntime } from './runtime/engine.js';
+import { STEP_API_VERSION, type Algorithm as StepAlgorithm } from './author/definition.js';
+import { StepAlgorithmAdapter, type ExecutionServices } from './author/step-adapter.js';
+import { initStepProject } from './author/project.js';
 import { assertJson, assertSchema, canonicalJson, jsonDigest, type JsonSchema, type JsonValue } from './schema.js';
 
 type Entry = { language: 'python'; interpreter: string; module: string; export: string; sdkPath?: string; resources?: string[] }
   | { language: 'typescript'; module: string; export: string; resources?: string[] };
 type CampaignConfig = {
-  schemaVersion: 1; kind: 'algorithm-campaign'; campaignId: string; stateDir: string;
+  schemaVersion: 1; kind: 'algorithm-campaign'; campaignId: string; stateDir: string; concurrency?: number;
+  authoring?: 'step';
+  host?: 'recorded';
   algorithm?: Entry; hostProfile?: Extract<Entry, { language: 'typescript' }>;
   config: JsonValue; bindings?: Record<string, ArtifactRef>;
   budget: CampaignSpec['budget']; providers?: Entry[]; hooks?: Record<string, Entry>;
 };
 type HookRequirement = { inputSchema: JsonSchema; outputSchema: JsonSchema; scope: ComponentManifest['scope']; operationKind?: string };
-type Loaded = { algorithm: Algorithm; requirements: Record<string, HookRequirement>; close(): Promise<void> };
+type Loaded = { algorithm?: Algorithm; author?: StepAlgorithm; sourceDigest?: string; requirements: Record<string, HookRequirement>; close(): Promise<void> };
 
 function object(value: unknown, label: string): Record<string, unknown> {
   if (!value || Array.isArray(value) || typeof value !== 'object') throw new Error(`${label} must be an object`);
@@ -66,75 +73,55 @@ async function readConfig(path: string): Promise<{ config: CampaignConfig; confi
 }
 
 const loadedEsmClosures = new Map<string, string>();
+let typeScriptLoaderRegistered = false;
 
-async function assertTsSourceClosure(root: string): Promise<{ sdkImports: string[]; sourceDigest: string }> {
-  const sdkImports = new Set<string>();
-  const sources: { path: string; digest: string }[] = [];
-  const skip = new Set(['.git', '.venv', 'venv', 'node_modules', '__pycache__', '.gear', 'dist', 'build']);
-  const base = resolve(root);
-  async function visit(directory: string): Promise<void> {
-    for (const entry of await readdir(directory, { withFileTypes: true })) {
-      if (skip.has(entry.name)) continue;
-      const path = resolve(directory, entry.name);
-      if (entry.isSymbolicLink()) throw new Error(`ESM source symlink is outside the closed source tree: ${path}`);
-      if (entry.isDirectory()) { await visit(path); continue; }
-      if (!entry.isFile() || !/\.(mjs|js|cjs)$/.test(entry.name)) continue;
-      const source = await readFile(path, 'utf8');
-      if (entry.name.endsWith('.cjs') || /\b(?:module\.)?require\s*\(/u.test(source)) {
-        throw new Error('CommonJS require needs a separately sealed bundle');
-      }
-      sources.push({ path: path.slice(base.length + 1), digest: createHash('sha256').update(source).digest('hex') });
-      if (/\bimport\s*\(/.test(source) || /\bcreateRequire\s*\(/.test(source)) {
-        throw new Error('Dynamic imports and createRequire need a separately sealed bundle');
-      }
-      const specs = [...source.matchAll(/\b(?:import|export)\s+(?:[^;]*?\s+from\s+)?['"]([^'"]+)['"]/g)].map(match => match[1]!);
-      for (const spec of specs) {
-        if (spec.startsWith('node:')) continue;
-        if (['rsi-gear/algorithm', 'rsi-gear/algorithm/testing', 'rsi-gear/algorithm/recipes',
-          'rsi-gear/algorithm/gepa',
-          'rsi-gear/algorithm/training', 'rsi-gear/algorithm/harness'].includes(spec)) {
-          sdkImports.add(spec); continue;
-        }
-        if (!spec.startsWith('./') && !spec.startsWith('../')) throw new Error(`External ESM import must be bundled: ${spec}`);
-        const target = resolve(dirname(path), spec);
-        if (!target.startsWith(base + '/')) throw new Error(`ESM import escapes source closure: ${spec}`);
-      }
-    }
-  }
-  await visit(base);
-  sources.sort((a, b) => Buffer.compare(Buffer.from(a.path), Buffer.from(b.path)));
-  return { sdkImports: [...sdkImports].sort(), sourceDigest: jsonDigest(sources) };
+/** Explicit ESM loading works throughout our Node range, including with native stripping disabled. */
+function registerTypeScriptLoader(): void {
+  if (typeScriptLoaderRegistered) return;
+  registerHooks({ load(url, context, nextLoad) {
+    if (!url.startsWith('file:') || !fileURLToPath(url).endsWith('.ts')) return nextLoad(url, context);
+    const path = fileURLToPath(url);
+    return { format: 'module', shortCircuit: true,
+      source: ts.transpileModule(readFileSync(path, 'utf8'), { fileName: path,
+        compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ESNext,
+          verbatimModuleSyntax: true } }).outputText };
+  } });
+  typeScriptLoaderRegistered = true;
 }
 
 async function tsModule(entry: Extract<Entry, { language: 'typescript' }>, configDir: string): Promise<{
   module: Record<string, unknown>; exported: Record<string, unknown>; modulePath: string; identity: string; environmentDigest: string
 }> {
   const modulePath = pathFrom(configDir, entry.module);
-  if (!/\.(mjs|js)$/.test(modulePath)) throw new Error('TypeScript entry must be built ESM .mjs or .js');
+  if (!/\.(mjs|js|ts)$/.test(modulePath)) throw new Error('TypeScript entry must be ESM .ts, .mjs, or .js');
   const relative = modulePath.startsWith(resolve(configDir) + '/') || modulePath.startsWith(resolve(configDir) + '\\');
   if (!relative) throw new Error('TypeScript entry must be inside its configuration directory');
-  const closure = await assertTsSourceClosure(configDir);
+  const sourceDigest = await sourceTreeDigest(configDir, [], true);
   const requireFromProject = createRequire(resolve(configDir, 'gear.algorithm.json'));
   const sdkIdentity: { spec: string; resolved: string; closureDigest: string; entrySha256: string }[] = [];
-  for (const spec of closure.sdkImports) {
+  for (const spec of ['rsi-gear/algorithm/author']) {
     let resolved: string;
     try { resolved = requireFromProject.resolve(spec); }
-    catch { throw new Error(`Public Gear SDK import is unavailable: ${spec}`); }
+    catch { continue; } // Internal host-only projects may not import the public SDK.
     const bytes = await readFile(resolved);
     sdkIdentity.push({ spec, resolved, entrySha256: createHash('sha256').update(bytes).digest('hex'),
       closureDigest: await sourceTreeDigest(dirname(resolved)) });
   }
   const hostBridgeDigest = await pythonHostBridgeDigest();
-  const importClosureDigest = jsonDigest({ sourceDigest: closure.sourceDigest, sdkIdentity, hostBridgeDigest });
+  const compilerBytes = await readFile(createRequire(import.meta.url).resolve('typescript'));
+  const compiler = { version: ts.version, sha256: createHash('sha256').update(compilerBytes).digest('hex') };
+  const importClosureDigest = jsonDigest({ sourceDigest, sdkIdentity, hostBridgeDigest, compiler });
   const previousClosureDigest = loadedEsmClosures.get(resolve(configDir));
   if (previousClosureDigest && previousClosureDigest !== importClosureDigest) {
     throw new Error('Campaign identity drift: TypeScript ESM source or SDK changed in this process; start a new process before loading it again');
   }
   loadedEsmClosures.set(resolve(configDir), importClosureDigest);
   const bytes = await readFile(modulePath);
+  registerTypeScriptLoader();
   const module = await import(pathToFileURL(modulePath).href) as Record<string, unknown>;
   const exported = object(module[entry.export], `TS export ${entry.export}`);
-  const environmentDigest = jsonDigest({ node: process.version, executable: process.execPath, platform: process.platform, arch: process.arch });
+  const environmentDigest = jsonDigest({ node: process.version, executable: process.execPath, platform: process.platform, arch: process.arch,
+    typescript: compiler });
   const identity = jsonDigest({ language: 'typescript', module: modulePath, export: entry.export,
     sourceSha256: createHash('sha256').update(bytes).digest('hex'),
     sourceTreeDigest: await sourceTreeDigest(configDir, entry.resources ?? []), sdkIdentity,
@@ -148,6 +135,10 @@ async function loadTsAlgorithm(entry: Extract<Entry, { language: 'typescript' }>
   const value = typeof exported.create === 'function'
     ? object(await (exported.create as (context: import('./host-profile.js').AlgorithmHostContext) => unknown).call(exported, context), 'TS algorithm factory result')
     : exported;
+  if (typeof value.describe === 'function' && (value.describe as () => { apiVersion: string }).call(value).apiVersion === STEP_API_VERSION) {
+    if (typeof value.step !== 'function') throw new Error('Explicit-state algorithm requires step(context)');
+    return { author: value as unknown as StepAlgorithm, sourceDigest: identity, requirements: {}, close: async () => undefined };
+  }
   if (typeof value.describe !== 'function' || typeof value.initialize !== 'function' || typeof value.reduce !== 'function') {
     throw new Error('TS algorithm export requires describe/initialize/reduce');
   }
@@ -210,8 +201,12 @@ async function loadTsProvider(entry: Extract<Entry, { language: 'typescript' }>,
 }
 
 async function loadAlgorithm(entry: Entry, configDir: string,
-  context: import('./host-profile.js').AlgorithmHostContext): Promise<Loaded> {
+  context: import('./host-profile.js').AlgorithmHostContext, authoring?: 'step'): Promise<Loaded> {
   if (entry.language === 'typescript') return loadTsAlgorithm(entry, configDir, context);
+  if (authoring === 'step') {
+    const loaded = await loadPythonStepAlgorithm(pythonEntry(entry, configDir));
+    return { author: loaded.value, sourceDigest: loaded.identity.implementationDigest, requirements: {}, close: loaded.close };
+  }
   const loaded = await loadPythonAlgorithm(pythonEntry(entry, configDir));
   // Python algorithms express hooks through operation kinds; no implicit overrides.
   return { algorithm: loaded.value, requirements: loaded.requiredHooks, close: loaded.close };
@@ -247,6 +242,7 @@ async function loadTsHostProfile(entry: Extract<Entry, { language: 'typescript' 
     entrypoint: { module: entry.module, export: entry.export }, inputSchema: { type: 'any' },
     outputSchema: { type: 'any' }, capabilities: ['host-profile'], failureSemantics: 'typed-error' };
   return { value: { ...(algorithm ? { algorithm } : {}), providers, bindings,
+    ...(raw.execution ? { execution: raw.execution as ExecutionServices } : {}),
     ...(raw.config !== undefined ? { config: raw.config as JsonValue } : {}),
     ...(typeof raw.close === 'function' ? { close: raw.close as () => Promise<void> | void } : {}) }, source,
   close: async () => { if (typeof raw.close === 'function') await (raw.close as () => Promise<void> | void).call(raw); } };
@@ -260,11 +256,11 @@ export async function algorithmCommand(argv: string[], emit: (line: string) => v
   const [action, operand, option] = argv;
   if (action === 'init') {
     if (!operand) throw new Error('Usage: algorithm init DIRECTORY [python|typescript]');
-    await initTemplate(resolve(operand), option === 'typescript' ? 'typescript' : 'python');
+    await initStepProject(resolve(operand), option === 'typescript' ? 'typescript' : 'python');
     emit(`Created ${resolve(operand)}/gear.algorithm.json`);
     return;
   }
-  if (!['check', 'run', 'resume'].includes(action ?? '') || !operand) throw new Error('Usage: algorithm <init|check|run|resume> CONFIG');
+  if (!['check', 'explain', 'run', 'resume'].includes(action ?? '') || !operand) throw new Error('Usage: algorithm <init|check|run|resume> CONFIG');
   const { config, configDir } = await readConfig(operand);
   const root = pathFrom(configDir, config.stateDir);
   const projectRoot = resolve(configDir);
@@ -280,16 +276,23 @@ export async function algorithmCommand(argv: string[], emit: (line: string) => v
   const workers: { close(): Promise<void> }[] = [];
   let primaryError: unknown;
   try {
-    const profile = config.hostProfile ? await loadTsHostProfile(config.hostProfile, configDir, context) : undefined;
+    const profile = config.hostProfile ? await loadTsHostProfile(config.hostProfile, configDir, context)
+      : config.host === 'recorded' ? { value: await (await import('./author/recorded-host.js')).createRecordedExecutionHost(context),
+        close: async () => undefined, source: undefined } : undefined;
     if (profile) workers.push(profile);
     if (profile?.value.algorithm && config.algorithm) throw new Error('Both algorithm entry and host profile algorithm supplied');
-    const loaded = config.algorithm ? await loadAlgorithm(config.algorithm, configDir, context) : undefined;
+    const loaded = config.algorithm ? await loadAlgorithm(config.algorithm, configDir, context, config.authoring) : undefined;
     if (loaded) workers.push(loaded);
     const profileAlgorithm = profile?.value.algorithm;
     if (!loaded && !profileAlgorithm) throw new Error('Host profile did not return an algorithm');
-    const algorithm: Algorithm = loaded?.algorithm ?? {
+    const stepAdapter = loaded?.author ? (() => {
+      if (!profile?.value.execution) throw new Error('Step algorithm requires an execution host');
+      const execution = profile.value.execution;
+      return new StepAlgorithmAdapter(loaded.author, execution, artifacts, new BindingStore(artifacts, execution.bindingSchema), loaded.sourceDigest!);
+    })() : undefined;
+    const algorithm: Algorithm = stepAdapter ?? loaded?.algorithm ?? {
       describe: () => { const declared = profileAlgorithm!.describe(); return { ...declared,
-        implementationDigest: jsonDigest({ hostProfileSource: profile!.source.implementationDigest,
+        implementationDigest: jsonDigest({ hostProfileSource: profile!.source?.implementationDigest ?? null,
           declaredImplementation: declared.implementationDigest ?? null }) }; },
       initialize: decision => profileAlgorithm!.initialize(decision),
       reduce: decision => profileAlgorithm!.reduce(decision),
@@ -297,7 +300,7 @@ export async function algorithmCommand(argv: string[], emit: (line: string) => v
     const resolvedConfig = profile?.value.config ?? config.config;
     const providers: OperationProvider[] = [...profile?.value.providers ?? []];
     const componentManifests: Record<string, ComponentManifest> = {};
-    if (profile) componentManifests['host-profile'] = profile.source;
+    if (profile?.source) componentManifests['host-profile'] = profile.source;
     const expected = loaded?.requirements ?? {};
     for (const name of Object.keys(config.hooks ?? {})) if (!Object.hasOwn(expected, name)) throw new Error(`Unknown hook ${name}`);
     for (const name of Object.keys(expected)) if (!config.hooks?.[name]) throw new Error(`Required hook ${name} is missing`);
@@ -348,11 +351,11 @@ export async function algorithmCommand(argv: string[], emit: (line: string) => v
       slotRefs[slot] = ref;
     }
     const initialBindingSetRef = bindings.create(slotRefs);
-    const spec: CampaignSpec = { campaignId: config.campaignId, config: resolvedConfig, initialBindingSetRef,
+    const spec: CampaignSpec = { campaignId: config.campaignId, ...(config.concurrency === undefined ? {} : { concurrency: config.concurrency }), config: resolvedConfig, initialBindingSetRef,
       budget: config.budget, components: componentManifests };
     const runtime = new AlgorithmRuntime(root, algorithm, providers, spec);
     const existing = runtime.snapshot();
-    if (action === 'check') {
+    if (action === 'check' || action === 'explain') {
       emit(JSON.stringify({ ok: true, campaignId: config.campaignId, algorithm: algorithm.describe().id,
         providers: providers.map(provider => provider.describe().kind), hooks: Object.keys(componentManifests),
         resumable: existing !== null }));
@@ -360,8 +363,23 @@ export async function algorithmCommand(argv: string[], emit: (line: string) => v
     }
     if (action === 'run' && existing) throw new Error('Campaign already exists; use resume');
     if (action === 'resume' && !existing) throw new Error('Campaign does not exist; use run');
-    const status = await runtime.runUntilBlocked();
-    emit(JSON.stringify({ status, campaignId: config.campaignId, snapshot: runtime.snapshot() }));
+    const observer = new AbortController();
+    const stop = () => observer.abort();
+    process.once('SIGINT', stop); process.once('SIGTERM', stop);
+    let status: 'complete' | 'waiting' = 'waiting';
+    try {
+      while (!observer.signal.aborted) {
+        const advanced = await runtime.tick();
+        if (advanced === 'complete') { status = 'complete'; break; }
+        if (advanced === 'waiting') await new Promise<void>(resolveWait => {
+          const done = () => { clearTimeout(timer); observer.signal.removeEventListener('abort', done); resolveWait(); };
+          const timer = setTimeout(done, 250);
+          observer.signal.addEventListener('abort', done, { once: true });
+          if (observer.signal.aborted) done();
+        });
+      }
+    } finally { process.off('SIGINT', stop); process.off('SIGTERM', stop); }
+    emit(JSON.stringify({ status, campaignId: config.campaignId, ...(stepAdapter && runtime.snapshot() ? { result: stepAdapter.readResult(runtime.snapshot()!) } : {}), snapshot: runtime.snapshot() }));
   } catch (error) { primaryError = error; throw error; }
   finally {
     const results = await Promise.allSettled(workers.reverse().map(worker => worker.close()));
@@ -372,38 +390,6 @@ export async function algorithmCommand(argv: string[], emit: (line: string) => v
     }
   }
 }
-
-async function initTemplate(directory: string, language: 'python' | 'typescript'): Promise<void> {
-  await mkdir(directory, { recursive: true });
-  const path = resolve(directory, 'gear.algorithm.json');
-  try { await stat(path); throw new Error(`Template already exists: ${path}`); }
-  catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
-  const basename = directory.split(/[\\/]/).at(-1)?.replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 32) || 'campaign';
-  const prefix = /^[A-Za-z]/u.test(basename) ? basename : `campaign-${basename}`;
-  const campaignId = `${prefix}-${randomUUID()}`;
-  const config = { schemaVersion: 1, kind: 'algorithm-campaign', campaignId, stateDir: `./.gear/${campaignId}`,
-    algorithm: language === 'python'
-      ? { language: 'python', interpreter: 'python3.11', module: './algorithm.py', export: 'algorithm' }
-      : { language: 'typescript', module: './recipe.mjs', export: 'algorithm' },
-    config: {}, bindings: {}, budget: {}, hooks: language === 'typescript'
-      ? { choose: { language: 'python', interpreter: 'python3.11', module: './choose.py', export: 'choose' } }
-      : undefined,
-    providers: language === 'python'
-      ? [{ language: 'python', interpreter: 'python3.11', module: './echo.py', export: 'provider' }] : [] };
-  await writeFile(path, JSON.stringify(config, null, 2) + '\n', { flag: 'wx' });
-  if (language === 'python') {
-    await writeFile(resolve(directory, 'algorithm.py'), PYTHON_ALGORITHM, { flag: 'wx' });
-    await writeFile(resolve(directory, 'echo.py'), PYTHON_ECHO, { flag: 'wx' });
-  } else {
-    await writeFile(resolve(directory, 'recipe.mjs'), TS_RECIPE, { flag: 'wx' });
-    await writeFile(resolve(directory, 'choose.py'), PYTHON_HOOK, { flag: 'wx' });
-  }
-}
-
-const PYTHON_ALGORITHM = `from gear_algorithm import AlgorithmManifest, advance, task\n\n@task("echo", kind="toy.echo")\ndef echo(value):\n    return {"value": value}\n\nclass Toy:\n    def describe(self):\n        return AlgorithmManifest(id="python-toy", stateSchema={"type":"object"}, configSchema={"type":"object"}, bindingSchema={"id":"toy-bindings","slots":{}}, requiredOperationKinds=("toy.echo",))\n    def initialize(self, context):\n        return advance({"step":"echo"}, echo("hello"))\n    def reduce(self, context):\n        return advance({"step":"done","reply":context["completed"]["echo"]}, complete=True)\n\nalgorithm = Toy()\n`;
-const PYTHON_ECHO = `from gear_algorithm import DurableLocalProvider, ProviderManifest\n\nclass Echo(DurableLocalProvider):\n    def __init__(self):\n        super().__init__(ProviderManifest("toy.echo", {"type":"object","properties":{"value":{"type":"string"}},"required":["value"],"additionalProperties":False}, {"type":"object","properties":{"value":{"type":"string"}},"required":["value"],"additionalProperties":False}))\n    def execute(self, request):\n        return {"kind":"result","value":request["input"]}\n\nprovider = Echo()\n`;
-const PYTHON_HOOK = `from gear_algorithm import component\n\n@component(id="choose", input_schema={"type":"object","properties":{"options":{"type":"array","items":{"type":"string"}}},"required":["options"],"additionalProperties":False}, output_schema={"type":"object","properties":{"choice":{"type":"string"}},"required":["choice"],"additionalProperties":False}, scope="campaign")\ndef choose(value):\n    return {"choice": value["options"][0]}\n`;
-const TS_RECIPE = `import { defineWorkflow, task } from 'rsi-gear/algorithm';\n\nexport const requiredHooks = { choose: { inputSchema: { type: 'object', properties: { options: { type: 'array', items: { type: 'string' } } }, required: ['options'], additionalProperties: false }, outputSchema: { type: 'object', properties: { choice: { type: 'string' } }, required: ['choice'], additionalProperties: false }, scope: 'campaign' } };\n\nexport const algorithm = defineWorkflow({\n  manifest: { id: 'ts-toy', apiVersion: 'gear.algorithm.experimental.v1', configSchema: { type: 'object' }, bindingSchema: { id: 'toy-bindings', slots: {} }, requiredOperationKinds: ['policy.decide'] },\n  businessStateSchema: { type: 'object' },\n  initialState: () => ({}),\n  steps: [{\n    name: 'choose',\n    plan: () => [task('choose', 'policy.decide', { options: ['alpha', 'beta'] })],\n    join: context => ({ state: { decision: context.completed.choose } }),\n  }],\n});\n`;
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   algorithmCommand(process.argv.slice(2)).catch(error => { console.error(error instanceof Error ? error.message : String(error)); process.exitCode = 1; });

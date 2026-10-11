@@ -9,7 +9,6 @@ import { TaskViewAuthority, type TaskEntry, type TaskView, readTaskView } from '
 import { jsonDigest, type JsonValue } from '../../src/algorithm/schema.js';
 import { createTasksSampleProvider, type TaskSampleGrant } from '../../src/algorithm/providers/task-sampling.js';
 import { assertTaskSelectionV1, type TaskSelectionV1 } from '../../src/algorithm/author/a1-contract.js';
-import { algorithm, replay, AUTHOR_WIRE_VERSION_V2, type AuthorReplayRequest } from '../../src/algorithm/author/index.js';
 
 const roots: string[] = [];
 afterEach(async () => { await Promise.all(roots.splice(0).map(root => rm(root, { recursive: true, force: true }))); });
@@ -66,28 +65,6 @@ it('samples a signed child view without replacement, preserving task purpose, ex
   expect(f.artifacts.getBytes(f.sourceTaskViewRef)).toEqual(originalBytes);
   expect(readTaskView(f.artifacts, f.sourceTaskViewRef).tasks).toEqual(f.tasks);
   expect(f.provider.describe()).toMatchObject({ kind: 'tasks.sample', execution: 'trusted-local', meteredDimensions: [] });
-});
-
-it('admits the actual A1 SDK frontier through the pure physical provider preflight', async () => {
-  const f = await setup();
-  const definition = algorithm(async ctx => {
-    await ctx.tasks.sample(f.sourceTaskViewRef, { count: 2, seed: 7 });
-    return ctx.result({ selected: ctx.initialAgent });
-  });
-  const request: AuthorReplayRequest = { version: AUTHOR_WIRE_VERSION_V2, input: {
-    initialAgent: { schemaVersion: 1, kind: 'harness-agent', bindingSetRef: f.bindingSetRef,
-      executionProfileDigest: sha256('profile') }, data: {}, config: {},
-    capabilities: { version: 'gear.author.capabilities.v1', lockDigest: sha256('lock'), roles: {},
-      operationLimits: { 'tasks.sample': {} }, execution: {} },
-  }, history: [] };
-  const reply = await replay(definition, request);
-  if (reply.status !== 'waiting' || reply.frontier.length !== 1) throw new Error('sample frontier missing');
-  const item = reply.frontier[0]!;
-  expect(item).toMatchObject({ kind: 'tasks.sample', limits: {}, startsBudgetClock: false });
-  const operation: OperationEnvelope = { ...f.envelope(item.input), limits: item.limits ?? {},
-    startsBudgetClock: item.startsBudgetClock ?? true };
-  expect(() => f.provider.preflight(operation)).not.toThrow();
-  expect(selected(await f.provider.submit(operation)).selectedTaskIds).toHaveLength(2);
 });
 
 it('recreates one CAS result after a lost reply and cold provider reconstruction', async () => {

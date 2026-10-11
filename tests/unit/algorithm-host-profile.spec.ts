@@ -80,19 +80,25 @@ it('makes an init campaign ID legal for a numeric directory name', async () => {
   const project = join(root, '2026-demo');
   await algorithmCommand(['init', project, 'python'], () => undefined);
   const config = JSON.parse(await readFile(join(project, 'gear.algorithm.json'), 'utf8')) as { campaignId: string };
-  expect(config.campaignId).toMatch(/^campaign-2026-demo-[a-f0-9-]+$/);
+  expect(config.campaignId).toMatch(/^search-[a-f0-9-]+$/);
 });
 
-it('rejects CommonJS require in the closed TypeScript author tree before importing it', async () => {
+it('allows ordinary local CommonJS helpers without source-language bans', async () => {
   const root = await mkdtemp(join(tmpdir(), 'gear-cjs-closure-')); roots.push(root);
-  await writeFile(join(root, 'profile.mjs'), `export const host = { create() { return { providers: [] }; } };\n`);
+  await writeFile(join(root, 'profile.mjs'), `import helper from './helper.cjs';
+export const host = { create() { if (typeof helper.readFileSync !== 'function') throw Error('CommonJS helper unavailable');
+return { providers: [], algorithm: {
+describe() { return {id:'commonjs-host',apiVersion:'gear.algorithm.experimental.v1',implementationDigest:'${sha256('commonjs-host')}',stateSchema:{type:'object'},configSchema:{type:'object'},bindingSchema:{id:'empty',slots:{}}}; },
+initialize() { return {nextState:{},complete:true}; }, reduce() { return {nextState:{},complete:true}; }
+} }; } };\n`);
   await writeFile(join(root, 'helper.cjs'), `module.exports = require('fs');\n`);
   const configPath = join(root, 'gear.algorithm.json');
   await writeFile(configPath, JSON.stringify({ schemaVersion: 1, kind: 'algorithm-campaign',
     campaignId: 'cjs-test', stateDir: './.gear/cjs-test',
     hostProfile: { language: 'typescript', module: './profile.mjs', export: 'host' }, config: {}, budget: {} }));
-  await expect(algorithmCommand(['check', configPath], () => undefined))
-    .rejects.toThrow('CommonJS require needs a separately sealed bundle');
+  const output: string[] = [];
+  await algorithmCommand(['check', configPath], line => output.push(line));
+  expect(JSON.parse(output.at(-1)!).ok).toBe(true);
 });
 
 it('freezes a host-resolved artifact ref into a Python algorithm config and restores the same ref', async () => {

@@ -45,6 +45,7 @@ import type {
 } from '../types.js'
 import { isExactGitCommit } from '../types.js'
 import { EvaluationCleanupError } from './cleanup.js'
+import { hitchSubprocessEnvironment } from './hitch-environment.js'
 import type { EvaluationRerunReservation } from '../types.js'
 
 export interface HitchCliEvaluatorOptions extends HitchConfig {
@@ -2844,11 +2845,7 @@ export class HitchCliEvaluator implements RefineEvaluator, HitchTrajectoryReader
     return new Promise<ProcessResult>((resolvePromise, reject) => {
       const child = spawn(executablePath, args, {
         cwd,
-        env: {
-          ...process.env,
-          // Hitch controller runtimes are immutable; their Python bridge must not write .pyc files.
-          PYTHONDONTWRITEBYTECODE: '1',
-        },
+        env: hitchSubprocessEnvironment(),
         stdio: ['ignore', 'pipe', 'pipe'],
       })
       const stdoutChunks: string[] = []

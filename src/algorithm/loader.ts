@@ -6,6 +6,7 @@ import type { Algorithm, AlgorithmDecision, AlgorithmManifest, ComponentManifest
 import { ALGORITHM_API_VERSION } from './contracts.js';
 import { assertJson, assertSchema, jsonDigest, type JsonSchema, type JsonValue } from './schema.js';
 import { PythonWorker, type PythonWorkerOptions } from './hosts/python.js';
+import { STEP_API_VERSION, type Algorithm as StepAlgorithm } from './author/definition.js';
 
 export type PythonEntry = Omit<PythonWorkerOptions, 'mode'> & { resources?: string[] };
 export type PythonIdentity = { implementationDigest: string; environmentDigest: string; sourceDigest: string; hostBridgeDigest: string; environment: JsonValue };
@@ -22,7 +23,7 @@ function schema(value: JsonValue, label: string): JsonSchema {
   return object as JsonSchema;
 }
 
-export async function sourceTreeDigest(root: string, resources: string[] = []): Promise<string> {
+export async function sourceTreeDigest(root: string, resources: string[] = [], esmCache = false): Promise<string> {
   const files: { path: string; digest: string }[] = [];
   const skip = new Set(['.git', '.venv', 'venv', 'node_modules', '__pycache__', '.gear', 'dist', 'build']);
   async function visit(directory: string, prefix: string): Promise<void> {
@@ -33,7 +34,9 @@ export async function sourceTreeDigest(root: string, resources: string[] = []): 
       const relative = join(prefix, entry.name);
       if (entry.isSymbolicLink()) throw new Error(`Symlink is outside the closed source tree: ${relative}`);
       if (entry.isDirectory()) await visit(path, relative);
-      else if (entry.isFile() && (/\.(py|pyi|js|mjs|cjs|ts|json|toml|lock|yaml|yml)$/.test(entry.name) || /^requirements.*\.txt$/.test(entry.name))) {
+      else if (entry.isFile() && (esmCache
+        ? /\.(js|mjs|cjs|ts|json)$/.test(entry.name) && relative !== 'gear.algorithm.json'
+        : /\.(py|pyi|js|mjs|cjs|ts|json|toml|lock|yaml|yml)$/.test(entry.name) || /^requirements.*\.txt$/.test(entry.name))) {
         const bytes = await readFile(path);
         if (bytes.length > 4 * 1024 * 1024) throw new Error(`Python source too large: ${relative}`);
         files.push({ path: relative, digest: createHash('sha256').update(bytes).digest('hex') });
@@ -179,4 +182,24 @@ export async function checkPythonEntry(entry: PythonEntry, mode: PythonWorkerOpt
   const loaded = mode === 'algorithm' ? await loadPythonAlgorithm(entry)
     : mode === 'component' ? await loadPythonComponent(entry) : await loadPythonProvider(entry);
   try { return loaded.identity; } finally { await loaded.close(); }
+}
+
+/** Python and TypeScript authors share one step protocol and the same kernel adapter. */
+export async function loadPythonStepAlgorithm(entry: PythonEntry): Promise<LoadedPython<StepAlgorithm>> {
+  const { worker, identity, declared } = await loadWorker(entry, 'author');
+  try {
+    if (declared.apiVersion !== STEP_API_VERSION || typeof declared.id !== 'string')
+      throw new Error('Python author must export an explicit-state algorithm');
+    const configSchema = schema(declared.configSchema!, 'configSchema');
+    const stateSchema = schema(declared.stateSchema!, 'stateSchema');
+    const description = { apiVersion: STEP_API_VERSION, id: declared.id, configSchema, stateSchema };
+    const value: StepAlgorithm = { describe: () => description,
+      step: async context => {
+        const reply = await worker.call('author.step', { state: context.state, results: context.results.values,
+          config: context.config, initialCandidate: context.initialCandidate, taskSource: context.taskSource,
+          budget: context.budget, stepIndex: context.stepIndex } as JsonValue);
+        return reply as import('./author/definition.js').StepDecision;
+      } };
+    return { value, identity, worker, close: () => worker.close() };
+  } catch (error) { await worker.close(); throw error; }
 }

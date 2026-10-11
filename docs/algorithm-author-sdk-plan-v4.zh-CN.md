@@ -1,3 +1,5 @@
+> 历史设计记录，已由[显式状态作者接口](algorithm-authoring.zh-CN.md)替代；其中 replay/source-check 不再是默认或受支持作者模型。
+
 # Gear 算法作者 SDK：运行接口重构与历史实验数据兼容方案 v4
 
 状态：设计与验收方案，2026-09-25；尚未实现本文新增 SDK。本文与 [作者合同及完整示例](algorithm-author-sdk-authoring-v4.zh-CN.md) 共同作为实施依据，取代 [v3](algorithm-author-sdk-plan-v3.zh-CN.md)。采纳 [Sol xhigh 对 v3 的独立评审](algorithm-author-sdk-plan-v3-review-sol-xhigh.zh-CN.md)；此前方案与评审保持原样。API 名称是待实现合同，示例不是现有版本的使用说明。

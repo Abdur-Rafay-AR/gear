@@ -77,9 +77,13 @@ export class AlgorithmRuntime {
   private readonly providerCatalogDigest: string;
   private readonly manifest: AlgorithmManifest;
   private readonly storageBackendDigest?: string;
+  private readonly concurrency: number;
 
   constructor(readonly root: string, readonly algorithm: Algorithm, providers: OperationProvider[], readonly spec: CampaignSpec,
     storage: { store?: CampaignStoreLike<JsonValue>; artifacts?: FileArtifactStore } = {}) {
+    this.concurrency = spec.concurrency ?? 8;
+    if (!Number.isSafeInteger(this.concurrency) || this.concurrency < 1)
+      throw new Error('Campaign concurrency must be a positive safe integer');
     this.artifacts = storage.artifacts ?? new FileArtifactStore(`${root}/artifacts`);
     if (storage.store?.requiresArtifactCheckpoint
       && (typeof (this.artifacts as FileArtifactStore & Partial<ArtifactCheckpoint>).hydrate !== 'function'
@@ -498,7 +502,8 @@ export class AlgorithmRuntime {
         && record.dispatchAdmitted === true))) throw new Error('Admitted dispatch budget clock drift');
     const newAdmitted = new Set(batch.filter(([, record]) => record.dispatchAdmitted !== true
       && ready.some(result => result.envelope.operationId === record.envelope.operationId
-        && (result.provider.prepareForDispatch !== undefined || result.envelope.startsBudgetClock === true)))
+        && (result.provider.prepareForDispatch !== undefined || result.envelope.startsBudgetClock === true
+          || result.provider.describe().execution === 'external')))
       .map(([, record]) => record.envelope.operationId));
     if (clockStarts || newAdmitted.size > 0) {
       const candidate = clone(state);
@@ -546,6 +551,59 @@ export class AlgorithmRuntime {
     if (result.status === 'running') { record.status = 'running'; if (result.handle) record.handle = result.handle; }
   }
 
+  private inFlightCount(state: CampaignState): number {
+    return [...Object.values(state.operations), ...Object.values(state.auxiliaryOperations ?? {}).flatMap(Object.values)]
+      .filter(record => !record.released && (record.status !== 'intent' || record.dispatchAdmitted === true)).length;
+  }
+
+  /** Reconcile started work first; reserve free slots for new submissions only afterwards. */
+  private async advancePending(state: CampaignState, groupId?: string): Promise<CampaignState> {
+    const records = (current: CampaignState) => groupId ? current.auxiliaryOperations![groupId]! : current.operations;
+    const apply = async (batch: Array<[string, OperationRecord]>, observedGroup?: string): Promise<void> => {
+      const dispatched = await this.dispatchBatch(batch, state);
+      state = dispatched.state;
+      let failure: { error: unknown } | undefined;
+      for (let index = 0; index < batch.length; index++) {
+        const result = dispatched.observed[index]!;
+        if (result.status === 'rejected') { failure ??= { error: result.reason }; continue; }
+        const [key, previousRecord] = batch[index]!;
+        const candidate = clone(state);
+        const record = observedGroup ? candidate.auxiliaryOperations![observedGroup]![key]! : candidate.operations[key]!;
+        try { this.applyObservation(candidate, record, result.value); }
+        catch (error) { failure ??= { error }; continue; }
+        // Completion or confirmed cancellation changes a previously held reservation.
+        if ((!previousRecord.released && record.released) || canonicalJson(candidate) !== canonicalJson(state)) {
+          await (this.artifacts as FileArtifactStore & Partial<ArtifactCheckpoint>).flush?.();
+          await this.store.commit(candidate as unknown as JsonValue,
+            observedGroup ? `auxiliary.${observedGroup}.${record.status}` : `operation.${record.status}`);
+          state = candidate;
+        }
+        if (result.value.kind === 'submit-protocol-error' || result.value.kind === 'preflight-error')
+          failure ??= { error: result.value.error };
+      }
+      if (failure) throw failure.error;
+    };
+    // Auxiliary repair may wait for a main operation's slot. Reconcile all started
+    // operations, without advancing the scientific reducer or admitting other queues.
+    for (const observedGroup of [undefined, ...Object.keys(state.auxiliaryOperations ?? {})]) {
+      const group = observedGroup ? state.auxiliaryOperations![observedGroup]! : state.operations;
+      const active = Object.entries(group).filter(([, record]) => !record.released
+        && (record.status !== 'intent' || record.dispatchAdmitted === true))
+        .sort(([a], [b]) => Buffer.compare(Buffer.from(a), Buffer.from(b)));
+      for (let offset = 0; offset < active.length; offset += this.concurrency)
+        await apply(active.slice(offset, offset + this.concurrency), observedGroup);
+    }
+    // Refill slots released by immediate completions without inspecting new running work again.
+    while (true) {
+      const slots = Math.max(0, this.concurrency - this.inFlightCount(state));
+      const queued = Object.entries(records(state)).filter(([, record]) => record.status === 'intent' && !record.dispatchAdmitted)
+        .sort(([a], [b]) => Buffer.compare(Buffer.from(a), Buffer.from(b))).slice(0, slots);
+      if (queued.length === 0) break;
+      await apply(queued, groupId);
+    }
+    return state;
+  }
+
   async tick(): Promise<'complete' | 'waiting' | 'advanced'> {
     return this.withHydratedWriter(async loaded => (await this.tickLocked(loaded)).status);
   }
@@ -567,29 +625,7 @@ export class AlgorithmRuntime {
       if (Object.values(state.auxiliaryOperations ?? {}).some(group =>
         Object.values(group).some(record => record.status !== 'completed' && !(record.status === 'cancelled' && record.released))))
         return { status: 'waiting', state };
-      const pending = Object.entries(state.operations).filter(([, record]) => record.status !== 'completed' && !(record.status === 'cancelled' && record.released)).sort(([a], [b]) => Buffer.compare(Buffer.from(a), Buffer.from(b)));
-      for (let offset = 0; offset < pending.length; offset += 8) {
-        const batch = pending.slice(offset, offset + 8);
-        const dispatched = await this.dispatchBatch(batch, state);
-        state = dispatched.state;
-        const observed = dispatched.observed;
-        let failure: unknown;
-        for (let index = 0; index < batch.length; index++) {
-          const result = observed[index]!;
-          if (result.status === 'rejected') { failure ??= result.reason; continue; }
-          const key = batch[index]![0];
-          const candidate: CampaignState = clone(state);
-          const record = candidate.operations[key]!;
-          try { this.applyObservation(candidate, record, result.value); }
-          catch (error) { failure ??= error; continue; }
-          await (this.artifacts as FileArtifactStore & Partial<ArtifactCheckpoint>).flush?.();
-          await this.store.commit(candidate as unknown as JsonValue, `operation.${record.status}`);
-          state = candidate;
-          if (result.value.kind === 'submit-protocol-error' || result.value.kind === 'preflight-error')
-            failure ??= result.value.error;
-        }
-        if (failure) throw failure;
-      }
+      state = await this.advancePending(state);
       if (Object.values(state.operations).every(record => record.status === 'completed' || (record.status === 'cancelled' && record.released))) {
         const completed = Object.fromEntries(Object.entries(state.operations).sort(([a], [b]) => Buffer.compare(Buffer.from(a), Buffer.from(b))).map(([key, record]) => [key, record.outcome ?? { kind: 'cancelled' }])) as Record<string, OperationOutcome>;
         const completedOperationIds = Object.fromEntries(Object.entries(state.operations)
@@ -602,7 +638,8 @@ export class AlgorithmRuntime {
         await this.store.commit(state as unknown as JsonValue, 'decision.reduce');
         return { status: state.phase === 'complete' ? 'complete' : 'advanced', state };
       }
-      return { status: 'waiting', state };
+      const queued = Object.values(state.operations).some(record => record.status === 'intent' && !record.dispatchAdmitted);
+      return { status: queued && this.inFlightCount(state) < this.concurrency ? 'advanced' : 'waiting', state };
   }
 
   async runUntilBlocked(maxTicks = 100): Promise<'complete' | 'waiting'> {
@@ -683,34 +720,7 @@ export class AlgorithmRuntime {
       let state: CampaignState = loaded;
       const group = state.auxiliaryOperations?.[groupId];
       if (!group) throw new Error(`Unknown auxiliary group ${groupId}`);
-      const pending = Object.entries(group).filter(([, record]) =>
-        record.status !== 'completed' && !(record.status === 'cancelled' && record.released))
-        .sort(([a], [b]) => Buffer.compare(Buffer.from(a), Buffer.from(b)));
-      if (pending.length === 0) return 'complete';
-      for (let offset = 0; offset < pending.length; offset += 8) {
-        const batch = pending.slice(offset, offset + 8);
-        const dispatched = await this.dispatchBatch(batch, state);
-        state = dispatched.state;
-        const observed = dispatched.observed;
-        let failure: unknown;
-        for (let index = 0; index < batch.length; index++) {
-          const result = observed[index]!;
-          if (result.status === 'rejected') { failure ??= result.reason; continue; }
-          const key = batch[index]![0];
-          const candidate: CampaignState = clone(state);
-          const record = candidate.auxiliaryOperations![groupId]![key]!;
-          try { this.applyObservation(candidate, record, result.value); }
-          catch (error) { failure ??= error; continue; }
-          if (canonicalJson(candidate) !== canonicalJson(state)) {
-            await (this.artifacts as FileArtifactStore & Partial<ArtifactCheckpoint>).flush?.();
-            await this.store.commit(candidate as unknown as JsonValue, `auxiliary.${groupId}.${record.status}`);
-            state = candidate;
-          }
-          if (result.value.kind === 'submit-protocol-error' || result.value.kind === 'preflight-error')
-            failure ??= result.value.error;
-        }
-        if (failure) throw failure;
-      }
+      state = await this.advancePending(state, groupId);
       if (Object.values(state.auxiliaryOperations![groupId]!).every(record =>
         record.status === 'completed' || (record.status === 'cancelled' && record.released))) return 'complete';
       // A still-running physical effect needs an explicit next caller/resume;

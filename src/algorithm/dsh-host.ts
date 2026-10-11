@@ -16,7 +16,7 @@ export type RestrictedDshHost = { context: Context; close(): Promise<void> };
  * and destination policy; recipe code never receives that credential or Context.
  * An interrupted model turn remains an unknown operation until reconciled.
  */
-export async function createRestrictedAlgorithmDshHost(registerModel: (llm: LlmRuntime) => void | Promise<void>):
+export async function createRestrictedAlgorithmDshHost(registerModel: (llm: LlmRuntime, context: Context) => void | Promise<void>):
 Promise<RestrictedDshHost> {
   const context = new Context();
   try {
@@ -30,7 +30,7 @@ Promise<RestrictedDshHost> {
     // persist arbitrary DSH sessions after a process crash.
     context.on('session/flush', async () => {});
     context.provide('agentPresets', { mount: async () => {} } as never);
-    await registerModel(context.llm);
+    await registerModel(context.llm, context);
     return { context, close: () => context.fiber.dispose() };
   } catch (error) {
     await context.fiber.dispose();

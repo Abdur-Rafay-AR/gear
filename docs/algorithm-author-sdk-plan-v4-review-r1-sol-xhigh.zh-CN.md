@@ -1,3 +1,5 @@
+> 历史设计记录，已由[显式状态作者接口](algorithm-authoring.zh-CN.md)替代；其中 replay/source-check 不再是默认或受支持作者模型。
+
 # Gear 算法作者 SDK v4 复审（R1）
 
 审阅：[v4 方案](/Users/zgq/.codex/worktrees/meta-agent-algorithm-plan/gear/docs/algorithm-author-sdk-plan-v4.zh-CN.md:1)及其规范性附件[作者合同](/Users/zgq/.codex/worktrees/meta-agent-algorithm-plan/gear/docs/algorithm-author-sdk-authoring-v4.zh-CN.md:1)，对照上一轮 v3 独立评审逐项核验。源码仍为 `a5011e879e11586c9b62da2ba894944d61fb7541`，新增 SDK 尚未实现；本轮没有改文档/源码、运行模型/GPU或操作服务器。科学范式沿用上一轮已读的本地 harness/RSI 总引及 RHO、GEPA、DGM、Harness-R1/Harness-Zero 笔记；本轮只复核两份 v4 文档和必要源码合同，没有重读论文原文。

@@ -16,7 +16,7 @@ export type SourceExperience = {
   kind?: 'task-trajectory' | 'seed-summary';
   taskId?: string;
   exposure: { seenInTraining: boolean; graderLabelExposed: boolean };
-  task?: { prompt: string; executionSource?: { kind: 'compiled-seed-dataset'; datasetDigest: string; taskContentDigest: string } };
+  task?: { prompt: string; executionSource?: { kind: 'compiled-seed-dataset' | 'compiled-author-dataset'; datasetDigest: string; taskContentDigest: string } };
   overview: { summary: string; tags: string[] };
   taskReport: { narrative: string; outcomeSummary?: string };
   traceChunks: Array<{ text: string; sequence: number }>;
@@ -131,7 +131,7 @@ export async function sealExperienceView(
       if (!raw.taskId || !raw.task || typeof raw.task.prompt !== 'string') throw new Error('Physical task content required');
       name(raw.taskId, 'task ID');
       if (raw.task.executionSource) {
-        if (raw.task.executionSource.kind !== 'compiled-seed-dataset'
+        if (!['compiled-seed-dataset', 'compiled-author-dataset'].includes(raw.task.executionSource.kind)
           || !/^sha256:[0-9a-f]{64}$/u.test(raw.task.executionSource.datasetDigest)
           || !/^sha256:[0-9a-f]{64}$/u.test(raw.task.executionSource.taskContentDigest)) {
           throw new Error('Invalid physical task execution source');

@@ -1,7 +1,8 @@
-import { copyFile, mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
+import { cp, copyFile, mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { basename, join, resolve } from 'node:path';
 import { afterEach, beforeAll, expect, it } from 'vitest';
 import { build } from 'esbuild';
 import { algorithmCommand } from '../../src/algorithm/cli.js';
@@ -24,7 +25,8 @@ async function directory(): Promise<string> { const path = await mkdtemp(join(tm
 
 async function prepare(language: 'python' | 'typescript') {
   const dir = await directory();
-  await algorithmCommand(['init', dir, language], () => undefined);
+  // Preserve low-level worker/provider/hook regressions independently of the new public scaffold.
+  await cp(resolve('examples/algorithms', language === 'python' ? 'python-toy' : 'cross-language-hook'), dir, { recursive: true });
   if (language === 'typescript') {
     // The real package export is staged in S6. Mirror only that public export in
     // this temporary candidate so the generated recipe exercises the SDK path.
@@ -39,6 +41,8 @@ async function prepare(language: 'python' | 'typescript') {
   }
   const configPath = join(dir, 'gear.algorithm.json');
   const config = JSON.parse(await readFile(configPath, 'utf8')) as Record<string, any>;
+  config.campaignId = `${basename(dir)}-${randomUUID()}`;
+  config.stateDir = `./.gear/${config.campaignId}`;
   const wire = (entry: Record<string, unknown>) => { if (entry.language === 'python') { entry.sdkPath = sdkPath; entry.interpreter = interpreter; } };
   wire(config.algorithm);
   for (const entry of config.providers ?? []) wire(entry);
@@ -410,7 +414,7 @@ it('rejects malformed nested Python provider status and completion replies', asy
     outcome: { kind: 'result', value: 1 } } }).submit(envelope)).rejects.toThrow('operationId mismatch');
 });
 
-it('seals imported ESM helpers and rejects imports outside the configured closure', async () => {
+it('seals imported ESM helpers and rejects their drift on resume', async () => {
   const { dir, configPath } = await prepare('typescript');
   const recipePath = join(dir, 'recipe.mjs');
   const source = await readFile(recipePath, 'utf8');
@@ -419,8 +423,6 @@ it('seals imported ESM helpers and rejects imports outside the configured closur
   await algorithmCommand(['run', configPath], () => undefined);
   await writeFile(join(dir, 'helper.mjs'), `export const marker = 'v2';\n`);
   await expect(algorithmCommand(['resume', configPath], () => undefined)).rejects.toThrow('Campaign identity drift');
-  await writeFile(recipePath, `import '../outside.mjs';\n${source}`);
-  await expect(algorithmCommand(['check', configPath], () => undefined)).rejects.toThrow('escapes source closure');
 });
 
 it('refuses a stale Node ESM cache after check when a transitive helper changes before run', async () => {

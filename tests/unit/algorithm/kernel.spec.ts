@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { AlgorithmRuntime, BindingStore, FileArtifactStore, LocalDurableProvider, ALGORITHM_API_VERSION, assertJson, assertSchema, canonicalJson, sha256, task, parallel, defineWorkflow } from '../../../src/algorithm/index.js';
 import { CampaignStore, probeProviderReplay, probeProviderNoResult, probeProviderReceipt, probeProviderCancellation } from '../../../src/algorithm/testing.js';
-import type { Algorithm, BindingSchema, BindingSetRef, CampaignSpec, OperationProvider, ProviderManifest } from '../../../src/algorithm/index.js';
+import type { KernelAlgorithm as Algorithm, BindingSchema, BindingSetRef, CampaignSpec, OperationProvider, ProviderManifest } from '../../../src/algorithm/index.js';
 
 const roots: string[] = [];
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); });

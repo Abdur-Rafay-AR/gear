@@ -16,6 +16,8 @@ export type AlgorithmHostProfile = {
   /** May construct a recipe such as GRPO whose constructor needs the artifact store. */
   algorithm?: Algorithm;
   providers: OperationProvider[];
+  /** Common capabilities for explicit-state authors; independent of algorithm policy. */
+  execution?: import('./author/step-adapter.js').ExecutionServices;
   /** Host-sealed initial slot values. The profile must verify their provenance. */
   bindings?: Record<string, ArtifactRef>;
   /** Complete scientific configuration after host-sealed refs are added. */

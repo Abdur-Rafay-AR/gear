@@ -103,7 +103,7 @@ function frozenProfile(options: AuthorMeasurementOptions): FrozenAuthorMeasureme
   if (options.resolveCommitted.identityDigest !== profile.resolverIdentityDigest)
     throw new Error('Author measurement committed resolver identity drift');
   if (!profile.campaignId || !profile.recipePhase || !Number.isSafeInteger(profile.repeatCount)
-    || profile.repeatCount < 1 || profile.repeatCount > 100
+    || profile.repeatCount < 1
     || !Array.isArray(profile.allowedExperienceViewDigests) || profile.allowedExperienceViewDigests.length === 0
     || new Set(profile.allowedExperienceViewDigests).size !== profile.allowedExperienceViewDigests.length)
     throw new Error('Invalid author measurement frozen scope');
@@ -180,7 +180,7 @@ export function createAuthorMeasurementProvider(options: AuthorMeasurementOption
       throw new Error('Author measurement producer operation list invalid');
     for (const id of input.producerOperationIds) assertDigest(id);
     const view = authority.verify(input.selection.taskViewRef, profile.allowedExperienceViewDigests);
-    if (!view.parentTaskViewDigest || view.tasks.length === 0
+    if (view.tasks.length === 0
       || !same(input.selection.selectedTaskIds, view.tasks.map(task => task.id))
       || view.tasks.some(task => task.purpose === 'final-test'))
       throw new Error('Author measurement needs one exact signed research TaskSelection');

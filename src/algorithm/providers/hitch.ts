@@ -13,6 +13,7 @@ import { VerifiedExecutionAdapter, executionResultSchema, type ExecutionReceipt,
 import { EvolutionRegistryStore } from '../../state/evolution.js';
 import { HarnessBuilder } from '../../harness/builder.js';
 import { HitchCliEvaluator } from '../../evaluator/hitch-cli.js';
+import { hitchSubprocessEnvironmentDigest } from '../../evaluator/hitch-environment.js';
 import { findSubmittedHitchReservationReadOnly } from './hitch-readonly.js';
 import { materializeSkillOverlay, validateSkillOverlaySelection, SkillOverlayUnknown,
   type SkillOverlayResult } from './skill-overlay.js';
@@ -50,13 +51,6 @@ async function withProjectionLock<T>(root: string, work: (lock: WorkspaceLock) =
     releaseQueue();
     if (projectionQueues.get(root) === turn) projectionQueues.delete(root);
   }
-}
-
-/** Match HitchCliEvaluator.run's child env exactly; only the digest is persisted or exposed. */
-function hitchSubprocessEnvironmentDigest(): string {
-  const environment = { ...process.env, PYTHONDONTWRITEBYTECODE: '1' };
-  return digestJson(Object.fromEntries(Object.entries(environment).filter((entry): entry is [string, string] =>
-    entry[1] !== undefined)));
 }
 
 export type GitHarnessBinding = { schemaVersion: 1; kind: 'git-harness'; commitOid: string; manifestDigest: string };

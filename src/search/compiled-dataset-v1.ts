@@ -1,5 +1,6 @@
-import { lstat } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { createHash } from 'node:crypto';
+import { lstat, readFile, readdir } from 'node:fs/promises';
+import { join, relative, resolve, sep } from 'node:path';
 import { digestDatasetRef } from '../state/dataset.js';
 import { digestJson } from '../state/digest.js';
 import { readBoundedRegularFile } from '../state/bounded-file.js';
@@ -29,6 +30,25 @@ function scoring(value: unknown, label: string): void {
     || item.reducer !== 'task-macro-mean'
     || !Array.isArray(item.range) || item.range.length !== 2 || !item.range.every(Number.isFinite)
     || item.range[0] >= item.range[1]) throw new Error(`${label} scoring contract invalid`);
+}
+
+/** Standard Hitch v1 task_digest: ordered file records, distinct from Gear's internal tree identity. */
+export async function hitchTaskTreeDigest(root: string): Promise<string> {
+  const rows: Array<{ path: string; mode: 'executable' | 'file'; sha256: string }> = [];
+  const visit = async (directory: string): Promise<void> => {
+    const entries = (await readdir(directory, { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name));
+    for (const entry of entries) {
+      const absolute = join(directory, entry.name), path = relative(root, absolute).split(sep).join('/');
+      const info = await lstat(absolute);
+      if (info.isSymbolicLink()) throw new Error(`Compiled task refuses symlink: ${path}`);
+      if (info.isDirectory()) await visit(absolute);
+      else if (info.isFile()) rows.push({ path, mode: info.mode & 0o111 ? 'executable' : 'file',
+        sha256: createHash('sha256').update(await readFile(absolute)).digest('hex') });
+      else throw new Error(`Compiled task refuses special file: ${path}`);
+    }
+  };
+  await visit(root);
+  return `sha256:${createHash('sha256').update(JSON.stringify(rows)).digest('hex')}`;
 }
 
 /** Shared standard-v1 task-byte verifier for search projection and author admission. */
@@ -74,9 +94,9 @@ export async function inspectStandardCompiledDatasetV1(named: string): Promise<S
     const directory = join(root, id);
     if (!(await lstat(directory)).isDirectory() || !(await lstat(join(directory, 'task.toml'))).isFile())
       throw new Error(`Compiled dataset task ${id} is not a standard task directory`);
-    const actual = await digestDatasetRef(directory);
-    if (claimed !== actual) throw new Error(`Compiled dataset task ${id} bytes differ from manifest`);
-    tasks.push({ id, contentDigest: actual });
+    if (claimed !== await hitchTaskTreeDigest(directory))
+      throw new Error(`Compiled dataset task ${id} bytes differ from manifest`);
+    tasks.push({ id, contentDigest: await digestDatasetRef(directory) });
   }
   const { dataset_digest: _claimed, ...body } = manifest;
   if (digest(manifest.dataset_digest, 'Compiled dataset manifest') !== digestJson(body))

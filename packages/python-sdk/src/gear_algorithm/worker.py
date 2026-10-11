@@ -19,10 +19,9 @@ from .errors import GearAlgorithmError, ProtocolError, ValidationError
 from .manifest import AlgorithmManifest, ProviderManifest
 from .protocol import decision_to_wire, validate_json
 from .provider import ArtifactClient
-from .author import replay as replay_author
 
 MAX_FRAME_BYTES = 4 * 1024 * 1024
-MAX_AUTHOR_FRAME_BYTES = 1024 * 1024
+MAX_AUTHOR_FRAME_BYTES = MAX_FRAME_BYTES
 
 
 def _read_exact(sock: socket.socket, length: int) -> bytes:
@@ -153,9 +152,9 @@ def _dispatch(target: Any, mode: str, method: str, params: Any) -> Any:
         function = target.initialize if method.endswith("initialize") else target.reduce
         return decision_to_wire(function(params))
     if mode == "author":
-        if method != "author.replay":
+        if method != "author.step":
             raise ProtocolError(f"unsupported author method {method}")
-        return replay_author(target, params)
+        return target.step(params)
     if mode == "component":
         if method != "component.invoke":
             raise ProtocolError(f"unsupported component method {method}")

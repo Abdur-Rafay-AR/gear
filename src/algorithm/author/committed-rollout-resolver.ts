@@ -239,3 +239,11 @@ export function createLocalCommittedRolloutResolver(options: LocalCommittedRollo
     },
   };
 }
+
+/** Read-only projection of the authoritative Campaign; no additional candidate ledger. */
+export function readCommittedOperations(root: string, campaignId: string): Array<{
+  envelope: OperationEnvelope; outcome: OperationOutcome
+}> {
+  return [...committedFromChain(verifiedChain(resolve(root), 10_000, 8 * 1024 * 1024, 256 * 1024 * 1024), campaignId).values()]
+    .flatMap(item => item.completed ? [{ envelope: item.completed.envelope, outcome: item.completed.outcome }] : []);
+}

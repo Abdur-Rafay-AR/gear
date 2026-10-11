@@ -121,6 +121,8 @@ export type AlgorithmManifest = {
 };
 export type CampaignSpec = {
   campaignId: string;
+  /** Host scheduling limit, frozen with the run. */
+  concurrency?: number;
   config: JsonValue;
   initialBindingSetRef: BindingSetRef;
   budget: BudgetPlan;

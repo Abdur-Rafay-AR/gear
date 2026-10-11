@@ -1,3 +1,5 @@
+> 历史设计记录，已由[显式状态作者接口](algorithm-authoring.zh-CN.md)替代；其中 replay/source-check 不再是默认或受支持作者模型。
+
 # Gear 作者合同与完整项目 v4（待实现规格）
 
 本文是 [v4 实现方案](algorithm-author-sdk-plan-v4.zh-CN.md) 的规范性附件。全部新增 API/命令是实施目标，当前 `gear-algorithm`/`rsi-gear` 版本不能直接运行这些样例。A0 固定其机器可校验 schema，A1 将下列文件做成安装后可运行的仓库外项目；每次改动本文的合同都需要对应验收。一个科学算法任选 Python 或 TS，下面两份实现仅为验证 SDK 的同等表达能力，不要求作者维护两份。

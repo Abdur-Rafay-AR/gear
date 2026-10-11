@@ -1,36 +1,56 @@
-# Gear v2 作者 CLI 快速使用
+# 算法 CLI 快速使用
 
-`gear algorithm` 面向五文件的 Python 或 TypeScript 作者项目。管理员需先准备可用的 `local-harness` profile：真实 Harness Git 仓库、已编译任务集、Hitch、模型目的地、权限和预算都由该 profile 管理。作者的 `run.yaml` 只引用 profile 别名，不提供物理服务配置。
-
-当前已验证从本地 npm tarball 和 Python wheel 初始化、安装两语言模板；TypeScript 项目通过 installed admission 与编译，Python 项目通过导入与 `describe()`。完整 profile-backed `check`、`run`、`resume` 的物理宿主接线仍需单独验收；没有该宿主时命令会明确失败，不会用模拟服务运行。
-
-在尚未发布对应 registry 版本的开发安装中，把已构建的包精确传给 `init`：
+需要 Node 22.19+ 或 24+、POSIX 文件锁，以及 Python 3.11+（Python 作者）。本分支尚未发布到包仓库；先从同一 checkout 生成 npm tarball 与 Python wheel，再在独立项目安装：
 
 ```sh
-gear algorithm init ./demo-ts --language typescript --template search --profile lab \
-  --sdk-package /absolute/path/rsi-gear-0.1.1.tgz
-cd demo-ts && npm install && cd ..
+# 在此 checkout 中
+npm run build
+mkdir -p /tmp/gear-sdk-artifacts
+npm pack --ignore-scripts --pack-destination /tmp/gear-sdk-artifacts
+python3.11 -m pip wheel --no-build-isolation --no-deps ./packages/python-sdk --wheel-dir /tmp/gear-sdk-artifacts
 
-gear algorithm init ./demo-py --language python --template search --profile lab \
-  --python-sdk-wheel /absolute/path/gear_algorithm-0.1.0a0-py3-none-any.whl
-cd demo-py && python3.11 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt && cd ..
+# 在仓库外的空目录中
+mkdir -p /tmp/gear-author-demo
+cd /tmp/gear-author-demo
+npm install /tmp/gear-sdk-artifacts/rsi-gear-0.1.1.tgz
+python3.11 -m venv .venv
+.venv/bin/python -m pip install /tmp/gear-sdk-artifacts/gear_algorithm-0.1.0a0-py3-none-any.whl
+PATH="$PWD/.venv/bin:$PATH" npx gear algorithm init ./my-search python
 ```
 
-每个项目恰有五个作者文件：算法、`run.yaml`、`roles.yaml`、`prompts/optimizer.md` 和语言依赖文件。`init` 拒绝非空目录、链接目标和覆盖已有文件。省略本地包选项时，它写入随当前宿主包携带的精确 SDK 版本；能否从 registry 安装该版本需由部署者确认。
+构建 wheel 需要解释器已安装 `setuptools` 与 `wheel`。后续 CLI 命令也使用该虚拟环境的 PATH，或把生成配置的 `algorithm.interpreter` 改为 `.venv/bin/python` 的绝对路径。对应版本发布后可用包仓库安装；这里的验证绑定本分支构建产物。
 
-管理员把 `lab.yaml` 放在 `GEAR_PROFILE_DIR/lab.yaml`（未设置时为 `~/.config/gear/profiles/lab.yaml`），也可以在首次准入时显式指定 `--profile-file`。以下 Python 命令在**已接通并验收的物理宿主**上使用；TypeScript 项目省略 `--python`：
+模板生成 `algorithm.py`、`gear.algorithm.json` 和 `requirements.txt`，默认是可运行的 recorded best-of-N。把配置中的 `algorithm.interpreter` 指向安装 wheel 的解释器；例如虚拟环境的绝对路径。模板不自动安装环境。TypeScript 使用 `init ./my-search typescript`，生成真正的 `algorithm.ts` 和 `package.json`，CLI 使用包内 TypeScript 编译器加载，无需启用 Node 原生类型剥离开关。父目录安装的本地 tarball 可直接供它载入，也可独立运行 tsc 检查；模板中的版本依赖是发布声明，本分支开发时使用上述本地产物。
 
 ```sh
-cd demo-py
-gear algorithm check run.yaml --profile-file /absolute/path/lab.yaml \
-  --python "$PWD/.venv/bin/python" --max-frontier-waves 200
-gear algorithm explain run.yaml --profile-file /absolute/path/lab.yaml \
-  --python "$PWD/.venv/bin/python" --max-frontier-waves 200
-gear algorithm run run.yaml --profile-file /absolute/path/lab.yaml \
-  --python "$PWD/.venv/bin/python" --max-frontier-waves 200
-gear algorithm resume RUN_ID --python "$PWD/.venv/bin/python"
+export PATH="$PWD/.venv/bin:$PATH"
+npx gear algorithm check ./my-search/gear.algorithm.json
+npx gear algorithm explain ./my-search/gear.algorithm.json
+npx gear algorithm run ./my-search/gear.algorithm.json
+npx gear algorithm resume ./my-search/gear.algorithm.json
 ```
 
-`--max-frontier-waves` 是每次新运行显式选择并写入 lock 的实验上限；`200` 只是示例值，不是默认值或科学预算。`check`/`explain` 可生成可清理的编译缓存或临时 scratch CAS，但不创建正式运行的 Campaign/CAS、运行 lock 或提交物理任务。`run` 创建新 run ID 与 `.gear/run/<RUN_ID>.json` 索引；在项目目录执行 `resume RUN_ID` 时，CLI 从索引读取原 lock 路径和摘要，不重新解析 `main` 等别名。也可使用 `resume --lock /absolute/path/run.lock.json`。身份漂移会在新 tick 前拒绝。
+仓库构建后同样可用 `node lib/cli.js algorithm ...`。`check`/`explain` 加载作者与宿主、校验配置和身份，不提交 Campaign 操作；真实模型宿主可能查询服务元数据。`run` 只创建新 Campaign；已有状态用 `resume`。它持续观察 running 操作，无需每次手动重启。SIGINT/SIGTERM 停止观察，保留已提交工作供恢复。
 
-`SIGINT`/`SIGTERM` 只停止本地观察，**当前正在执行的 tick 会先结束**；它不取消已提交的模型或 Hitch 工作。外部操作结果不明时，CLI 输出 `needs-attention` 并以非零状态退出，保留原 lock 供对账。公开 `gear algorithm` 不接受旧 `schemaVersion: 1` Campaign JSON；旧 v1 `algorithmCommand` 仅保留为内部回归 oracle。旧接口和样例见[旧 Campaign 指南](algorithm-authoring.zh-CN.md)。
+默认 `gear.algorithm.json` 的核心字段：
+
+```json
+{
+  "schemaVersion": 1,
+  "kind": "algorithm-campaign",
+  "authoring": "step",
+  "host": "recorded",
+  "campaignId": "my-unique-search",
+  "stateDir": "./.gear/my-unique-search",
+  "concurrency": 8,
+  "algorithm": {"language": "python", "interpreter": "python3.11", "module": "./algorithm.py", "export": "search"},
+  "config": {"n": 4},
+  "budget": {"rollout.trials": {"unit": "trials", "limit": 100, "source": "execution.rollout", "capability": "hard"}}
+}
+```
+
+`config` 是算法自己的科学参数；`concurrency` 是运行设置，可按可用容量改为 20 等正整数。预算来源由安装的宿主/provider 决定。每个实验使用新 campaignId 与独立状态目录，目录位于项目内时必须在 `.gear/` 下。恢复使用相同的源码、依赖、配置和物理身份。
+
+recorded 宿主给出确定性教学分数，不代表真实模型能力。要走真实 Git/DSH/Hitch，移除 `host`，添加 `hostProfile: {"language":"typescript","module":"./physical-host.mjs","export":"hostProfile"}`，由管理员提供[共用物理配置](../examples/algorithms/step-search/README.md#物理执行)。三个不同控制结构与 best-of-N 共用同一个宿主。
+
+`npm run test:algorithm:package` 会打包 npm 与 wheel，在仓库外安装，并实际执行两语言 init/check/run/resume、TypeScript 类型检查及三个示例。它验证 recorded 路径；真实模型与 daemon 集成单独验收。

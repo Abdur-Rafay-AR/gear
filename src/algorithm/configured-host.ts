@@ -8,6 +8,7 @@ import type { CandidateWorkspaceOptions } from '../candidate/workspace.js';
 import { HarnessBuilder, type HarnessBuilderOptions } from '../harness/builder.js';
 import { SubprocessHarnessCompiler, type SubprocessCompilerOptions } from '../harness/compiler.js';
 import { HitchCliEvaluator, type HitchCliEvaluatorOptions } from '../evaluator/hitch-cli.js';
+import { hitchSubprocessEnvironmentDigest } from '../evaluator/hitch-environment.js';
 import { createDefaultFreshHostProfile } from './default-host.js';
 import { createRestrictedAlgorithmDshHost } from './dsh-host.js';
 import { implementationClosureDigest } from './data/identity.js';
@@ -68,17 +69,6 @@ function fileDigest(path: string): string {
   const real = realpathSync(path);
   if (!lstatSync(real).isFile()) throw new Error(`Configured executable is not a file: ${path}`);
   return createHash('sha256').update(readFileSync(real)).digest('hex');
-}
-
-function hitchEnvironmentDigest(): string {
-  const values: Record<string, string | undefined> = { ...process.env, PYTHONDONTWRITEBYTECODE: '1' };
-  const hash = createHash('sha256');
-  for (const name of Object.keys(values).sort()) {
-    const value = values[name] ?? '';
-    hash.update(String(Buffer.byteLength(name))); hash.update('\0'); hash.update(name);
-    hash.update(String(Buffer.byteLength(value))); hash.update('\0'); hash.update(value);
-  }
-  return hash.digest('hex');
 }
 
 function positive(value: unknown, name: string): number {
@@ -164,7 +154,7 @@ export async function createConfiguredFreshHostProfile(context: AlgorithmHostCon
     return jsonDigest({ implementation, settings: current,
       modelModule: fileDigest(modelPath), compiler: fileDigest(current.compiler.command),
       hitch: fileDigest(current.hitch.executable), node: process.version, executable: process.execPath,
-      hitchEnvironmentDigest: hitchEnvironmentDigest(),
+      hitchEnvironmentDigest: hitchSubprocessEnvironmentDigest(),
       runtimeResources: current.runtimeResources.map(named => {
         const path = resourcePath(context.configDir, named);
         return { path, digest: fileDigest(path) };

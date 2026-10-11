@@ -8,8 +8,8 @@ function usage(): never {
 async function main(argv: string[]): Promise<void> {
   const args = [...argv]
   if (args[0] === 'algorithm') {
-    const { runAuthorCommand } = await import('./algorithm/author/cli.js')
-    await runAuthorCommand(args.slice(1))
+    const { algorithmCommand } = await import('./algorithm/cli.js')
+    await algorithmCommand(args.slice(1))
     return
   }
   if (args[0] === 'history') {
