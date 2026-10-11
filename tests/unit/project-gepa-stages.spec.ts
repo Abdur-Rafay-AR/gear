@@ -10,6 +10,7 @@ import { type ProjectRun, ProjectRuntime, type RunPlan } from '../../src/runtime
 
 function fixture(interruptBridge = false, entrypoint = 'gear.algorithms:StagedGEPA', periodic = false) {
   const seedSize = periodic ? 20 : 10
+  const multiParent = entrypoint.startsWith('multi_parent_fixture:')
   let saved: ProjectRun
   let interrupted = false
   const results = new Map<string, TrialResult>()
@@ -121,8 +122,8 @@ function fixture(interruptBridge = false, entrypoint = 'gear.algorithms:StagedGE
     algorithmIdentity: algorithm.identity,
     target: { id: 'initial', files: { 'AGENTS.md': 'initial' }, digest: canonicalDigest('initial') },
     validation: 'holdout',
-    maxEvaluations: periodic ? 100 : 60,
-    maxCandidates: periodic ? 4 : 2,
+    maxEvaluations: multiParent ? 200 : periodic ? 100 : 60,
+    maxCandidates: multiParent ? 6 : periodic ? 4 : 2,
     split: 'seed',
     taskIds: Array.from({ length: seedSize }, (_, i) => `seed-${i}`),
     benchmark: {
@@ -227,7 +228,9 @@ it('recovers a frozen periodic scope preparation without resampling parents or r
   expect(sampling).not.toHaveProperty('observations')
   const preparation = frozen.state.pending_epoch as { scope: { id: string }; admission: { participant_ids: string[] } }
   expect(preparation.admission.participant_ids).toContain('initial')
-  expect(preparation.admission.participant_ids).toContain(frozen.state.parent)
+  for (const batch of frozen.state.parent_batches as Array<{ parent: string }>) {
+    expect(preparation.admission.participant_ids).toContain(batch.parent)
+  }
   expect(
     (frozen.state.catalog as Array<{ scope: { id: string } }>).some((c) => c.scope.id === preparation.scope.id),
   ).toBe(false)
@@ -238,6 +241,34 @@ it('recovers a frozen periodic scope preparation without resampling parents or r
   expect(new Set(f.steps).size).toBe(f.steps.length)
   expect(f.generations.size).toBe(4)
   expect((run.algorithmState.catalog as unknown[]).length).toBeGreaterThanOrEqual(4)
+  const calls = [...f.calls]
+  expect(await f.runtime().resume(run.id, new AbortController().signal)).toEqual(run)
+  expect(f.calls).toEqual(calls)
+})
+
+it('recovers every parent allocation and generates from distinct parents after periodic preparation', async () => {
+  const f = fixture(false, 'multi_parent_fixture:build_algorithm', true)
+  await expect(f.runtime().start(f.plan, new AbortController().signal)).rejects.toThrow(
+    'disconnected-after-epoch-result',
+  )
+  const pending = f.saved().decisions.find((d) => !d.done)!
+  const frozen = structuredClone(pending.decision)
+  const batches = frozen.state.parent_batches as Array<{ parent: string; slots: number; batch_id: string }>
+  expect(new Set(batches.map((b) => b.parent)).size).toBe(2)
+  const admission = (frozen.state.pending_epoch as { admission: { participant_ids: string[] } }).admission
+  expect(admission.participant_ids).toEqual(expect.arrayContaining(batches.map((b) => b.parent)))
+  const run = await f.runtime().resume(f.saved().id, new AbortController().signal)
+  expect(run.status).toBe('complete')
+  expect(run.decisions[pending.step]!.decision).toEqual(frozen)
+  const local = run.decisions.find(
+    (d) => d.step > pending.step && d.decision.operations.some((o) => o.kind === 'generate'),
+  )!
+  expect(new Set(local.decision.operations.filter((o) => o.kind === 'generate').map((o) => o.parent)).size).toBe(2)
+  expect(local.decision.state.parent_batches).toEqual(batches)
+  expect(f.generations.size).toBe(6)
+  expect(new Set(f.calls).size).toBe(f.calls.length)
+  expect(new Set(f.steps).size).toBe(f.steps.length)
+  expect(f.calls.length).toBeLessThanOrEqual(f.plan.maxEvaluations)
   const calls = [...f.calls]
   expect(await f.runtime().resume(run.id, new AbortController().signal)).toEqual(run)
   expect(f.calls).toEqual(calls)

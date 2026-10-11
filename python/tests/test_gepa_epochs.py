@@ -195,14 +195,23 @@ class EpochTests(unittest.TestCase):
         for d in prepared:
             pending = d.state["pending_epoch"]
             self.assertNotIn(pending["scope"]["id"], [c["scope"]["id"] for c in d.state["catalog"]])
-            self.assertIn(d.state["parent"], pending["admission"]["participant_ids"])
+            self.assertIn(
+                d.state["parent_batches"][0]["parent"], pending["admission"]["participant_ids"]
+            )
             self.assertIn("initial", pending["admission"]["participant_ids"])
             # The allocation stays attached to the old archive even as the new scope is prepared.
             self.assertEqual(
                 d.state["parent_selection"]["allocations"][0]["scope_id"],
-                d.state["parent_scope"]["id"],
+                d.state["parent_batches"][0]["scope_id"],
             )
-            self.assertLess(d.state["parent_scope"]["epoch"], pending["scope"]["epoch"])
+            self.assertLess(
+                next(
+                    c["scope"]["epoch"]
+                    for c in d.state["catalog"]
+                    if c["scope"]["id"] == d.state["parent_batches"][0]["scope_id"]
+                ),
+                pending["scope"]["epoch"],
+            )
         final = decisions[-1].state
         self.assertEqual(
             len([d for d in decisions for op in d.operations if op.kind == "generate"]), 4

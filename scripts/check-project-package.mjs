@@ -110,6 +110,7 @@ try {
     'one_shot:build_algorithm',
     'archive_policy:choose_parent',
     'archive_policy:build_algorithm',
+    'multi_parent:build_algorithm',
   ]) {
     const args = ['algorithm', 'test', entrypoint, '--source', examples]
     const checked = JSON.parse(run(installed, ['-m', 'gear', ...args]))

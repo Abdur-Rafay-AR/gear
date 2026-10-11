@@ -14,13 +14,15 @@ from typing import Any
 from ..contracts import Decision, Operation, ParentPolicy, SearchView
 from .bridge import BridgeNominee, select_bridge
 from .epochs import EpochPolicy
+from .parent_plan import ParentSelectionPolicy
 from .scope_types import SamplingTask, ScopeConfig
+from .stage_catalog import plans as _plans
+from .stage_catalog import record_local
 from .stage_evidence import missing as _missing
 from .stage_evidence import nominate
 from .stage_evidence import profiles as _profiles
 from .stage_evidence import score as _score
-from .stage_planning import plan_generation, record_local
-from .stage_planning import plans as _plans
+from .stage_planning import plan_generation
 
 
 @dataclass(frozen=True)
@@ -30,8 +32,11 @@ class StagedGEPA:
     batch_size: int = 2
     bridge_max_candidates: int = 2
     epoch_policy: EpochPolicy = field(default_factory=EpochPolicy)
+    parent_selection_policy: ParentSelectionPolicy | None = None
 
     def __post_init__(self) -> None:
+        if self.parent_policy is not None and self.parent_selection_policy is not None:
+            raise ValueError("Choose a single-parent override or a parent selection policy")
         if type(self.batch_size) is not int or not 1 <= self.batch_size <= 16:
             raise ValueError("Batch size must be between one and sixteen")
         if type(self.bridge_max_candidates) is not int or self.bridge_max_candidates < 0:
@@ -41,10 +46,10 @@ class StagedGEPA:
         return nominate(view, state, self.scope_config.guard_task_ids, reason)
 
     def step(self, view: SearchView, state: Mapping[str, Any]) -> Decision:
-        if state and state.get("recipe") != "staged-gepa-v2":
+        if state and state.get("recipe") != "staged-gepa-v3":
             raise ValueError("State belongs to another recipe; use its frozen runtime")
         current = {
-            "recipe": "staged-gepa-v2",
+            "recipe": "staged-gepa-v3",
             "stage": "parents",
             "index": 0,
             "round": 0,
@@ -59,7 +64,13 @@ class StagedGEPA:
         tasks = tuple(SamplingTask(t, view.task_families.get(t, "seed")) for t in view.seed_tasks)
         if stage in ("parents", "epochs", "epoch-results", "generate"):
             return plan_generation(
-                view, current, config, self.epoch_policy, self.parent_policy, self.batch_size
+                view,
+                current,
+                config,
+                self.epoch_policy,
+                self.parent_policy,
+                self.batch_size,
+                self.parent_selection_policy,
             )
         if stage == "bridge":
             record_local(view, current, config)

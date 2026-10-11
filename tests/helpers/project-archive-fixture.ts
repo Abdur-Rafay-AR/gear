@@ -2,7 +2,7 @@ import { digestJson } from '../../src/state/digest.js'
 import { buildArchive, passesExploration } from '../../src/search/archive.js'
 import { profile } from '../../src/search/evidence.js'
 import { createParentRandom } from '../../src/search/parent-random.js'
-import { parentSelectionInput, validateParentPlan } from '../../src/search/parent-selection.js'
+import { parentSelectionInput, selectParentsWithPolicy, validateParentPlan } from '../../src/search/parent-selection.js'
 import { championGepaPolicy, resolveParentPolicyRef, scopedFrontierPolicy } from '../../src/search/policies/parents.js'
 import { evaluatedFixture, scopeFixture, settings, snapshot, universe } from '../../src/search/testing.js'
 
@@ -24,7 +24,7 @@ export interface ResearchFixture {
   expected: ReturnType<typeof legacyResearchArchive>['expected']
 }
 
-export function legacyResearchArchive(f: ResearchFixture) {
+function fixtureArchive(f: ResearchFixture) {
   const u = universe(f.size, 'seed', f.process)
   const config = settings().search
   const snapshots = f.members.map((m) => snapshot(m.id, [], m.tree))
@@ -68,6 +68,11 @@ export function legacyResearchArchive(f: ResearchFixture) {
     championId: f.champion,
     includeChampion: false,
   })
+  return { u, config, snapshots, scopes, records, archive }
+}
+
+export function legacyResearchArchive(f: ResearchFixture) {
+  const { u, config, snapshots, scopes, records, archive } = fixtureArchive(f)
   const parent = parentSelectionInput(archive, 'fixture-round', 5, 23, f.champion)
   const input = {
     seed_tasks: u.tasks.map((t) => t.id),
@@ -187,4 +192,61 @@ export function legacyResearchArchive(f: ResearchFixture) {
       policies,
     },
   }
+}
+
+export function legacyParentBatches(f: ResearchFixture) {
+  const { archive } = fixtureArchive(f)
+  const input = parentSelectionInput(archive, 'fixture-round', 5, 23, f.champion)
+  return f.expected.policies.map((spec) => {
+    const fixed = spec.expected
+    const selected = selectParentsWithPolicy(
+      archive,
+      {
+        ref: scopedFrontierPolicy(resolveParentPolicyRef(settings().search)).ref,
+        requiresChampion: true,
+        select: () => ({
+          allocations: fixed.allocations.map((a) => ({
+            scopeDigest: a.scope_id,
+            parentSnapshotDigest: a.parent_identity,
+            slots: a.slots,
+            drawIndex: a.draw_index,
+            ...(a.branch ? { selectionBranch: a.branch } : {}),
+          })),
+          parentProbabilities: fixed.parent_probabilities,
+          reasonCodes: fixed.reason_codes,
+        }),
+      },
+      5,
+      'fixture-round',
+      23,
+      f.champion,
+    )
+    return {
+      name: `${f.name}/${spec.name}/${spec.config}`,
+      input: {
+        scopes: input.scopes.map((s) => ({
+          id: s.digest,
+          family: s.familyId,
+          epoch: s.epoch,
+          probability: s.probability,
+          parents: s.parents.map((p) => ({
+            candidate_id: p.candidateId,
+            identity: p.snapshotDigest,
+            probability: p.probability,
+          })),
+        })),
+        max_candidates: input.maxCandidates,
+        random_seed: input.randomSeed,
+      },
+      plan: fixed,
+      expected: selected.batches.map((b) => ({
+        batch_id: b.batchId,
+        parent: archive.snapshots.find((s) => s.digest === b.parentSnapshotDigest)!.candidateId,
+        scope_id: b.sourceScopeDigest,
+        slots: b.maxCandidateSlots,
+        draw_index: b.drawIndex,
+        branch: b.selectionBranch ?? null,
+      })),
+    }
+  })
 }

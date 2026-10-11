@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
+from .parent_random import RandomSource
 from .research import ArchiveChampion, ResearchArchive
 from .scope_types import ordered_ids
 
@@ -54,6 +55,41 @@ class ParentPlan:
         if not reason:
             raise ValueError("Parent policy must explain abstention")
         return cls((), {}, (reason,))
+
+
+ParentSelectionPolicy = Callable[[ParentInput, RandomSource], ParentPlan]
+
+
+@dataclass(frozen=True)
+class ParentBatch:
+    batch_id: str
+    parent: str
+    scope_id: str
+    slots: int
+    draw_index: int
+    branch: str | None = None
+
+
+def parent_batches(view: ParentInput, plan: ParentPlan, round_id: str) -> tuple[ParentBatch, ...]:
+    """Validate every allocation before freezing the entire ordered batch list."""
+    validate_parent_plan(view, plan)
+    return tuple(
+        ParentBatch(
+            f"{round_id}-batch-{i}",
+            next(
+                p.candidate_id
+                for s in view.scopes
+                if s.id == a.scope_id
+                for p in s.parents
+                if p.identity == a.parent_identity
+            ),
+            a.scope_id,
+            a.slots,
+            a.draw_index,
+            a.branch,
+        )
+        for i, a in enumerate(plan.allocations)
+    )
 
 
 def parent_input(

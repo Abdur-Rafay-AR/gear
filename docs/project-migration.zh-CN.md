@@ -39,3 +39,7 @@ Python 已提供历史 shared/local/cross 采样的纯函数与可选 `ScopeSamp
 历史采样元数据现迁入 `gear.algorithms.gepa.history`，并接入 `ScopeSampler` / `StagedGEPA`。完整重复槽位才形成一个有效执行版本，难度按失败版本占比计算；无效、缺失和冲突有独立处理。题族/成功对照/子模式/修改路径来自已提交诊断。10 组固定样例来自未修改的旧 TypeScript，覆盖归一化阈值、minimize、重复证据和 objective 不隐式推导难度。
 
 新 worker 输入增加可选 `execution_digest`、`score_evidence` 和 `evidence_condition`。执行身份与 Target 内容身份分开：共享缓存别名去重，独立执行的相同内容分别保留。旧构造和缺少字段的自定义 view 继续可用；新 runtime 只传 seed 分数与不含原始内容的引用。运行内冻结采样截止点不重算历史摘要，也不接管原始证据日志。完整历史导入/修订、模型诊断和 process/objective 执行仍是后续迁移项。
+
+`StagedGEPA` 的最新状态为 `staged-gepa-v3`。新增 `parent_selection_policy(ParentInput, RandomSource) -> ParentPlan`，完整分配列表经校验后展开为有来源 scope、父代、额度和随机索引的批次；默认仍为一个分配，原单父代覆盖保持兼容，但两种覆盖不能同时配置。v1/v2 状态需匹配原冻结 runtime，不原地转写。55 份旧 TS 完整批次输出与 Python 对照通过。
+
+周期准备保留从同一旧 scope 抽出的全部父代；局部计划按每个批次的额度执行，重复父代/题族去重，重叠父代 baseline 按槽位并集报价。各批次只有冻结 archive 元数据和自己的探测证据，完整分配、排除原因与输入摘要进入原 decision。父代冻结、catalog、epoch 编排和局部计划已拆分，移除原单父代规划实现。真实 Python worker 的多父代回合及准备阶段恢复已有离线证据；完整模型诊断、regression、objective 与跨运行 archive 仍待后续迁移。

@@ -1,149 +1,19 @@
-"""Durable GEPA planning over seed views; state contains plans, not evidence copies."""
+"""Durable parent selection and epoch preparation through the public contract."""
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from dataclasses import asdict, dataclass, replace
+from dataclasses import asdict
 from typing import Any
 
-from ..._protocol.canonical import digest
 from ..contracts import Decision, Operation, ParentPolicy, SearchView
-from .archive import project_seed_archive
 from .epochs import EpochPolicy, PreparationCost, admit_scope_epoch
-from .history import SamplingDiagnosis, project_sampling_evidence
-from .parent_plan import parent_input
-from .parent_policies import ScopedFrontierPolicy
-from .parent_random import RandomSource
-from .research import ArchiveScope, ResearchArchive, must_pass_guard_identity
-from .scope_types import FailureFamily, SamplingScope, SamplingTask, ScopeConfig, ordered_ids
+from .parent_plan import ParentSelectionPolicy
+from .scope_types import ScopeConfig
 from .scopes import create_scope
-from .stage_evidence import eligible, missing, nominate, profiles
-
-
-@dataclass(frozen=True)
-class LocalPlan:
-    candidate: str
-    family: str
-    scope_id: str
-    parent: str
-    task_ids: tuple[str, ...]
-    weights: Mapping[str, float]
-    failures: tuple[str, ...]
-
-
-def plans(state: Mapping[str, Any]) -> tuple[LocalPlan, ...]:
-    return tuple(
-        LocalPlan(**{**p, "task_ids": tuple(p["task_ids"]), "failures": tuple(p["failures"])})
-        for p in state.get("plans", [])
-    )
-
-
-def read_scope(value: Mapping[str, Any]) -> ArchiveScope:
-    return ArchiveScope(**{**value, "task_ids": tuple(value["task_ids"])})
-
-
-def _archive(view: SearchView, state: Mapping[str, Any], config: ScopeConfig) -> ResearchArchive:
-    catalog = state["catalog"]
-    return project_seed_archive(
-        view,
-        tuple(read_scope(c["scope"]) for c in catalog),
-        {c["scope"]["id"]: tuple(c["registrations"]) for c in catalog},
-        must_pass_guards={c["scope"]["id"]: config.guard_task_ids for c in catalog},
-    )
-
-
-def _add_scope(state: dict[str, Any], scope: ArchiveScope, members: tuple[str, ...] = ()) -> None:
-    entry = next((c for c in state["catalog"] if c["scope"]["id"] == scope.id), None)
-    if entry is None:
-        entry = {"scope": asdict(scope), "registrations": []}
-        state["catalog"].append(entry)
-    entry["registrations"] = list(dict.fromkeys((*entry["registrations"], *members)))
-
-
-def _scope(sample: SamplingScope, config: ScopeConfig) -> ArchiveScope:
-    guard = must_pass_guard_identity(config.guard_task_ids)
-    return ArchiveScope(
-        digest([asdict(sample), guard]),
-        sample.family_id,
-        sample.epoch,
-        sample.task_ids,
-        sample.weights,
-        guard,
-    )
-
-
-def _family(value: Mapping[str, Any]) -> FailureFamily:
-    return FailureFamily(
-        value["id"],
-        tuple(value["task_ids"]),
-        tuple(value["successful_control_task_ids"]),
-        tuple(value["modification_paths"]),
-    )
-
-
-def _diagnoses(state: Mapping[str, Any]) -> tuple[SamplingDiagnosis, ...]:
-    return tuple(
-        SamplingDiagnosis(
-            f["id"],
-            tuple(f["task_ids"]),
-            tuple(f["successful_control_task_ids"]),
-            tuple(f["modification_paths"]),
-        )
-        for f in state.get("family_history", {}).values()
-    )
-
-
-def _sampling_tasks(state: Mapping[str, Any], view: SearchView) -> tuple[SamplingTask, ...]:
-    value = state.get("sampling_evidence")
-    if value is None:
-        return project_sampling_evidence(view).tasks
-    return tuple(
-        SamplingTask(
-            **{
-                **t,
-                "family_ids": tuple(t["family_ids"]),
-                "submodes": tuple(t["submodes"]),
-                "modification_paths": tuple(t["modification_paths"]),
-            }
-        )
-        for t in value["tasks"]
-    )
-
-
-def _planning_view(
-    view: SearchView, state: Mapping[str, Any], parent: str, probe: tuple[str, ...]
-) -> SearchView:
-    # Freeze committed coverage, then admit only this selected parent's probe.
-    # Values remain runtime-owned; no second observation journal is created.
-    candidates = []
-    for candidate in view.candidates:
-        allowed = set(state["sampling_coverage"].get(candidate.id, ())) | (
-            set(probe) if candidate.id == parent else set()
-        )
-        candidates.append(
-            replace(
-                candidate,
-                scores={t: v for t, v in candidate.scores.items() if t in allowed},
-                score_evidence={t: r for t, r in candidate.score_evidence.items() if t in allowed},
-            )
-        )
-    return replace(view, candidates=tuple(candidates))
-
-
-def record_local(view: SearchView, state: dict[str, Any], config: ScopeConfig) -> None:
-    for plan in plans(state):
-        scope = read_scope(
-            next(c["scope"] for c in state["catalog"] if c["scope"]["id"] == plan.scope_id)
-        )
-        _add_scope(
-            state,
-            scope,
-            tuple(
-                c
-                for c in (plan.parent, plan.candidate)
-                if eligible(view, c, scope.task_ids, config.guard_task_ids)
-            ),
-        )
+from .stage_catalog import add_scope, make_scope, read_family, read_scope, sampling_tasks
+from .stage_evidence import eligible, missing, nominate
+from .stage_locals import generate, plan_locals
+from .stage_parents import batches, freeze_parents
 
 
 def plan_generation(
@@ -153,77 +23,19 @@ def plan_generation(
     policy: EpochPolicy,
     parent_policy: ParentPolicy | None,
     batch_size: int,
+    selection_policy: ParentSelectionPolicy | None,
 ) -> Decision:
-    """Freeze parent selection, admit epochs, probe scopes, then generate candidates."""
-    stage = state["stage"]
-    tasks = _sampling_tasks(state, view)
-    if stage == "parents":
+    if state["stage"] == "parents":
         if state["index"] >= view.max_candidates or view.remaining_evaluations < len(
             view.seed_tasks
         ):
             return nominate(
                 view, state, config.guard_task_ids, "Nominate from complete common seed evidence"
             )
-        if "catalog" not in state:
-            guard = must_pass_guard_identity(config.guard_task_ids)
-            bootstrap = ArchiveScope(
-                "bootstrap",
-                "bootstrap",
-                0,
-                view.seed_tasks,
-                dict.fromkeys(view.seed_tasks, 1 / len(view.seed_tasks)),
-                guard,
-            )
-            state["catalog"] = []
-            state["family_history"] = {}
-            _add_scope(state, bootstrap, (view.champion,))
-        archive = _archive(view, state, config)
-        sampling = project_sampling_evidence(view, _diagnoses(state))
-        tasks = sampling.tasks
-        state["sampling_evidence"] = asdict(sampling)
-        state["sampling_coverage"] = {c.id: list(c.scores) for c in view.candidates}
-        if parent_policy is None:
-            random_seed = digest([view.random_seed, state["round"], asdict(archive)])
-            selection = ScopedFrontierPolicy()(
-                parent_input(
-                    archive, min(batch_size, view.max_candidates - state["index"]), random_seed
-                ),
-                RandomSource(random_seed),
-            )
-            allocation = selection.allocations[0]
-            parent = next(
-                c
-                for c, identity in archive.identities.items()
-                if identity == allocation.parent_identity
-            )
-            source = next(s for s in archive.scopes if s.id == allocation.scope_id)
-            state["parent_selection"] = asdict(selection)
-        else:
-            parent = parent_policy(view)
-            if not eligible(view, parent, view.seed_tasks, config.guard_task_ids):
-                raise ValueError("Custom parent must have complete eligible seed evidence")
-            source = next(s for s in archive.scopes if s.family == "bootstrap")
-            state["parent_selection"] = {
-                "parent": parent,
-                "reason_codes": ["custom-full-seed-parent"],
-            }
-        state["parent"], state["parent_scope"] = parent, asdict(source)
-        state["epoch"] = policy.epoch(state["round"])
-        shared = state.setdefault("shared_epoch_successes", {})
-        state["epoch_successes"] = shared.setdefault(
-            str(state["epoch"]), [t for t in view.seed_tasks if profiles(view)[parent].get(t) == 1]
-        )
-        state["last_epoch_preparation"] = []
-        # Freeze the old selection archive before preparing any newer scope.
-        state["epoch_queue"] = [
-            {"scope": asdict(s), "probabilities": dict(archive.views[s.id].parent_probabilities)}
-            for s in sorted(archive.scopes, key=lambda s: s.family.encode("utf-16-be"))
-            if policy.due(state["round"])
-            and s.family != "bootstrap"
-            and s.epoch < state["epoch"]
-            and s.id in archive.scope_probabilities
-        ]
-        state["stage"] = "epochs"
+        freeze_parents(view, state, config, policy, parent_policy, selection_policy, batch_size)
+        if not batches(state):
+            return nominate(view, state, config.guard_task_ids, "Parent policy abstained")
+    tasks = sampling_tasks(state, view)
     if state["stage"] == "epoch-results":
         pending = state.pop("pending_epoch")
         scope = read_scope(pending["scope"])
@@ -234,7 +46,7 @@ def plan_generation(
             if not eligible(view, c, scope.task_ids, config.guard_task_ids)
         ]
         if not failed:
-            _add_scope(state, scope, tuple(admission["participant_ids"]))
+            add_scope(state, scope, tuple(admission["participant_ids"]))
         admission["status"] = "baseline-ineligible" if failed else "prepared"
         admission["reason_codes"] = [f"incomplete-or-ineligible:{c}" for c in failed]
         state["last_epoch_preparation"].append(admission)
@@ -247,21 +59,21 @@ def plan_generation(
             create_scope(
                 tasks,
                 config,
-                _family(history),
+                read_family(history),
                 tuple(state["epoch_successes"]),
                 epoch=state["epoch"],
             )
             if history
             else None
         )
-        proposed = _scope(sample, config) if sample else None
+        proposed = make_scope(sample, config) if sample else None
         if history and proposed is None:
             raise ValueError("Historical family has no representative in proposed epoch")
         admission = admit_scope_epoch(
             old,
             proposed,
             view.champion,
-            (state["parent"],) if state["parent_scope"]["id"] == old.id else (),
+            tuple(b.parent for b in batches(state) if b.scope_id == old.id),
             previous["probabilities"],
             policy,
             PreparationCost(view.remaining_evaluations),
@@ -282,154 +94,7 @@ def plan_generation(
             "Prepare frozen scope epoch participants before generation",
         )
     if state["stage"] == "epochs":
-        return _plan_locals(view, state, config, tasks, batch_size)
+        return plan_locals(view, state, config)
     if state["stage"] == "generate":
-        return _generate(view, state, config)
+        return generate(view, state, config)
     raise ValueError("Unknown GEPA planning stage")
-
-
-def _plan_locals(
-    view: SearchView,
-    state: dict[str, Any],
-    config: ScopeConfig,
-    tasks: tuple[SamplingTask, ...],
-    batch_size: int,
-) -> Decision:
-    source = read_scope(state["parent_scope"])
-    archive = _archive(view, state, config)
-    newer = [
-        s
-        for s in archive.scopes
-        if s.family == source.family
-        and s.epoch > source.epoch
-        and state["parent"] in archive.views[s.id].representatives
-    ]
-    if newer:
-        source = max(newer, key=lambda s: s.epoch)
-    parent = state["parent"]
-    if not eligible(view, parent, source.task_ids, config.guard_task_ids):
-        return nominate(
-            view, state, config.guard_task_ids, "Selected parent scope is incomplete or ineligible"
-        )
-    planning_view = _planning_view(view, state, parent, source.task_ids)
-    observed = profiles(planning_view)[parent]
-    families: dict[str, list[str]] = {}
-    for task in tasks:
-        if task.id in source.task_ids and observed[task.id] < 1:
-            families.setdefault(task.stratum, []).append(task.id)
-    if not families:
-        return nominate(
-            view, state, config.guard_task_ids, "Selected parent has no observed seed failures"
-        )
-    family_ids = ordered_ids(list(families))
-    offset = state["round"] % len(family_ids)
-    family_ids = family_ids[offset:] + family_ids[:offset]
-    proposed: list[LocalPlan] = []
-    for family_id in family_ids[: min(batch_size, view.max_candidates - state["index"])]:
-        controls = tuple(t.id for t in tasks if t.stratum == family_id and observed.get(t.id) == 1)
-        history = state["family_history"].get(family_id)
-        family = FailureFamily(
-            family_id,
-            tuple(ordered_ids([*families[family_id], *(history["task_ids"] if history else [])])),
-            tuple(
-                ordered_ids(
-                    [*controls, *(history["successful_control_task_ids"] if history else [])]
-                )
-            ),
-        )
-        state["family_history"][family_id] = asdict(family)
-        sampling = project_sampling_evidence(planning_view, _diagnoses(state))
-        tasks = sampling.tasks
-        state["sampling_evidence"] = asdict(sampling)
-        existing = [s for s in archive.scopes if s.family == family_id]
-        if existing:
-            scope = max(existing, key=lambda s: s.epoch)
-        else:
-            sample = create_scope(
-                tasks, config, family, tuple(state["epoch_successes"]), epoch=state["epoch"]
-            )
-            if sample is None:
-                continue
-            scope = _scope(sample, config)
-        _add_scope(state, scope)
-        proposed.append(
-            LocalPlan(
-                "",
-                family_id,
-                scope.id,
-                parent,
-                scope.task_ids,
-                scope.weights,
-                tuple(families[family_id]),
-            )
-        )
-    # Admit the complete baseline/local group and a conservative seed expansion.
-    while (
-        proposed
-        and sum(missing(view, (parent,), p.task_ids) + len(p.task_ids) for p in proposed)
-        + len(view.seed_tasks)
-        > view.remaining_evaluations
-    ):
-        proposed.pop()
-    if not proposed:
-        return nominate(
-            view,
-            state,
-            config.guard_task_ids,
-            "Budget cannot cover local baselines, candidates and seed expansion",
-        )
-    state["plans"] = [asdict(p) for p in proposed]
-    state["stage"] = "generate"
-    if any(missing(view, (parent,), p.task_ids) for p in proposed):
-        return Decision(
-            state,
-            tuple(Operation("evaluate_seed", candidate=parent, tasks=p.task_ids) for p in proposed),
-            "Complete frozen local parent baselines before generation",
-        )
-    return _generate(view, state, config)
-
-
-def _generate(view: SearchView, state: dict[str, Any], config: ScopeConfig) -> Decision:
-    confirmed: list[LocalPlan] = []
-    for plan in plans(state):
-        if eligible(view, plan.parent, plan.task_ids, config.guard_task_ids):
-            scope = read_scope(
-                next(c["scope"] for c in state["catalog"] if c["scope"]["id"] == plan.scope_id)
-            )
-            _add_scope(state, scope, (plan.parent,))
-            if any(
-                profiles(view)[plan.parent].get(t, 1) < 1
-                for t in plan.failures
-                if t in plan.task_ids
-            ):
-                confirmed.append(
-                    LocalPlan(
-                        f"candidate-{state['index'] + len(confirmed) + 1}",
-                        plan.family,
-                        plan.scope_id,
-                        plan.parent,
-                        plan.task_ids,
-                        plan.weights,
-                        plan.failures,
-                    )
-                )
-    if not confirmed:
-        return nominate(
-            view, state, config.guard_task_ids, "No confirmed eligible local hypothesis"
-        )
-    state.pop("sampling_coverage", None)
-    state["index"] += len(confirmed)
-    state["plans"] = [asdict(p) for p in confirmed]
-    state["stage"] = "local"
-    return Decision(
-        state,
-        tuple(
-            op
-            for p in confirmed
-            for op in (
-                Operation("diagnose_seed", candidate=p.parent, tasks=p.task_ids),
-                Operation("generate", candidate=p.candidate, parent=p.parent),
-            )
-        ),
-        "Generate one candidate per admitted failure family",
-    )

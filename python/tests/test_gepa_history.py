@@ -190,8 +190,17 @@ class SamplingHistoryTests(unittest.TestCase):
         state = {
             **copy.deepcopy(first.state),
             "stage": "epochs",
-            "parent": "historical",
-            "parent_scope": scope,
+            "parent_batches": [
+                {
+                    "batch_id": "round-0-batch-0",
+                    "parent": "historical",
+                    "scope_id": scope["id"],
+                    "slots": 1,
+                    "draw_index": 0,
+                    "branch": None,
+                }
+            ],
+            "planning_family_history": copy.deepcopy(first.state["family_history"]),
             "epoch_queue": [],
             "sampling_coverage": {c.id: list(c.scores) for c in view.candidates},
             "sampling_evidence": asdict(project_sampling_evidence(view)),
@@ -206,7 +215,7 @@ class SamplingHistoryTests(unittest.TestCase):
             original.state["family_history"], after_preparation.state["family_history"]
         )
         self.assertEqual(
-            original.state["sampling_evidence"], after_preparation.state["sampling_evidence"]
+            original.state["batch_sampling"], after_preparation.state["batch_sampling"]
         )
         self.assertEqual(original.operations, after_preparation.operations)
 

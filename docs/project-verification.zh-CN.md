@@ -9,8 +9,8 @@
 | 检查 | 结果与边界 |
 | --- | --- |
 | TypeScript 全量回归 | `697a63d` 的远端 CI：104 个测试文件通过、7 个按环境跳过；无模型环境项单独验证 |
-| 项目定向回归 | 历史采样投影接入后：12 个文件、128 项通过，含固定 fixture、真实 worker 闭环、采样截止点、epoch/bridge 恢复与 CLI 作者流程 |
-| Python 全量回归 | 历史采样投影接入后本地 348 项：344 项通过，4 项按环境跳过 |
+| 项目定向回归 | 多父代阶段接入后：13 个文件、141 项通过，含固定 fixture、真实 worker 闭环、采样截止点、多父代/epoch/bridge 恢复与 CLI 作者流程 |
+| Python 全量回归 | 多父代阶段接入后本地 354 项：350 项通过，4 项按环境跳过 |
 | Python 公共 API | Ruff lint/format、Mypy strict 通过 |
 | TS 质量 | typecheck、Biome、协议生成一致性、205 个模块依赖/循环检查通过 |
 | CI/发布规则 | 14 项规则测试通过；dev 代码变更启用完整回归 |
@@ -29,6 +29,8 @@
 `ea7b02e` 的 [archive 与父代策略 CI](https://github.com/rsi-gear/gear/actions/runs/38119768715) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。下面的 epoch 集成属于其后新增代码，不用该 CI 代替新代码验证。
 
 `420c6f2` 的 [epoch 生命周期 CI](https://github.com/rsi-gear/gear/actions/runs/38120986517) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。以下历史采样投影有独立的本地验证，不把旧 CI 视为新增代码的验证。
+
+`a306123` 的 [历史采样 CI](https://github.com/rsi-gear/gear/actions/runs/38122255845) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。多父代阶段的验证另记如下。
 
 ## 推送后修复
 
@@ -106,6 +108,20 @@ runtime 的 seed view 投影移至 `project-view.ts`，新增可选执行身份�
 最终本地验证：项目 128 项通过；Python 全量 348 项中 344 通过、4 跳过；7 项历史投影测试包含上述 10 组固定对照；Ruff lint/format、32 个公共模块 Mypy strict、typecheck、Biome、205 模块边界与协议生成检查通过。macOS worker sandbox 两项通过；最终源码的独立 tgz/wheel 六组模板/Target、共享应用闭环、CPU training 恢复、同步/异步 SDK、双算法 CLI 通过。文档链接、Python 示例和 README 保护检查通过。本轮无新模型调用。
 
 当前可计算运行内完整执行版本的历史难度，并接收已验证诊断元数据；完整模型诊断、跨运行历史认证/修订、process/objective 执行、多父代批次、regression proposals、全序列等价和默认切换仍待完成。
+
+## Python 完整父代批次与 v3 阶段
+
+`StagedGEPA(parent_selection_policy=...)` 现使用公开 `(ParentInput, RandomSource) -> ParentPlan` 合同，保留全部 allocations，校验父代/scope/概率与候选额度后展开有序 `ParentBatch`。批次来源、slots、draw index、branch、整个输入摘要和随机种子在任何准备操作之前冻结；原单父代覆盖仍可用，两种覆盖同时设置会拒绝。新状态明确为 `staged-gepa-v3`，v1/v2 需匹配原冻结 runtime，默认 `algorithm: gepa` 仍未切换。
+
+`test-contracts/gepa-parent-batches-v1.json` 的 55 份期望由未修改的旧 TS `selectParentsWithPolicy`（源提交 `a306123`）从已有固定父代计划展开。双语言比较每个批次及原顺序，覆盖多个 scoped 配额、champion/GEPA 分支和随机索引。已有 archive fixture 生成辅助函数只抽出共同输入构建，原 11 组 archive / 55 份父代计划保持逐值通过。此处不宣称完整历史生成计划或预算等价。
+
+周期准备把同一旧 scope 的全部已选父代列为必需参与者，预算不足时不能剔除其中一个。局部计划按每批 slots 生成；重复的父代/题族在本轮去重，未用额度不隐式转移。所有 local baselines 按父代/任务并集报价，再保留候选评测与完整 seed 扩展余量。每批采样只读冻结历史与自身 probe；新增控制题和准备结果不会串入其他批次。每批保存 cutoff 和元数据摘要，500 题/16 批次的 decision 与后续 request 投影均在公开 worker 消息上限以内。
+
+父代冻结、catalog/投影、epoch 编排和 local 计划分别放入 `stage_parents.py`、`stage_catalog.py`、`stage_planning.py`、`stage_locals.py`；原单父代规划实现已移除。阶段 orchestration 不另建执行器、证据日志或预算系统。
+
+真实 Python 协议 worker 运行六次生成，在两个不同父代的周期准备已经执行但响应丢失时中断。恢复保留原全部分配、必需参与者与 decision，随后从两个父代分别生成，没有重抽或重复物理提交；终态 resume 一致。回归中发现新公开示例与测试 fixture 同名，Python 搜索路径加载了示例；测试 fixture 更名后重新完成上述故障注入。`examples/python-algorithm/multi_parent.py` 同时通过安装后的 wheel 与两种 CLI 作者检查。
+
+最终本地项目 141 项通过；Python 全量 354 项中 350 通过、4 跳过，含 6 项批次合同测试；Ruff、35 个公共模块 Mypy strict、typecheck、Biome、205 模块边界与协议检查通过。macOS worker sandbox 两项通过，最终 tgz/wheel 含多父代示例的双 CLI、六组模板/Target、CPU training 恢复及 SDK 均通过；文档链接、示例语法和 README 保护检查通过。本轮无新模型调用。完整模型诊断与 hypothesis、regression proposals、process/objective、跨运行 archive/修订、全序列 shadow/replay 和默认切换仍未完成。
 
 ## Hitch 执行合同拆分
 

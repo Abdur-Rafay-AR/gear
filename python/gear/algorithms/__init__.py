@@ -13,7 +13,16 @@ from .contracts import (
 from .gepa import GEPA
 from .gepa.archive import FrontierParentPolicy
 from .gepa.epochs import EpochPolicy
-from .gepa.parent_plan import ParentAllocation, ParentInput, ParentOption, ParentPlan, ParentScope
+from .gepa.parent_plan import (
+    ParentAllocation,
+    ParentBatch,
+    ParentInput,
+    ParentOption,
+    ParentPlan,
+    ParentScope,
+    ParentSelectionPolicy,
+    parent_batches,
+)
 from .gepa.parent_policies import ChampionGepaPolicy, ScopedFrontierPolicy
 from .gepa.parent_random import RandomSource, Selection
 from .gepa.scopes import ScopeSampler
@@ -31,11 +40,13 @@ __all__ = [
     "FrontierParentPolicy",
     "Operation",
     "ParentAllocation",
+    "ParentBatch",
     "ParentInput",
     "ParentOption",
     "ParentPlan",
     "ParentPolicy",
     "ParentScope",
+    "ParentSelectionPolicy",
     "ProposalPlanner",
     "RandomSource",
     "ScopeSampler",
@@ -46,4 +57,5 @@ __all__ = [
     "StagedGEPA",
     "StopRule",
     "TaskSampler",
+    "parent_batches",
 ]
