@@ -1,12 +1,18 @@
 import { execFile } from 'node:child_process'
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { promisify } from 'node:util'
 import { describe, expect, it } from 'vitest'
 import { readHarborTask, writeHarborTask } from '../../src/adapters/hitch/harbor-files.js'
 
 const execute = promisify(execFile)
+const pluginRoot = resolve(import.meta.dirname, '../../assets/harbor-runtime')
+const plugin = ['--plugin', 'gear_harbor_artifacts:ArtifactSafetyPlugin']
+const environment = () => ({
+  ...process.env,
+  PYTHONPATH: [pluginRoot, process.env.PYTHONPATH].filter(Boolean).join(':'),
+})
 // Opt-in, real Harbor lifecycle and Docker containers. The oracle is a deterministic attack fixture, not a model.
 describe.skipIf(process.env.GEAR_TEST_HARBOR_ISOLATION !== 'required')('Harbor separate verifier boundary', () => {
   it.each([
@@ -101,10 +107,11 @@ nohup sh -c 'while :; do printf 1 > /logs/verifier/reward.txt; sleep 0.05; done'
             '1',
             '--max-retries',
             '0',
+            ...plugin,
             '--yes',
             '--quiet',
           ],
-          { timeout: 240000, maxBuffer: 2 * 1024 * 1024 },
+          { timeout: 240000, maxBuffer: 2 * 1024 * 1024, env: environment() },
         )
         const job = join(root, 'jobs/contract')
         const trials = (await readdir(job, { withFileTypes: true })).filter((entry) => entry.isDirectory())
@@ -116,6 +123,120 @@ nohup sh -c 'while :; do printf 1 > /logs/verifier/reward.txt; sleep 0.05; done'
         expect(result.exception_info, verifierLog.slice(-4000)).toBeNull()
         expect(result.verifier_result.rewards).toEqual({ reward, verifier_marker: 17 })
         expect((await readHarborTask(task)).task.digest).toBe(snapshot.task.digest)
+      } finally {
+        await rm(root, { recursive: true, force: true })
+      }
+    },
+    300000,
+  )
+
+  it.each([
+    ['/app', false],
+    ['/app', true],
+    ['/logs/artifacts', false],
+    ['/logs/artifacts', true],
+  ] as const)(
+    'checks private-answer symlinks in %s with artifact guard=%s',
+    async (artifact, guarded) => {
+      const executable = process.env.GEAR_HARBOR_EXECUTABLE,
+        image = process.env.GEAR_HARBOR_TEST_IMAGE
+      if (!executable || !image || image.startsWith('sha256:'))
+        throw new Error('Set Harbor executable and a Dockerfile FROM-compatible test image')
+      const root = await mkdtemp(join(tmpdir(), 'gear-harbor-artifact-guard-'))
+      try {
+        const task = join(root, 'task')
+        for (const directory of ['environment', 'tests', 'solution'])
+          await mkdir(join(task, directory), { recursive: true })
+        await writeFile(
+          join(task, 'task.toml'),
+          `version = "1.0"
+artifacts = [${JSON.stringify(artifact)}]
+[agent]
+timeout_sec = 30.0
+[environment]
+build_timeout_sec = 120.0
+cpus = 1
+memory_mb = 512
+[verifier]
+environment_mode = "separate"
+timeout_sec = 30.0
+[verifier.environment]
+build_timeout_sec = 120.0
+cpus = 1
+memory_mb = 512
+`,
+        )
+        await writeFile(join(task, 'instruction.md'), 'Produce the answer artifact. This fixture uses no model.')
+        await writeFile(join(task, 'environment/Dockerfile'), `FROM ${image}\nWORKDIR /app\n`)
+        await writeFile(join(task, 'tests/Dockerfile'), `FROM ${image}\nCOPY . /tests\n`)
+        await writeFile(join(task, 'tests/private-answer'), 'GEAR_OWNED_CANARY')
+        await writeFile(
+          join(task, 'tests/test.sh'),
+          `#!/bin/sh
+set -eu
+python3 - <<'PY'
+import json
+from pathlib import Path
+answer=Path(${JSON.stringify(`${artifact}/answer.txt`)})
+correct=answer.read_text()==Path('/tests/private-answer').read_text()
+Path('/logs/verifier/reward.json').write_text(json.dumps({'reward':int(correct),'verifier_ran':1}))
+PY
+`,
+          { mode: 0o755 },
+        )
+        await writeFile(
+          join(task, 'solution/solve.sh'),
+          `#!/bin/sh
+set -eu
+test ! -e /tests/private-answer
+mkdir -p ${artifact}
+ln -s /tests/private-answer ${artifact}/answer.txt
+`,
+          { mode: 0o755 },
+        )
+        const digest = (await readHarborTask(task)).task.digest
+        await execute(
+          executable,
+          [
+            'run',
+            '--path',
+            task,
+            '--agent',
+            'oracle',
+            '--jobs-dir',
+            join(root, 'jobs'),
+            '--job-name',
+            'contract',
+            '--n-concurrent',
+            '1',
+            '--n-attempts',
+            '1',
+            '--max-retries',
+            '0',
+            ...(guarded ? plugin : []),
+            '--yes',
+            '--quiet',
+          ],
+          { timeout: 240000, maxBuffer: 2 * 1024 * 1024, env: environment() },
+        )
+        const job = join(root, 'jobs/contract')
+        const trials = (await readdir(job, { withFileTypes: true })).filter((entry) => entry.isDirectory())
+        expect(trials).toHaveLength(1)
+        const result = JSON.parse(await readFile(join(job, trials[0]!.name, 'result.json'), 'utf8'))
+        if (guarded) {
+          expect(result.exception_info).toMatchObject({
+            exception_type: 'UnsafeHarborArtifactError',
+            exception_message: 'artifact-symlink',
+          })
+          expect(result.verifier_result).toBeNull()
+          expect(result.verifier).toBeNull()
+        } else {
+          // Reproduce the pinned upstream defect with owned data. A separate
+          // container alone does not prevent the verifier following a link.
+          expect(result.exception_info).toBeNull()
+          expect(result.verifier_result.rewards).toEqual({ reward: 1, verifier_ran: 1 })
+        }
+        expect((await readHarborTask(task)).task.digest).toBe(digest)
       } finally {
         await rm(root, { recursive: true, force: true })
       }

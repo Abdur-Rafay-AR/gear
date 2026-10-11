@@ -100,7 +100,10 @@ jobs:
           python -m pip install transformers tokenizers safetensors numpy -c python/constraints-test.txt
       - name: Check public Python API
         working-directory: python
-        run: ruff check gear --exclude training && ruff format --check gear --exclude training && mypy
+        run: |
+          ruff check gear --exclude training && ruff format --check gear --exclude training && mypy
+          ruff check --config pyproject.toml ../assets/harbor-runtime tests/test_harbor_artifacts.py
+          ruff format --check --config pyproject.toml ../assets/harbor-runtime tests/test_harbor_artifacts.py
       - name: Test the CPU training bridge
         run: python -m unittest discover -s python/tests -v
         env:
@@ -212,7 +215,7 @@ jobs:
       - run: npm ci
       - name: Install the pinned Harbor lifecycle
         run: python -m pip install harbor==0.21.0
-      - name: Verify separate grading rejects forged candidate rewards
+      - name: Verify separate grading and artifact transfer boundaries
         run: |
           docker pull python:3.12-slim
           GEAR_HARBOR_EXECUTABLE="$(command -v harbor)" npx vitest run tests/integration/project-harbor-isolation.spec.ts --maxWorkers=1

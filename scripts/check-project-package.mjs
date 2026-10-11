@@ -35,6 +35,18 @@ try {
       (await readFile(join(carrierRoot, name))).byteLength > 0,
       `missing published Hitch carrier asset: ${name}`,
     )
+  const artifactGuard = join(temp, 'node_modules/rsi-gear/assets/harbor-runtime/gear_harbor_artifacts.py')
+  // Loading and using the metadata checker must not import Harbor or optional model packages.
+  const artifactFixture = join(temp, 'artifact-fixture')
+  await mkdir(artifactFixture)
+  await writeFile(join(artifactFixture, 'answer.txt'), 'owned fixture')
+  run(python, [
+    '-I',
+    '-c',
+    'import pathlib,runpy,sys; m=runpy.run_path(sys.argv[1]); m["validate_artifacts"](pathlib.Path(sys.argv[2])); assert "harbor" not in sys.modules',
+    artifactGuard,
+    artifactFixture,
+  ])
   const cli = join(temp, 'node_modules/rsi-gear/lib/cli/project.js')
   for (const adapter of ['dsh', 'pi']) {
     for (const template of ['text', 'json', 'file']) {

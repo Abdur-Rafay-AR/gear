@@ -297,3 +297,15 @@ CI 新增固定 Harbor 0.21.0 的独立隔离测试任务，Hitch 合同任务�
 定向五文件 139 项第二轮 138 项通过，唯一失败为当前实现摘要预期变动；源码/构建与历史固定值通过后更新当前快照，7 项身份测试重跑通过。新增测试还发现并补齐重试参数的有效配置摘要绑定，修正 daemon fixture 的版本为所需 0.2.6。持久化操作 12 项全部通过。真实固定 Hitch 的恢复、取消和 SIGKILL 三种合同最终完整重跑 3 项通过，额外读取 daemon 的实际请求记录，均确认 `infrastructure_retries=0`。
 
 typecheck、Biome、222 模块边界、协议及独立 tgz/wheel 旅程通过。本轮未调用模型，未修改 README、历史身份或数据。此项封闭 Hitch 内部重试入口；完整项目 provider 仍须在提交前固定任务集合，并认证实际物理执行数、环境条件和 verifier 来源，不能仅以此选项宣称预算全链路完成。
+
+## Harbor 产物软链接的真实负例与评分前检查
+
+新增实际隔离探针发现：Harbor 0.21.0 原生 separate 模式会保留目录产物和 `/logs/artifacts` 中的软链接。候选本身看不到 `/tests/private-answer`，但将答案产物链接到该路径后，verifier 读取产物时能间接读到私有答案。固定 oracle 的两种路径均在没有生成正确答案的情况下获得 1 分。全部数据来自专属临时测试目录，没有接触用户凭据或真实私有数据。原有假 reward/后台改分两项通过，只证明对应攻击路径，不能外推为完整 Harbor 隔离。
+
+`ArtifactSafetyPlugin` 使用 Harbor 的公开 JobPlugin 和 `on_verification_started` hook，在单步 separate 模式停止候选/sidecar 后、创建 verifier 前检查产物树。扫描以不跟随链接的目录描述符进行，拒绝软链接、硬链接、特殊文件、特殊权限及过深/过大/过多条目的树；不打开文件内容，错误不包含产物文件名或内容。不改变原始 task、产物或已安装的 Harbor。shared、多步和 regrade 不满足当前固定生命周期合同，会明确拒绝；不能把它描述成所有 Harbor 任务的最终支持范围。
+
+10 项离线检查通过，覆盖正常二进制及权限保留、空目录、相对/绝对/悬空/目录/root 软链接、硬链接、FIFO/socket、特殊权限、三个资源上限、异常脱敏及目录替换。首次真实测试暴露回调名 `on_verification_start` 与实际 API 不匹配，修正为 `on_verification_started` 后完整 6 项重跑通过：原生两种路径复现绕过；插件使同一攻击在评分开始前以 `UnsafeHarborArtifactError` 失败，verifier 时间和结果均为空；正常错误/正确答案仍分别得到 0 / 0.75，原有假 reward 和后台写入攻击仍无效。所有冻结任务摘要保持不变。使用 Harbor 0.21.0 和 `gear-native-refactor:local`，未调用模型。
+
+31 项 Harbor 导入与包清单回归通过；typecheck、Biome、222 模块边界、协议、14 项 CI/发布规则及新 Python 文件 Ruff 检查通过。tgz/wheel 安装旅程通过，并验证新检查器实际包含于 npm 包且无需 Harbor 依赖即可加载纯元数据检查。没有修改 Python 算法或训练实现，未重跑独立 Python 全量；CI 继续运行完整 Python/CPU 门禁。README 和原用户工作区未修改。
+
+剩余接线必须显式绑定插件版本/内容及实际加载证明、固定任务集合和执行条件，再向项目 provider 开放 Harbor 评分与恢复。当前默认 provider 未启用 `harborVerification`；本次修复不等于完整项目 Harbor 闭环或全部重构验收完成。

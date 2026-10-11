@@ -118,7 +118,8 @@
     "assets/native-runtime/*.yaml",
     "assets/hitch-carrier/*.mjs",
     "assets/hitch-carrier/*.json",
-    "assets/hitch-carrier/*.yaml"
+    "assets/hitch-carrier/*.yaml",
+    "assets/harbor-runtime/*.py"
   ],
   "scripts": {
     "clean": "node -e \"require('node:fs').rmSync('lib',{recursive:true,force:true})\"",

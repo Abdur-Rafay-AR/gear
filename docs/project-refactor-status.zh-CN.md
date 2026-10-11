@@ -34,7 +34,7 @@
 | P6 | 部分 | 唯一 training 实现与旧入口转发通过；匹配旧 runtime 的活跃任务恢复演练仍待补齐 |
 | P7 | 已验证当前原生 runner | Pi extension 与 DSH plugin 的可观察行为修改分别经 Luna 和可信评分器验证 |
 | C1 | 已验证当前合同 | 预留、未知提交、断线、取消、原子决策及最终 gate 已有故障注入；后续新阶段继续使用同一 runtime |
-| C2 | 已验证当前边界 | seed 投影与 operator/meta 视图；真实 OS 拒绝凭据、私有文件和网络；真实容器隔离 verifier；Harbor 0.21.0 separate verifier 拒绝预写假分数与后台改分，shared 模式未认证 |
+| C2 | 部分 | seed 投影与 operator/meta 视图、OS 拒绝凭据/私有文件/网络及模板 verifier 已验证。Harbor separate 拒绝预写假分数和后台改分，但原生 artifact 软链接可间接引用私有答案；新增评分前产物插件，项目 profile 强制加载及执行身份绑定仍待接线，shared/多步未认证 |
 | C3 | 部分 | gate 16 组、scope 10 组、frontier/bridge 20 组、archive 11 组与 55 份父代分配、epoch 准入 13 组、历史采样元数据 10 组、完整父代批次 55 份及诊断/提案交付 10 组固定比较通过；完整历史决策序列/预算等价尚未完成 |
 | C4 | 部分 | 历史身份 fixtures 原样校验，不改旧数据；完整配置迁移、匹配 runtime 继续与回退演练待补 |
 | Q1 | 部分 | 新层依赖、运行时环、lint/typecheck 和外部包消费检查通过；完整 wire payload 类型由 schema 生成并在两端结构校验；公共导出约束与遗留模块边界还需收尾 |
