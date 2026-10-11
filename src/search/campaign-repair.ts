@@ -6,9 +6,10 @@ import { implementationClosureDigest } from '../algorithm/data/identity.js'
 import type { GepaBudgetCut } from '../algorithm/recipes/gepa-budget.js'
 import { digestJson } from '../state/digest.js'
 import { campaignSearchId } from './campaign-identity.js'
-import { integrity, invariant, processTasks, safeId, seal, SearchProtocolError, validateSnapshot, verifyDigest } from './contracts.js'
+import { integrity, invariant, safeId, seal, SearchProtocolError, validateSnapshot, verifyDigest } from './contracts.js'
 import { assertCell, cellKey, completeEvidence, plannedCells, profile, reusableCells, validOutcome, verifyCells } from './evidence.js'
 import { budgetFailure, pendingOperation, resolvePendingOperation } from './recovery.js'
+import { missingEvaluationSlots } from './repair.js'
 import type { SearchAdmission, SearchExecutionRuntime } from './runtime.js'
 import { usageLimit, type Ledger, type SearchJournal } from './store.js'
 import type { EvidenceCell, PendingSearchOperation, Snapshot, StageEvaluationPlan, StageResult, TaskUniverse } from './types.js'
@@ -142,12 +143,13 @@ export async function prepareCampaignRepair(options: {
 }
 
 /** The ownership marker precedes the first auxiliary physical intent. */
-export async function claimCampaignRepair(store: SearchJournal, prepared: PreparedCampaignRepair): Promise<void> {
+export async function claimCampaignRepair(store: SearchJournal, prepared: PreparedCampaignRepair, automatic = false): Promise<void> {
   const active = await store.read<{ id: string }>(`rounds/${prepared.roundId}/active-repair`)
   invariant(!active || active.id === prepared.repairId
     || await store.read(`rounds/${prepared.roundId}/repair-result-${digestJson(active.id).slice(7)}`),
   'another repair is unresolved; resume its original repair ID')
-  await store.write(`rounds/${prepared.roundId}/active-repair`, { id: prepared.repairId })
+  await store.write(`rounds/${prepared.roundId}/active-repair`, { id: prepared.repairId,
+    originalRef: prepared.original.digest, ...(automatic ? { automatic: true } : {}) })
 }
 
 export function sealRepairInputs(runtime: AlgorithmRuntime, prepared: PreparedCampaignRepair): {
@@ -269,7 +271,7 @@ export async function repairCampaignEvaluation(options: {
   processProvider?: CampaignRepairPendingProvider & { beginLegacyInvocation(context: {
     callerSignal: AbortSignal; deadlineAt: number;
   }): () => void };
-  roundId: string; repairId: string; originalRef: string; signal: AbortSignal;
+  roundId: string; repairId: string; originalRef: string; signal: AbortSignal; automatic?: boolean;
 }): Promise<StageResult> {
   const { store, runtime, signal } = options
   const prepared = await prepareCampaignRepair(options)
@@ -288,7 +290,7 @@ export async function repairCampaignEvaluation(options: {
   const invocation = { callerSignal: signal, deadlineAt: prepared.deadlineAt }
   disposers.push(options.repairProvider.beginLegacyInvocation(invocation))
   if (options.processProvider) disposers.push(options.processProvider.beginLegacyInvocation(invocation))
-  await claimCampaignRepair(store, prepared)
+  await claimCampaignRepair(store, prepared, options.automatic)
   const refs = sealRepairInputs(runtime, prepared)
   const harness = runtime.artifacts.putJson({ commitOid: prepared.snapshot.commit,
     manifestDigest: prepared.snapshot.manifestDigest }, 'harness.directory.v1')
@@ -339,14 +341,13 @@ export async function repairCampaignEvaluation(options: {
   invariant(await verifyCells(options.validator.provider, physical.cells.map(cell =>
     ({ cell, identity: expected.get(cellKey(cell.identity))! }))), 'repair provenance rejected')
   let failure = physical.failure
-  const processMode = ['held-out', 'global-seed', 'bridge'].includes(prepared.plan.stage)
-    ? prepared.admission.settings.promotion.process.mode : prepared.admission.settings.search.process.mode
-  const applicable = new Set(processTasks(prepared.universe, processMode))
   const source = completeEvidence(prepared.current, [...prepared.cached, ...physical.cells])
+  const gaps = missingEvaluationSlots(prepared.universe, prepared.plan, prepared.snapshot, source,
+    prepared.admission.resolvedSettings, options.validator.provider)
   const projections = source.cells.filter(cell => validOutcome(cell)
-    && applicable.has(cell.identity.taskId) && cell.process?.status !== 'available')
+    && gaps.some(gap => gap.repair === 'projection' && cellKey(gap.identity) === cellKey(cell.identity)))
   const projected: EvidenceCell[] = []
-  if (options.validator.provider.completeProcess) {
+  if (options.validator.provider.completeEvidence || options.validator.provider.completeProcess) {
     // The old repair loop stops at the first unresolved cell. Keep each original
     // projection key in its own auxiliary group so later physical cells do not start.
     for (const base of projections) {

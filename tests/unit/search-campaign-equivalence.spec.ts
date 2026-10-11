@@ -10,10 +10,10 @@ import { fixtures, revise, settings } from '../helpers/search-fixture.js'
 import { CampaignFailureClusterSearch } from '../../src/search/campaign-engine.js'
 import { selectParentsWithPolicy } from '../../src/search/parent-selection.js'
 import { resolveParentPolicyRef, scopedFrontierPolicy } from '../../src/search/policies/parents.js'
-import { SearchExecutionFailure, SearchOperationPending } from '../../src/search/recovery.js'
+import { SearchEvidencePending, SearchExecutionFailure, SearchOperationPending } from '../../src/search/recovery.js'
 import { MemorySearchStore } from '../../src/search/testing.js'
 import { SearchStore } from '../../src/search/store.js'
-import type { ResearchArchive } from '../../src/search/types.js'
+import type { PendingSearchEvidence, ResearchArchive, StageResult } from '../../src/search/types.js'
 import { digestJson } from '../../src/state/digest.js'
 import { resolveMetric, resolveObjective } from '../../src/objective/contracts.js'
 import { extractRawMetrics } from '../../src/objective/scoring.js'
@@ -29,6 +29,7 @@ async function oracleCase(mode: 'actionable' | 'no-actionable' | 'bootstrap-fail
   const root = await mkdtemp(join(tmpdir(), 'gear-frozen-search-oracle-'))
   roots.push(root)
   const store = new SearchStore(root), fixture = fixtures(20), config = settings()
+  if (mode === 'bootstrap-failure') config.search.evaluationStages.repair = { maxAttempts: 0, backoffMs: [0], jitterMs: 0 }
   const admission = { evolutionId: 'equivalence', roundId: 'r', roundIndex: 0, maxCandidates: 1,
     anchor: fixture.anchor, championRevisionDigest: digestJson('frozen-champion'), settings: config }
   const evaluate = fixture.provider.evaluate
@@ -441,7 +442,12 @@ describe('Campaign FailureClusterSearch differential', () => {
         await originalWrite(path, value)
         if (path === 'rounds/r/admission') now = base + elapsed
       }
-      const outcome = await scenario.run()
+      let outcome
+      if (driver === 'campaign' && expired) {
+        await expect(scenario.run()).rejects.toBeInstanceOf(SearchEvidencePending)
+        expect(await scenario.store.read('rounds/r/pending-evidence')).toMatchObject({ reasonCodes: ['budget-exhausted:time'] })
+        expect(await scenario.store.read('rounds/r/terminal')).toBeUndefined()
+      } else outcome = await scenario.run()
       const pointer = await scenario.store.read<{ ref: string }>('rounds/r/admission')
       const admission = await scenario.store.object<{ digest: string; startedAt: number }>(pointer!.ref)
       const ledger = await scenario.store.read<{ startedAt: number }>('budget')
@@ -453,7 +459,10 @@ describe('Campaign FailureClusterSearch differential', () => {
       return { outcome, attempts: scenario.attempts, startedAt: ledger?.startedAt,
         remaining: await scenario.store.remaining('r', scenario.admission.settings.budgets) }
     }
-    expect(await exercise('campaign')).toEqual(await exercise('frozen'))
+    const observed = await exercise('campaign'), expected = await exercise('frozen')
+    expect({ ...observed, outcome: undefined }).toEqual({ ...expected, outcome: undefined })
+    if (expired) expect(expected.outcome?.reasonCodes).toContain('budget-exhausted:time')
+    else expect(observed.outcome).toEqual(expected.outcome)
   })
 
   it('preserves the first reservation when only the initial evolution timer has expired', async () => {
@@ -469,13 +478,22 @@ describe('Campaign FailureClusterSearch differential', () => {
         await write(path, value)
         if (path === 'rounds/r/admission') now = base + 2000
       }
-      const outcome = await scenario.run()
+      if (driver === 'campaign') {
+        await expect(scenario.run()).rejects.toBeInstanceOf(SearchEvidencePending)
+        expect(await scenario.store.read('rounds/r/pending-evidence')).toMatchObject({ reasonCodes: ['budget-exhausted:time'] })
+        expect(await scenario.store.read('rounds/r/terminal')).toBeUndefined()
+      } else expect((await scenario.run()).reasonCodes).toContain('budget-exhausted:time')
       const ledger = await scenario.store.read<{ startedAt: number }>('budget')
       expect(ledger?.startedAt).toBe(base + 2000)
       expect(scenario.attempts).toEqual([])
-      expect(outcome.reasonCodes).toContain('budget-exhausted:time')
-      return { outcome, startedAt: ledger?.startedAt,
-        remaining: await scenario.store.remaining('r', scenario.admission.settings.budgets) }
+      const remaining = await scenario.store.remaining('r', scenario.admission.settings.budgets)
+      if (driver === 'campaign') {
+        await expect(scenario.run(new SearchStore(scenario.root))).rejects.toBeInstanceOf(SearchEvidencePending)
+        expect(await scenario.store.read('budget')).toEqual(ledger)
+        expect(await scenario.store.remaining('r', scenario.admission.settings.budgets)).toEqual(remaining)
+        expect(scenario.attempts).toEqual([])
+      }
+      return { startedAt: ledger?.startedAt, remaining }
     }
     const expected = await exercise('frozen')
     expect(await exercise('campaign')).toEqual(expected)
@@ -526,24 +544,33 @@ describe('Campaign FailureClusterSearch differential', () => {
     expect(campaign.diagnoses()).toBe(before.diagnoses)
   })
 
-  it('matches verified bootstrap failure, absence of a parent, budget, terminal state and replay', async () => {
+  it('retains verified bootstrap failure and its original budget as pending evidence without installing a parent', async () => {
     vi.spyOn(Date, 'now').mockReturnValue(2_000_000_000_000)
     const frozen = await oracleCase('bootstrap-failure')
     const campaign = await oracleCase('bootstrap-failure', 'campaign')
-    const expected = await frozen.run(), observed = await campaign.run()
-    expect(observed).toEqual(expected)
+    const expected = await frozen.run()
+    await expect(campaign.run()).rejects.toBeInstanceOf(SearchEvidencePending)
+    const pending = await campaign.store.read<PendingSearchEvidence>('rounds/r/pending-evidence')
+    expect(pending).toMatchObject({ state: 'infrastructure-incomplete', reasonCodes: ['automatic-repair-exhausted'] })
+    const participant = pending!.participants![0]!
+    expect(participant.currentRef).toBe(participant.originalRef)
+    expect(pending!.resultRefs).toEqual([participant.originalRef])
+    const original = await campaign.store.object<StageResult>(participant.originalRef)
+    expect(original).toEqual((await frozen.store.object<ResearchArchive>(expected.archiveDigest)).results[0])
     expect(await campaign.store.archive()).toEqual(await frozen.store.archive())
-    expect(await campaign.store.object<ResearchArchive>(observed.archiveDigest))
-      .toEqual(await frozen.store.object<ResearchArchive>(expected.archiveDigest))
-    expect(await campaign.store.remaining('r', campaign.admission.settings.budgets))
-      .toEqual(await frozen.store.remaining('r', frozen.admission.settings.budgets))
-    for (const path of ['rounds/r/terminal', 'active-round', 'rounds/r/progress'])
-      expect(await campaign.store.read(path)).toEqual(await frozen.store.read(path))
+    const remaining = await campaign.store.remaining('r', campaign.admission.settings.budgets)
+    expect(remaining).toEqual(await frozen.store.remaining('r', frozen.admission.settings.budgets))
+    expect(await campaign.store.read('rounds/r/terminal')).toBeUndefined()
+    expect(await campaign.store.read('rounds/r/commit')).toBeUndefined()
     expect(campaign.attempts).toEqual(frozen.attempts)
     expect(campaign.fixture.executions).toEqual(frozen.fixture.executions)
-    const attempts = campaign.attempts.length
-    expect(await campaign.run(new SearchStore(campaign.root))).toEqual(observed)
-    expect(campaign.attempts).toHaveLength(attempts)
+    const attempts = structuredClone(campaign.attempts), ledger = await campaign.store.read('budget')
+    await expect(campaign.run(new SearchStore(campaign.root))).rejects.toBeInstanceOf(SearchEvidencePending)
+    expect(campaign.attempts).toEqual(attempts)
+    expect(await campaign.store.read('budget')).toEqual(ledger)
+    expect(await campaign.store.remaining('r', campaign.admission.settings.budgets)).toEqual(remaining)
+    expect(campaign.fixture.generated).toEqual([])
+    expect(campaign.fixture.promotions).toEqual([])
   })
 })
 
@@ -672,23 +699,46 @@ describe('Campaign search adversarial behavioral equivalence', () => {
     expect(result.outcome.research.remainingBudget).toEqual(result.remaining)
   })
 
-  it('blocks every nominee when one bridge participant lacks evidence', async () => {
-    const result = await compareCase({ id: 'partial-bridge', maxCandidates: 4,
-      configure: (fixture) => {
-        const evaluate = fixture.provider.evaluate
-        let partialId: string | undefined
-        fixture.provider.evaluate = async input => {
-          const cells = await evaluate(input)
-          if (input.plan.stage === 'bridge' && input.snapshot.candidateId !== fixture.anchor.candidateId && !partialId) {
-            partialId = input.snapshot.candidateId
-            return cells.slice(1)
-          }
-          return cells
-        }
-      } })
-    expect(result.outcome.nomineeId).toBeUndefined()
-    expect(result.outcome.reasonCodes).toContain('incomplete-bridge-evidence')
-    expect(result.executions.some(call => call.stage === 'global-seed' || call.stage === 'held-out')).toBe(false)
+  it('keeps every nominee pending when one bridge participant lacks evidence and automatic repair is disabled', async () => {
+    vi.spyOn(Date, 'now').mockReturnValue(2_000_000_000_000)
+    const root = await mkdtemp(join(tmpdir(), 'gear-search-pending-bridge-'))
+    roots.push(root)
+    const store = new SearchStore(root), fixture = fixtures(20), config = settings()
+    config.search.evaluationStages.repair = { maxAttempts: 0, backoffMs: [0], jitterMs: 0 }
+    const evaluate = fixture.provider.evaluate
+    let partialId: string | undefined
+    fixture.provider.evaluate = async input => {
+      const cells = await evaluate(input)
+      if (input.plan.stage === 'bridge' && input.snapshot.candidateId !== fixture.anchor.candidateId && !partialId) {
+        partialId = input.snapshot.candidateId
+        return cells.slice(1)
+      }
+      return cells
+    }
+    const request = { evolutionId: 'partial-bridge', roundId: 'r', roundIndex: 0, maxCandidates: 4,
+      anchor: fixture.anchor, championRevisionDigest: digestJson('adversarial-champion'), settings: config }
+    const run = (journal = store) => new CampaignFailureClusterSearch(journal, fixture.provider, fixture.diagnosis, fixture.hooks)
+      .run(request, new AbortController().signal)
+    await expect(run()).rejects.toBeInstanceOf(SearchEvidencePending)
+    const pending = await store.read<PendingSearchEvidence>('rounds/r/pending-evidence')
+    const participant = pending!.participants!.find(participant => participant.candidateId === partialId)!
+    expect(partialId).toBeDefined()
+    expect(participant.currentRef).toBe(participant.originalRef)
+    expect(pending!.resultRefs).toContain(participant.originalRef)
+    expect(participant.missingSlots).toHaveLength(1)
+    expect(participant.missingSlots[0]).toMatchObject({ channel: 'outcome', repair: 'execution' })
+    expect(fixture.executions.some(call => call.stage === 'global-seed' || call.stage === 'held-out')).toBe(false)
+    expect(fixture.promotions).toEqual([])
+    expect(await store.read('rounds/r/terminal')).toBeUndefined()
+    expect(await store.read('rounds/r/commit')).toBeUndefined()
+    const executions = structuredClone(fixture.executions), generated = structuredClone(fixture.generated)
+    const ledger = await store.read('budget'), archive = await store.archive()
+    expect(new Set(executions.map(call => call.key)).size).toBe(executions.length)
+    await expect(run(new SearchStore(root))).rejects.toBeInstanceOf(SearchEvidencePending)
+    expect(fixture.executions).toEqual(executions)
+    expect(fixture.generated).toEqual(generated)
+    expect(await store.read('budget')).toEqual(ledger)
+    expect(await store.archive()).toEqual(archive)
   })
 
   it('preserves process evidence and all stage decisions', async () => {

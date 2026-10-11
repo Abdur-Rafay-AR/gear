@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { isAbsolute, join, resolve } from 'node:path'
 import { FileArtifactStore } from '../algorithm/artifacts.js'
 import { BindingStore } from '../algorithm/bindings.js'
-import type { BindingSchema, BudgetPlan, CampaignSpec } from '../algorithm/contracts.js'
+import type { Algorithm, ArtifactRef, BindingSchema, BudgetPlan, CampaignSpec, OperationOutcome } from '../algorithm/contracts.js'
 import { GepaDiagnosisProvider, GepaEvaluationProvider, GepaGenerationProvider } from '../algorithm/providers/gepa-operations.js'
 import { GepaPublicationProvider } from '../algorithm/providers/gepa-publication.js'
 import { GepaResearchCheckpointProvider } from '../algorithm/providers/gepa-research-checkpoint.js'
@@ -35,12 +35,13 @@ import { SearchStore, type RemainingBudget, type SearchJournal } from './store.j
 import type { DiagnosisProvider, SearchProvider } from './types.js'
 import { SearchEvidencePending, type SearchRoundOutcome } from './outcomes.js'
 import { repairCampaignEvaluation } from './campaign-repair.js'
-import { pendingOperation } from './recovery.js'
+import { pendingOperation, searchDeadline } from './recovery.js'
+import { missingEvaluationSlots } from './repair.js'
 import { campaignSearchDirectory, campaignSearchId } from './campaign-identity.js'
 import { CampaignPhaseProgress } from './campaign-progress.js'
 import { claimCampaignRun, inspectCampaignRun, type CampaignAdmissionExtensions,
   type FrozenCampaignAdmission } from './campaign-admission.js'
-import type { PendingSearchOperation, ResearchArchive, ResearchFinding, StageResult } from './types.js'
+import type { AutomaticEvaluationRepair, PendingSearchOperation, ResearchArchive, ResearchFinding, Snapshot, StageEvaluationPlan, StageResult, TaskUniverse } from './types.js'
 
 /** Optional local cache root. Campaign state/artifacts/intent records are durably stored in SearchJournal. */
 export type CampaignSearchHost = { root?: string; hookImplementationDigest?: string }
@@ -57,6 +58,13 @@ export class CampaignSearchPending extends Error {
   constructor(readonly roundId: string) {
     super(`Campaign search round ${roundId} is awaiting an existing operation; resume the same round`)
     this.name = 'CampaignSearchPending'
+  }
+}
+
+/** Leaves the writer lease before scheduling auxiliary work; no science has consumed this result. */
+class CampaignEvaluationRepairRequired extends Error {
+  constructor(readonly plan: StageEvaluationPlan, readonly snapshot: Snapshot, readonly result: StageResult) {
+    super(`Campaign evaluation requires complete evidence: ${result.digest}`)
   }
 }
 
@@ -125,6 +133,40 @@ export class CampaignFailureClusterSearch {
   }
 
   validate(admission: SearchAdmission) { return this.validator.validate(admission) }
+
+  /** Deliver a verified append-only revision before the scientific reducer can consume a physical result. */
+  private async readyEvaluations(completed: Record<string, OperationOutcome>, artifacts: FileArtifactStore,
+    roundId: string, settings: SearchAdmission['settings'], seed: TaskUniverse, heldOut: TaskUniverse): Promise<Record<string, OperationOutcome>> {
+    const ready = { ...completed }
+    for (const [key, outcome] of Object.entries(completed)) {
+      if (outcome.kind !== 'result' || !outcome.value || typeof outcome.value !== 'object' || Array.isArray(outcome.value)) continue
+      const ref = outcome.value.resultRef as ArtifactRef | undefined
+      if (ref?.schemaId !== 'gepa.stage-result.v1') continue
+      const original = artifacts.getJson(ref) as unknown as StageResult
+      const pointer = await this.store.read<{ ref: string }>(`rounds/${roundId}/repair-${original.digest.slice(7)}`)
+      const result = pointer ? await this.store.object<StageResult>(pointer.ref) : original
+      verifyDigest(result)
+      invariant(result.stagePlanDigest === original.stagePlanDigest && result.snapshotDigest === original.snapshotDigest,
+        'repaired evaluation changed its plan or snapshot')
+      const plan = await this.store.object<StageEvaluationPlan>(original.stagePlanDigest)
+      const snapshot = await this.store.object<Snapshot>(original.snapshotDigest)
+      // Physical completion clears its compatibility marker even when missing
+      // evidence prevents the scientific reducer from advancing.
+      const pending = await this.store.read<PendingSearchOperation | null>(`rounds/${roundId}/pending-operation`)
+      if (pending?.kind === 'evaluation' && pending.stagePlanDigest === plan.digest && pending.candidateId === snapshot.candidateId)
+        await this.store.write(`rounds/${roundId}/pending-operation`, null)
+      const universe = plan.partition === 'seed' ? seed : heldOut
+      if (result.failure || missingEvaluationSlots(universe, plan, snapshot, result, settings, this.provider).length)
+        throw new CampaignEvaluationRepairRequired(plan, snapshot, result)
+      if (result.digest !== original.digest) {
+        await this.validator.resolveEvidence(roundId, original.digest)
+        await this.validator.evaluationProgress(roundId, universe, plan, snapshot, settings.search.process.mode, result)
+        ready[key] = { kind: 'result', value: { ...outcome.value,
+          resultRef: artifacts.putJson(result as unknown as JsonValue, 'gepa.stage-result.v1') } }
+      }
+    }
+    return ready
+  }
 
   async repairEvaluation(roundId: string, repairId: string, originalRef: string, signal: AbortSignal): Promise<StageResult> {
     safeId(roundId); safeId(repairId); signal.throwIfAborted()
@@ -255,13 +297,15 @@ export class CampaignFailureClusterSearch {
       validateSearchSchema('RegressionProposal', proposal)
       verifyDigest(proposal)
     }
-    const recipe = campaignFailureClusterRecipe({ admission: admitted, seed, heldOut, settings: resolvedSettings,
+    const science = campaignFailureClusterRecipe({ admission: admitted, seed, heldOut, settings: resolvedSettings,
       artifacts, bindingSchema: harnessBindingSchema, anchorBindingSetRef, deadlineAt, parentPolicy: policy,
       initialSnapshot, initialSnapshotBindingSetRef,
       budgetCut, roundStartedAt: startedAt,
       findings, handoffFindingDigests, sharedEpochs, startingRegressionProposals,
       checkpointMode: 'projections',
       ...(archiveStart ? { archiveStart } : {}) })
+    const recipe: Algorithm = { ...science, reduce: async context => science.reduce({ ...context,
+      completed: await this.readyEvaluations(context.completed, artifacts, request.roundId, resolvedSettings, seed, heldOut) }) }
     const spec: CampaignSpec = { campaignId: campaignSearchId(request.roundId),
       config: { request: admitted, seedDigest: seed.digest, heldOutDigest: heldOut.digest, deadlineAt,
         trustedHostIdentity: this.host.hookImplementationDigest ?? null } as unknown as JsonValue,
@@ -317,7 +361,8 @@ export class CampaignFailureClusterSearch {
   async run(request: SearchAdmission, signal: AbortSignal): Promise<SearchRoundOutcome> {
     return withImplementationClosureSnapshot(async identitySnapshot => {
     const inspected = await inspectCampaignRun<SearchCampaignExtensions>({ store: this.store,
-      request, components: this.components, signal })
+      request, components: this.components, signal,
+      ownsAutomaticRepair: (roundId, repair) => this.validator.ownsAutomaticRepair(roundId, repair) })
     if (inspected.kind === 'terminal') return inspected.outcome
     // Publication's commit intent is frozen only after Campaign's budget
     // projection barrier. The old single-purpose reconcile replays this exact
@@ -371,19 +416,50 @@ export class CampaignFailureClusterSearch {
     const deadlineAt = Math.min(startedAt + resolvedSettings.budgets.round.timeoutMs,
       budgetStart + resolvedSettings.budgets.evolution.timeoutMs)
     const dispose = legacyProviders.map(provider => provider.beginLegacyInvocation({ callerSignal: signal, deadlineAt }))
+    const timed = searchDeadline(signal, deadlineAt)
     try {
     const phases = new CampaignPhaseProgress(this.store, request.roundId, this.hooks.progress)
     await phases.reach(runtime.snapshot()?.state ?? null)
-    const status = await runtime.runWithWriterUntilBlocked({
-      beforeTick: () => signal.throwIfAborted(),
-      onAdvanced: async scientificState => {
-        // A reducer advances only after the preceding physical group settled;
-        // the old compatibility pointer can then be cleared before the next key.
-        const prior = await this.store.read<PendingSearchOperation | null>(`rounds/${request.roundId}/pending-operation`)
-        if (prior) await this.store.write(`rounds/${request.roundId}/pending-operation`, null)
-        await phases.reach(scientificState as JsonValue)
-      },
-    })
+    const completeEvaluation = async (plan: StageEvaluationPlan, snapshot: Snapshot, result: StageResult): Promise<void> => {
+      const universe = plan.partition === 'seed' ? host.seed : host.heldOut
+      const complete = await this.validator.ensureEvaluationComplete({ ...request, settings: resolvedSettings }, universe, plan, snapshot,
+        result, timed.signal, signal, (roundId, repairId, originalRef, inspectionSignal, automatic) =>
+          repairCampaignEvaluation({ store: this.store, validator: this.validator, runtime,
+            repairProvider: host.repairProvider, processProvider: host.processProvider,
+            roundId, repairId, originalRef, signal: inspectionSignal, automatic: automatic ?? false }))
+      await this.validator.evaluationProgress(request.roundId, universe, plan, snapshot, resolvedSettings.search.process.mode, complete)
+    }
+    // A running repair owns its original auxiliary operation even after the deadline.
+    // Reconcile it before the main Campaign observes the unresolved auxiliary group.
+    const active = await this.store.read<{ id: string; originalRef?: string; automatic?: boolean }>(`rounds/${request.roundId}/active-repair`)
+    if (active?.automatic && active.originalRef) {
+      const automatic = await this.store.read<AutomaticEvaluationRepair>(`rounds/${request.roundId}/automatic-repair-${active.originalRef.slice(7)}`)
+      if (automatic?.attempts.some(attempt => attempt.state !== 'complete')) {
+        const original = await this.store.object<StageResult>(active.originalRef)
+        const current = await this.store.read<{ ref: string }>(`rounds/${request.roundId}/repair-${active.originalRef.slice(7)}`)
+        await completeEvaluation(await this.store.object<StageEvaluationPlan>(original.stagePlanDigest),
+          await this.store.object<Snapshot>(original.snapshotDigest), current ? await this.store.object<StageResult>(current.ref) : original)
+      }
+    }
+    let status: 'complete' | 'waiting'
+    while (true) {
+      try {
+        status = await runtime.runWithWriterUntilBlocked({
+          beforeTick: () => signal.throwIfAborted(),
+          onAdvanced: async scientificState => {
+            // A reducer advances only after the preceding physical group settled;
+            // the old compatibility pointer can then be cleared before the next key.
+            const prior = await this.store.read<PendingSearchOperation | null>(`rounds/${request.roundId}/pending-operation`)
+            if (prior) await this.store.write(`rounds/${request.roundId}/pending-operation`, null)
+            await phases.reach(scientificState as JsonValue)
+          },
+        })
+        break
+      } catch (error) {
+        if (!(error instanceof CampaignEvaluationRepairRequired)) throw error
+        await completeEvaluation(error.plan, error.snapshot, error.result)
+      }
+    }
     if (status !== 'complete') {
       const pendingReference = Object.values(runtime.snapshot()?.operations ?? {}).find(record =>
         record.envelope.kind === 'gepa.objective-reference'
@@ -450,6 +526,7 @@ export class CampaignFailureClusterSearch {
       if (error instanceof ProviderProtocolError && error.cause instanceof SearchProtocolError) throw error.cause
       throw error
     } finally {
+      timed.dispose()
       for (const release of dispose.reverse()) release()
     }
     })

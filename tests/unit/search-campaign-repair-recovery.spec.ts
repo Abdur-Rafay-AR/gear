@@ -8,7 +8,7 @@ import { CampaignFailureClusterSearch } from '../../src/search/campaign-engine.j
 import { SearchEvidencePending } from '../../src/search/engine.js'
 import { SearchOperationPending } from '../../src/search/recovery.js'
 import { SearchStore } from '../../src/search/store.js'
-import type { EvidenceCell } from '../../src/search/types.js'
+import type { EvidenceCell, PendingSearchEvidence } from '../../src/search/types.js'
 import { digestJson } from '../../src/state/digest.js'
 
 const roots: string[] = []
@@ -17,10 +17,18 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map(root => rm(root, { recursive: true, force: true })))
 })
 
+// Compare the same current-evidence view while the new journal retains original repair ownership.
+async function pendingView(store: SearchStore, roundId = 'r') {
+  const pending = await store.read<PendingSearchEvidence>(`rounds/${roundId}/pending-evidence`)
+  return pending && { planDigest: pending.planDigest,
+    resultRefs: pending.resultRefs.map(ref => pending.participants?.find(participant => participant.originalRef === ref)?.currentRef ?? ref) }
+}
+
 async function scenario(driver: 'old' | 'campaign') {
   const root = await mkdtemp(join(tmpdir(), 'gear-campaign-repair-recovery-'))
   roots.push(root)
   const store = new SearchStore(root), fixture = fixtures(20), config = settings()
+  config.search.evaluationStages.repair = { maxAttempts: 0, backoffMs: [0], jitterMs: 0 }
   const admission = { evolutionId: 'repair-recovery', roundId: 'r', roundIndex: 0,
     maxCandidates: 1, anchor: fixture.anchor,
     championRevisionDigest: digestJson('frozen-champion'), settings: config }
@@ -52,6 +60,7 @@ async function processScenario(driver: 'old' | 'campaign') {
   const root = await mkdtemp(join(tmpdir(), 'gear-campaign-process-recovery-'))
   roots.push(root)
   const store = new SearchStore(root), fixture = fixtures(20, true), config = settings()
+  config.search.evaluationStages.repair = { maxAttempts: 0, backoffMs: [0], jitterMs: 0 }
   const admission = { evolutionId: 'process-recovery', roundId: 'r', roundIndex: 0,
     maxCandidates: 1, anchor: fixture.anchor,
     championRevisionDigest: digestJson('frozen-champion'), settings: config }
@@ -97,6 +106,7 @@ async function repeatedRepairScenario(driver: 'old' | 'campaign', roundId = 'r')
   const root = await mkdtemp(join(tmpdir(), 'gear-campaign-repeated-repair-'))
   roots.push(root)
   const store = new SearchStore(root), fixture = fixtures(20), config = settings()
+  config.search.evaluationStages.repair = { maxAttempts: 0, backoffMs: [0], jitterMs: 0 }
   const admission = { evolutionId: 'repeated-repair', roundId, roundIndex: 0,
     maxCandidates: 1, anchor: fixture.anchor,
     championRevisionDigest: digestJson('frozen-champion'), settings: config }
@@ -119,13 +129,13 @@ async function repeatedRepairScenario(driver: 'old' | 'campaign', roundId = 'r')
 }
 
 describe('Campaign repair recovery against frozen FailureClusterSearch', () => {
-  it('retries an unresolved evaluation under the original physical key on the next explicit call', async () => {
+  it('reconciles a settled evaluation under the original physical key without another submission', async () => {
     vi.spyOn(Date, 'now').mockReturnValue(2_000_000_000_000)
     const old = await scenario('old'), modern = await scenario('campaign')
     await expect(old.run()).rejects.toBeInstanceOf(FrozenSearchEvidencePending)
     await expect(modern.run()).rejects.toBeInstanceOf(SearchEvidencePending)
     const oldPending = await old.store.read<{ resultRefs: string[] }>('rounds/r/pending-evidence')
-    const modernPending = await modern.store.read<{ resultRefs: string[] }>('rounds/r/pending-evidence')
+    const modernPending = await pendingView(modern.store)
     expect(modernPending).toEqual(oldPending)
     const originalRef = oldPending!.resultRefs[1]!
     old.beginRepair(); modern.beginRepair()
@@ -135,7 +145,8 @@ describe('Campaign repair recovery against frozen FailureClusterSearch', () => {
     const oldResult = await old.repair('repair-retry', originalRef)
     const modernResult = await modern.repair('repair-retry', originalRef)
     expect(modernResult).toEqual(oldResult)
-    expect([old.calls(), modern.calls()]).toEqual([2, 2])
+    expect([old.calls(), modern.calls()]).toEqual([1, 1])
+    expect(modern.fixture.executions).toEqual(old.fixture.executions)
     expect(await modern.store.read('rounds/r/pending-operation'))
       .toEqual(await old.store.read('rounds/r/pending-operation'))
     expect(await modern.store.remaining('r', modern.config.budgets))
@@ -151,7 +162,7 @@ describe('Campaign repair recovery against frozen FailureClusterSearch', () => {
     await expect(old.run()).rejects.toBeInstanceOf(FrozenSearchEvidencePending)
     await expect(modern.run()).rejects.toBeInstanceOf(SearchEvidencePending)
     const oldPending = await old.store.read<{ resultRefs: string[] }>('rounds/r/pending-evidence')
-    const modernPending = await modern.store.read<{ resultRefs: string[] }>('rounds/r/pending-evidence')
+    const modernPending = await pendingView(modern.store)
     expect(modernPending).toEqual(oldPending)
     const originalRef = oldPending!.resultRefs[1]!
     old.beginRepair(); modern.beginRepair()
@@ -190,7 +201,7 @@ describe('Campaign repair recovery against frozen FailureClusterSearch', () => {
     await expect(old.run()).rejects.toBeInstanceOf(FrozenSearchEvidencePending)
     await expect(modern.run()).rejects.toBeInstanceOf(SearchEvidencePending)
     const oldPending = await old.store.read<{ resultRefs: string[] }>('rounds/r/pending-evidence')
-    const modernPending = await modern.store.read<{ resultRefs: string[] }>('rounds/r/pending-evidence')
+    const modernPending = await pendingView(modern.store)
     expect(modernPending).toEqual(oldPending)
     const originalRef = oldPending!.resultRefs[1]!
     old.beginRepair(); modern.beginRepair()
@@ -207,7 +218,7 @@ describe('Campaign repair recovery against frozen FailureClusterSearch', () => {
     const newResult = await modern.repair('process-1', originalRef)
     expect(newResult).toEqual(oldResult)
     expect(modern.processCalls).toEqual(old.processCalls)
-    expect(old.processCalls).toHaveLength(2)
+    expect(old.processCalls).toHaveLength(1)
     expect(await modern.store.read('rounds/r/pending-operation'))
       .toEqual(await old.store.read('rounds/r/pending-operation'))
     expect(await modern.store.remaining('r', modern.config.budgets))
@@ -221,7 +232,7 @@ describe('Campaign repair recovery against frozen FailureClusterSearch', () => {
     await expect(old.run()).rejects.toBeInstanceOf(FrozenSearchEvidencePending)
     await expect(modern.run()).rejects.toBeInstanceOf(SearchEvidencePending)
     const originalPending = await old.store.read<{ resultRefs: string[] }>('rounds/r/pending-evidence')
-    expect(await modern.store.read('rounds/r/pending-evidence')).toEqual(originalPending)
+    expect(await pendingView(modern.store)).toEqual(originalPending)
     const originalRef = originalPending!.resultRefs[1]!
     old.phase(1); modern.phase(1)
     const oldFirst = await old.repair('first-input', originalRef)
@@ -233,7 +244,9 @@ describe('Campaign repair recovery against frozen FailureClusterSearch', () => {
     const nextPending = await old.store.read<{ resultRefs: string[] }>('rounds/r/pending-evidence')
     expect(nextPending!.resultRefs[1]).toBe(oldFirst.digest)
     expect(nextPending!.resultRefs[1]).not.toBe(originalRef)
-    expect(await modern.store.read('rounds/r/pending-evidence')).toEqual(nextPending)
+    expect(await pendingView(modern.store)).toEqual(nextPending)
+    expect(await modern.store.read<PendingSearchEvidence>('rounds/r/pending-evidence')).toMatchObject({
+      resultRefs: originalPending!.resultRefs, participants: [{ originalRef, currentRef: oldFirst.digest }] })
     old.phase(2); modern.phase(2)
     const secondId = originalRef.slice(7)
     const oldSecond = await old.repair(secondId, originalRef)
@@ -249,7 +262,7 @@ describe('Campaign repair recovery against frozen FailureClusterSearch', () => {
     await expect(old.run()).rejects.toBeInstanceOf(FrozenSearchEvidencePending)
     await expect(modern.run()).rejects.toBeInstanceOf(SearchEvidencePending)
     const oldPending = await old.store.read<{ resultRefs: string[] }>('rounds/r/pending-evidence')
-    const modernPending = await modern.store.read<{ resultRefs: string[] }>('rounds/r/pending-evidence')
+    const modernPending = await pendingView(modern.store)
     expect(modernPending).toEqual(oldPending)
     const originalRef = oldPending!.resultRefs[1]!
     old.phase(2); modern.phase(2)
@@ -287,7 +300,7 @@ describe('Campaign repair recovery against frozen FailureClusterSearch', () => {
     await expect(old.run()).rejects.toBeInstanceOf(FrozenSearchEvidencePending)
     await expect(modern.run()).rejects.toBeInstanceOf(SearchEvidencePending)
     const oldPending = await old.store.read<{ resultRefs: string[] }>(`rounds/${roundId}/pending-evidence`)
-    expect(await modern.store.read(`rounds/${roundId}/pending-evidence`)).toEqual(oldPending)
+    expect(await pendingView(modern.store, roundId)).toEqual(oldPending)
     const originalRef = oldPending!.resultRefs[1]!
     old.phase(2); modern.phase(2)
     expect(await modern.repair('repair-long-id', originalRef))
@@ -303,7 +316,7 @@ describe('Campaign repair recovery against frozen FailureClusterSearch', () => {
     await expect(old.run()).rejects.toBeInstanceOf(FrozenSearchEvidencePending)
     await expect(modern.run()).rejects.toBeInstanceOf(SearchEvidencePending)
     const pending = await old.store.read<{ resultRefs: string[] }>('rounds/r/pending-evidence')
-    expect(await modern.store.read('rounds/r/pending-evidence')).toEqual(pending)
+    expect(await pendingView(modern.store)).toEqual(pending)
     const originalRef = pending!.resultRefs[1]!
     const oldCalls = old.fixture.executions.length, modernCalls = modern.fixture.executions.length
     now += old.admission.settings.budgets.round.timeoutMs + 1_000
@@ -315,9 +328,12 @@ describe('Campaign repair recovery against frozen FailureClusterSearch', () => {
     expect(old.fixture.executions).toHaveLength(oldCalls)
     expect(modern.fixture.executions).toHaveLength(modernCalls)
     const oldOutcome = await old.run()
-    const modernOutcome = await modern.run()
-    expect(modernOutcome).toEqual(oldOutcome)
     expect(oldOutcome.reasonCodes).toContain('budget-exhausted:time')
+    await expect(modern.run()).rejects.toBeInstanceOf(SearchEvidencePending)
+    expect(await modern.store.read('rounds/r/pending-evidence')).toMatchObject({ reasonCodes: ['budget-exhausted:time'] })
+    expect(await modern.store.read('rounds/r/terminal')).toBeUndefined()
+    expect(old.fixture.executions).toHaveLength(oldCalls)
+    expect(modern.fixture.executions).toHaveLength(modernCalls)
   })
 
   it('turns an unreserved repair-cell quota failure into the old stage reason without another ledger', async () => {
@@ -328,7 +344,7 @@ describe('Campaign repair recovery against frozen FailureClusterSearch', () => {
     await expect(old.run()).rejects.toBeInstanceOf(FrozenSearchEvidencePending)
     await expect(modern.run()).rejects.toBeInstanceOf(SearchEvidencePending)
     const pending = await old.store.read<{ resultRefs: string[] }>('rounds/r/pending-evidence')
-    expect(await modern.store.read('rounds/r/pending-evidence')).toEqual(pending)
+    expect(await pendingView(modern.store)).toEqual(pending)
     const originalRef = pending!.resultRefs[1]!
     const oldCalls = old.fixture.executions.length, modernCalls = modern.fixture.executions.length
     old.phase(2); modern.phase(2)
@@ -340,7 +356,13 @@ describe('Campaign repair recovery against frozen FailureClusterSearch', () => {
     expect(modern.fixture.executions).toHaveLength(modernCalls)
     expect(await modern.store.remaining('r', modern.admission.settings.budgets))
       .toEqual(await old.store.remaining('r', old.admission.settings.budgets))
-    expect(await modern.run()).toEqual(await old.run())
+    await expect(modern.run()).rejects.toBeInstanceOf(SearchEvidencePending)
+    expect(await modern.store.read('rounds/r/pending-evidence')).toMatchObject({ reasonCodes: ['budget-exhausted:round.repairCells'] })
+    expect(await modern.store.read('rounds/r/terminal')).toBeUndefined()
+    expect(old.fixture.executions).toHaveLength(oldCalls)
+    expect(modern.fixture.executions).toHaveLength(modernCalls)
+    expect(await modern.store.remaining('r', modern.admission.settings.budgets))
+      .toEqual(await old.store.remaining('r', old.admission.settings.budgets))
   })
 
   it('rejects foreign evidence before claiming repair ownership or spending budget', async () => {

@@ -146,7 +146,7 @@ export class GepaProcessCompletionProvider implements OperationProvider {
     if (!await verifyCells(this.physical, [{ cell: base, identity: base.identity }]))
       throw new ProviderProtocolError('GEPA process source provenance rejected')
     if (digestJson([this.physical.integrity, this.physical.capabilities]) !== this.physicalIdentity
-      || !this.physical.completeProcess || !this.physical.capabilities.idempotentExecution)
+      || !(this.physical.completeEvidence || this.physical.completeProcess) || !this.physical.capabilities.idempotentExecution)
       throw new ProviderProtocolError('GEPA process provider identity or capability drift')
     this.bindings.read(envelope.bindingSetRef)
     return { input, base }
@@ -195,7 +195,9 @@ export class GepaProcessCompletionProvider implements OperationProvider {
     return record
   }
   private async inspectPhysical(base: EvidenceCell, key: string) {
-    return this.physical.inspectProcess?.(base, key, this.inspectionSignal())
+    const inspect = this.physical.completeEvidence ? this.physical.inspectEvidence?.bind(this.physical)
+      : this.physical.inspectProcess?.bind(this.physical)
+    return inspect?.(base, key, this.inspectionSignal())
   }
   async inspect(envelope: OperationEnvelope): Promise<ProviderInspection> {
     const { input, base } = await this.checked(envelope)
@@ -205,11 +207,10 @@ export class GepaProcessCompletionProvider implements OperationProvider {
     if (record.completion) return { status: 'completed', completion: record.completion }
     if (this.legacyInvocationEnabled && this.attemptedThisInvocation.has(envelope.operationId)) return { status: 'running' }
     if (!record.effectStarted) return { status: 'not-started' }
-    if (this.legacyInvocationEnabled && Date.now() < input.deadlineAt) return { status: 'replay-safe' }
     const observed = await this.inspectPhysical(base, record.externalKey)
-    if (observed?.status === 'complete') return { status: 'replay-safe' }
-    if (Date.now() < input.deadlineAt) return { status: 'replay-safe' }
     if (observed?.status === 'running') return { status: 'running', handle: observed.handle }
+    if (observed?.status === 'unknown') return { status: 'unknown' }
+    if (observed || Date.now() < input.deadlineAt) return { status: 'replay-safe' }
     return { status: 'unknown' }
   }
   /** Read-only compatibility view; the repair facade writes the old journal marker. */
@@ -285,8 +286,7 @@ export class GepaProcessCompletionProvider implements OperationProvider {
       record, base, { schemaVersion: 1, cells: [], failure: budgetFailure(record.budgetDecision.failure) }) }
     if (this.legacyInvocationEnabled && this.attemptedThisInvocation.has(envelope.operationId)) return { status: 'running' }
     let observed: Awaited<ReturnType<NonNullable<SearchProvider['inspectProcess']>>> | undefined
-    if (record.effectStarted && this.physical.inspectProcess
-      && (!this.legacyInvocationEnabled || Date.now() >= input.deadlineAt)) {
+    if (record.effectStarted && (this.physical.completeEvidence ? this.physical.inspectEvidence : this.physical.inspectProcess)) {
       try { observed = await this.inspectPhysical(base, record.externalKey) }
       catch (error) {
         if (error instanceof SearchExecutionFailure) return { status: 'completed', completion: await this.complete(envelope,
@@ -296,6 +296,8 @@ export class GepaProcessCompletionProvider implements OperationProvider {
     }
     if (observed?.status === 'complete') return { status: 'completed', completion: await this.complete(envelope,
       record, base, { schemaVersion: 1, cells: observed.result.cells }) }
+    if (observed?.status === 'running' || observed?.status === 'unknown')
+      return this.rememberPending(envelope, record, 'external projection has no verified terminal result', observed)
     if (Date.now() >= input.deadlineAt) {
       if (!record.effectStarted || observed?.status === 'not-started') return { status: 'completed', completion: await this.complete(envelope,
         record, base, { schemaVersion: 1, cells: [], failure: budgetFailure('time') }) }
@@ -310,7 +312,8 @@ export class GepaProcessCompletionProvider implements OperationProvider {
     let cell: EvidenceCell
     try {
       if (this.legacyInvocationEnabled) this.attemptedThisInvocation.add(envelope.operationId)
-      cell = await this.physical.completeProcess!(base, record.externalKey, this.physicalSignal())
+      const complete = this.physical.completeEvidence?.bind(this.physical) ?? this.physical.completeProcess!.bind(this.physical)
+      cell = await complete(base, record.externalKey, this.physicalSignal())
     } catch (error) {
       this.inspectionSignal()
       if (error instanceof SearchExecutionFailure) return { status: 'completed', completion: await this.complete(envelope,

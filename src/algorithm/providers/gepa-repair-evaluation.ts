@@ -44,7 +44,6 @@ export class GepaRepairEvaluationProvider implements OperationProvider {
   private readonly records: ProviderRecordBackend
   private readonly physicalIdentity: string
   private readonly attemptedThisInvocation = new Set<string>()
-  private legacyInvocationEnabled = false
   private invocation: { runSignal: AbortSignal; inspectSignal: AbortSignal; dispose(): void } | undefined
   constructor(root: string, readonly artifacts: FileArtifactStore, readonly bindings: BindingStore,
     readonly physical: SearchProvider, records?: ProviderRecordBackend) {
@@ -71,7 +70,6 @@ export class GepaRepairEvaluationProvider implements OperationProvider {
   beginLegacyInvocation(context?: { callerSignal: AbortSignal; deadlineAt: number }): () => void {
     this.invocation?.dispose()
     this.attemptedThisInvocation.clear()
-    this.legacyInvocationEnabled = true
     const timed = context ? searchDeadline(context.callerSignal, context.deadlineAt) : undefined
     const invocation = context && timed ? { runSignal: timed.signal, inspectSignal: context.callerSignal,
       dispose: () => timed.dispose() } : undefined
@@ -80,7 +78,6 @@ export class GepaRepairEvaluationProvider implements OperationProvider {
       if (this.invocation === invocation) {
         invocation?.dispose()
         this.invocation = undefined
-        this.legacyInvocationEnabled = false
         this.attemptedThisInvocation.clear()
       }
     }
@@ -264,15 +261,10 @@ export class GepaRepairEvaluationProvider implements OperationProvider {
     if (record.completion) return { status: 'completed', completion: record.completion }
     if (this.attemptedThisInvocation.has(envelope.operationId)) return { status: 'running' }
     if (!record.effectStarted) return { status: 'not-started' }
-    if (this.legacyInvocationEnabled && Date.now() < this.input(envelope).deadlineAt) return { status: 'replay-safe' }
     const observed = await this.physicalInspection(envelope, record)
     if (!observed) return Date.now() < this.input(envelope).deadlineAt ? { status: 'replay-safe' } : { status: 'unknown' }
-    if (observed.status === 'running') return Date.now() < this.input(envelope).deadlineAt
-      ? { status: 'replay-safe' } : { status: 'running', handle: observed.handle }
-    if (observed.status === 'unknown') return Date.now() < this.input(envelope).deadlineAt
-      ? { status: 'replay-safe' } : { status: 'unknown' }
-    if (observed.status === 'partially-complete' && Date.now() < this.input(envelope).deadlineAt)
-      return { status: 'replay-safe' }
+    if (observed.status === 'running') return { status: 'running', handle: observed.handle }
+    if (observed.status === 'unknown') return { status: 'unknown' }
     return { status: 'replay-safe' }
   }
   /** Read-only projection of the old public pending-operation fields. */
@@ -325,8 +317,7 @@ export class GepaRepairEvaluationProvider implements OperationProvider {
       record, { schemaVersion: 1, cells: [], failure: budgetFailure(record.budgetDecision.failure) }, 0) }
     if (this.attemptedThisInvocation.has(envelope.operationId)) return { status: 'running' }
     let observed: Awaited<ReturnType<NonNullable<SearchProvider['inspectEvaluation']>>> | undefined
-    if (record.effectStarted && this.physical.inspectEvaluation
-      && (!this.legacyInvocationEnabled || Date.now() >= input.deadlineAt)) {
+    if (record.effectStarted && this.physical.inspectEvaluation) {
       try { observed = await this.physicalInspection(envelope, record) }
       catch (error) {
         if (error instanceof SearchExecutionFailure) return { status: 'completed', completion: await this.complete(envelope,
@@ -337,8 +328,8 @@ export class GepaRepairEvaluationProvider implements OperationProvider {
     }
     if (observed?.status === 'complete') return { status: 'completed', completion: await this.complete(envelope,
       record, { schemaVersion: 1, cells: observed.result.cells }, input.missing.length) }
-    if (observed?.status === 'running' && Date.now() >= input.deadlineAt)
-      return { status: 'running', handle: observed.handle }
+    if (observed?.status === 'running' || observed?.status === 'unknown')
+      return this.rememberPending(envelope, record, 'external repair has no verified terminal result', observed)
     if (Date.now() >= input.deadlineAt) {
       if (!record.effectStarted || observed?.status === 'not-started') return { status: 'completed', completion: await this.complete(envelope,
         record, { schemaVersion: 1, cells: [], failure: budgetFailure('time') }, 0) }

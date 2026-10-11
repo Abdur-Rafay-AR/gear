@@ -6,7 +6,7 @@ import { claimCampaignRun, inspectCampaignRun, type CampaignAdmissionExtensions 
 import { seal } from '../../src/search/contracts.js'
 import { FrozenFailureClusterSearch } from '../helpers/frozen-failure-cluster-search.js'
 import { collectFailure } from '../../src/search/regression.js'
-import type { SearchAdmission } from '../../src/search/runtime.js'
+import { SearchExecutionRuntime, type SearchAdmission } from '../../src/search/runtime.js'
 import { MemorySearchStore, fixtures, settings, universe } from '../../src/search/testing.js'
 
 const recipeIdentity = digestJson('campaign-admission-fixture-recipe')
@@ -17,6 +17,7 @@ function scenario(store = new MemorySearchStore()) {
     maxCandidates: 1, anchor: fixture.anchor, championRevisionDigest: digestJson('champion'),
     settings: settings() }
   const components = new ComponentRegistry()
+  const validator = new SearchExecutionRuntime(store, fixture.provider, fixture.diagnosis, fixture.hooks, components)
   const proposal = collectFailure({ source: { kind: 'online-feedback', evidenceRef: 'fixture-evidence' },
     outcome: 'business-failure', prompt: 'Handle an uncommon workflow', fixtureRefs: [],
     expectedBehavior: 'Complete the workflow', failureCategory: 'coverage-gap' }, [],
@@ -30,7 +31,8 @@ function scenario(store = new MemorySearchStore()) {
     startingRegressionProposals: [proposal], roundRecipeIdentity: recipeIdentity,
   })
   const inspect = (next = request, signal = new AbortController().signal) =>
-    inspectCampaignRun({ store, request: next, components, signal })
+    inspectCampaignRun({ store, request: next, components, signal,
+      ownsAutomaticRepair: (roundId, repair) => validator.ownsAutomaticRepair(roundId, repair) })
   const claim = async (signal = new AbortController().signal, overrides: {
     validate?: () => Promise<{ seed: typeof fixture.seed; heldOut: typeof fixture.heldOut;
       resolvedSettings: SearchAdmission['settings'] }>

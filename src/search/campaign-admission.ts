@@ -85,6 +85,7 @@ function assertFrozenExtensions(value: CampaignAdmissionExtensions): void {
 /** Mirrors the old pre-admission recovery gates; it deliberately ignores caller abort. */
 export async function inspectCampaignRun<E extends CampaignAdmissionExtensions = CampaignAdmissionExtensions>(options: {
   store: SearchJournal; request: SearchAdmission; components: ComponentRegistry; signal: AbortSignal
+  ownsAutomaticRepair(roundId: string, repair: { id: string; originalRef?: string; automatic?: boolean }): Promise<boolean>
 }): Promise<CampaignAdmissionInspection<E>> {
   const { store, request, components } = options
   safeId(request.roundId)
@@ -118,8 +119,9 @@ export async function inspectCampaignRun<E extends CampaignAdmissionExtensions =
   const completion = await store.read<{ id: string }>('active-completion')
   invariant(!completion || await store.read(`rounds/${completion.id}/result`),
     'search has an unresolved completion; resume its original completion ID')
-  const repair = await store.read<{ id: string }>(`rounds/${request.roundId}/active-repair`)
-  invariant(!repair || await store.read(`rounds/${request.roundId}/repair-result-${digestJson(repair.id).slice(7)}`),
+  const repair = await store.read<{ id: string; originalRef?: string; automatic?: boolean }>(`rounds/${request.roundId}/active-repair`)
+  invariant(!repair || await store.read(`rounds/${request.roundId}/repair-result-${digestJson(repair.id).slice(7)}`)
+    || saved && await options.ownsAutomaticRepair(request.roundId, repair),
     'round has an unresolved repair; resume its original repair ID')
   const commit = await store.read<{ ref: string }>(`rounds/${request.roundId}/commit`)
   if (commit) return { kind: 'commit', intent: await store.object<CommitIntent>(commit.ref) }

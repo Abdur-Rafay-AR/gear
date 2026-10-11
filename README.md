@@ -6,7 +6,7 @@
 
 [![GitHub release](https://img.shields.io/github/v/release/rsi-gear/gear?cacheSeconds=300)](https://github.com/rsi-gear/gear/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Discord](https://img.shields.io/badge/Discord-Join_chat-5865F2?logo=discord&logoColor=white)](https://discord.gg/cZ4NBbHDk)
+[![Discord](https://img.shields.io/badge/Discord-Join_chat-5865F2?logo=discord&logoColor=white)](https://discord.gg/ZduvAtS2k)
 
 [English](README.md) | [简体中文](README.zh-CN.md) · [User guide](https://rsigear.xyz/docs/gear) · [Examples](https://rsigear.xyz/docs/gear/examples/evolution-search)
 
@@ -71,6 +71,8 @@ For Luna, the comparison is between the original harness at medium reasoning eff
 ## Quick start
 
 Use Gear through its **Refine Skill** in Codex, Claude Code, DSH, or another compatible agent environment. Start with an existing benchmark or provide your own tasks in [Harbor format](docs/guide/en/datasets.md).
+
+For installation and dependency setup, see the [quick start guide](docs/guide/en/quickstart.md).
 
 **Let your agent install Gear.** Paste the following prompt into your agent session:
 
@@ -151,7 +153,7 @@ Gear supports harness optimization today. Two components of the broader learning
 
 ## Build with us
 
-Start with the [user guide](docs/guide/en/index.md), browse the [example code](examples/evolution-search/README.md), or join [Discord](https://discord.gg/cZ4NBbHDk).
+Start with the [user guide](docs/guide/en/index.md), browse the [example code](examples/evolution-search/README.md), or join [Discord](https://discord.gg/ZduvAtS2k).
 
 For local development:
 

@@ -1,3 +1,4 @@
+import { readOfflineDataset, validateOfflineBatch } from './offline.js'
 import { digestJson } from './digest.js'
 import { parseModelVersion, parseTrainerCheckpoint, parseTrainingArtifacts, parseTrainingBatch, parseTrainingCapabilities, parseUpdateCommit, requireContract } from './schema.js'
 import type { TrainingContentStore } from './store.js'
@@ -9,6 +10,9 @@ export const trainingCompatibilityDigest = (request: T.TrainingRequest): string 
   placement: request.trainer.placement ?? 'separate', trainingDeviceCount: request.trainingDevices.length,
   referenceModelRef: request.referenceModelRef, architecture: request.parentModel.architecture, dtype: request.parentModel.dtype,
   tokenizerDigest: request.parentModel.tokenizerDigest, chatTemplateDigest: request.parentModel.chatTemplateDigest,
+  ...(request.trainer.recipe !== 'agent-grpo-v1' ? { recipe: request.trainer.recipe,
+    batchLayout: { rolloutBatchSize: request.trainer.rolloutBatchSize, globalBatchSize: request.trainer.globalBatchSize, dataParallelSize: request.trainer.dataParallelSize },
+    ...(request.offlineTraining ? { offlineTraining: request.offlineTraining } : { rollout: request.rollout }) } : {}),
   ...(request.schemaVersion === 2 ? { deployment: request.deployment, trainingDevices: request.trainingDevices } : {}),
 })
 
@@ -25,12 +29,23 @@ export async function validateTrainingResumeCheckpoint(store: TrainingContentSto
   const checkpoint = parseTrainerCheckpoint(await store.readJson(request.resumeCheckpointRef))
   requireContract(checkpoint.actorWeightsDigest === request.parentModel.weightsDigest && checkpoint.compatibilityDigest === trainingCompatibilityDigest(request),
     'checkpoint-incompatible', 'champion checkpoint weights or training compatibility differ')
+  if (request.offlineTraining) {
+    const cursor = await store.readJson<{ position: number; datasetDigest: string }>(checkpoint.dataCursorRef)
+    const data = await readOfflineDataset(store, request.offlineTraining.datasetRef,
+      request.parentModel, request.trainDataset, request.offlineTraining.maxSequenceTokens)
+    requireContract(cursor.position === checkpoint.committedUpdate * request.trainer.rolloutBatchSize
+      && cursor.datasetDigest === request.offlineTraining.datasetRef.digest
+      && cursor.position + request.trainer.updatesPerCandidate * request.trainer.rolloutBatchSize <= data.records.length * request.offlineTraining.maxEpochs,
+    'offline-dataset-exhausted', 'accepted parent cursor must have enough data within the explicit epoch limit')
+  }
 }
 
 export async function preflightTrainingRequest(store: TrainingContentStore, trainer: T.ModelTrainer, request: T.TrainingRequest): Promise<void> {
   if (request.schemaVersion === 2) requireContract(trainer.control, 'training-control-unavailable', 'v2 training requires durable ordered start and pause commands')
   const capabilities = parseTrainingCapabilities(await trainer.preflight(request))
-  const required = ['trainingExternalBinding', 'exactPolicyTokens', 'policyFencing', 'durableIdempotency', 'checkpointEveryUpdate', 'immutableHfExport'] as const
+  const required: (keyof Pick<T.TrainingCapabilities, 'trainingExternalBinding' | 'exactPolicyTokens' | 'policyFencing' | 'durableIdempotency' | 'checkpointEveryUpdate' | 'immutableHfExport'>)[] = request.offlineTraining
+    ? ['durableIdempotency', 'checkpointEveryUpdate', 'immutableHfExport']
+    : ['trainingExternalBinding', 'exactPolicyTokens', 'policyFencing', 'durableIdempotency', 'checkpointEveryUpdate', 'immutableHfExport']
   requireContract(required.every(k => capabilities[k]) && capabilities.blockers.length === 0
     && capabilities.runtimeLockDigest === digestJson(request.trainer.runtimeLock),
   'training-preflight-blocked', `training capabilities unavailable: ${capabilities.blockers.join(', ') || required.filter(k => !capabilities[k]).join(', ') || 'runtime lock mismatch'}`)
@@ -54,6 +69,8 @@ export async function validateTrainingArtifacts(store: TrainingContentStore, req
   if (request.resumeCheckpointRef) baseUpdate = parseTrainerCheckpoint(await store.readJson(request.resumeCheckpointRef)).committedUpdate
   requireContract(artifacts.updateCommitRefs.length === request.trainer.updatesPerCandidate && checkpoint.committedUpdate === baseUpdate + artifacts.updateCommitRefs.length,
     'incomplete-updates', 'candidate must include each configured complete update')
+  const offlineData = request.offlineTraining ? await readOfflineDataset(store, request.offlineTraining.datasetRef,
+    request.parentModel, request.trainDataset, request.offlineTraining.maxSequenceTokens) : undefined
   const batches = new Set<string>()
   let previous: T.ContentRef | undefined
   for (const [i, ref] of artifacts.updateCommitRefs.entries()) {
@@ -67,8 +84,12 @@ export async function validateTrainingArtifacts(store: TrainingContentStore, req
     const batch = parseTrainingBatch(await store.readJson({ uri: `cas:${commit.consumedBatchDigest}`, digest: commit.consumedBatchDigest, mediaType: 'application/json' }))
     requireContract(batch.trainingRunId === request.trainingRunId && batch.recipeDigest === request.recipeDigest && batch.datasetSplitDigest === request.datasetSplitDigest,
       'batch-provenance-mismatch', 'consumed batch differs from the frozen recipe or data partition')
-    await store.readBytes(batch.groupsRef)
-    await store.readBytes(batch.samplesRef)
+    if (batch.schemaVersion === 3) await validateOfflineBatch(store, batch, request, committedCheckpoint, offlineData)
+    else {
+      requireContract(!request.offlineTraining, 'batch-recipe-mismatch', 'SFT cannot consume online trajectory batches')
+      await store.readBytes(batch.groupsRef)
+      await store.readBytes(batch.samplesRef)
+    }
     batches.add(commit.consumedBatchDigest)
     previous = ref
     if (i === artifacts.updateCommitRefs.length - 1) requireContract(commit.checkpointRef.digest === artifacts.checkpointRef.digest, 'final-checkpoint-mismatch', 'candidate checkpoint is not the final committed update')

@@ -66,7 +66,8 @@ export class GepaPublicationProvider implements OperationProvider {
       kind: 'gepa.publish',
       implementationDigest: implementationClosureDigest(['providers/gepa-publication'], {
         hookIdentityDigest: options.hookIdentityDigest ?? null,
-        hookSourceDigest: digestJson(String(hooks.commitChampion)),
+        // An explicit owner closure also covers restricted repair-time hook facades.
+        hookSourceDigest: options.hookIdentityDigest === undefined ? digestJson(String(hooks.commitChampion)) : null,
         persistenceIdentity, publicationBarrierIdentityDigest: options.publicationBarrierIdentityDigest ?? null,
       }),
       inputSchema: { type: 'object', required: ['roundId', 'expectedArchiveDigest', 'nextArchiveRef',

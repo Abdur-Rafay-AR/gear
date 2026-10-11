@@ -6,7 +6,7 @@
 
 [![GitHub release](https://img.shields.io/github/v/release/rsi-gear/gear?cacheSeconds=300)](https://github.com/rsi-gear/gear/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Discord](https://img.shields.io/badge/Discord-加入讨论-5865F2?logo=discord)](https://discord.gg/cZ4NBbHDk)
+[![Discord](https://img.shields.io/badge/Discord-加入讨论-5865F2?logo=discord)](https://discord.gg/ZduvAtS2k)
 
 [English](README.md) | [简体中文](README.zh-CN.md) · [用户指南](https://rsigear.xyz/docs/gear/zh) · [案例](https://rsigear.xyz/docs/gear/zh/examples/evolution-search)
 
@@ -71,6 +71,8 @@ Luna 对比的是原始 harness 的 medium 推理档位与优化后 harness 的 
 ## 快速开始
 
 通过 **Refine Skill**，你可以在 Codex、Claude Code、DSH 或其他兼容的 Agent 环境中使用 Gear。你可以使用已有 benchmark，也可以用 [Harbor 格式](docs/guide/zh-CN/datasets.md)定义自己的任务。
+
+安装及依赖准备步骤，见[快速开始](docs/guide/zh-CN/quickstart.md)。
 
 **让 Agent 帮你安装。** 把下面的 prompt 复制给你正在使用的 Agent：
 
@@ -151,7 +153,7 @@ Gear 目前已支持 harness 优化。完整学习循环中的两个组件仍在
 
 ## 一起完善 Gear
 
-阅读[用户指南](docs/guide/zh-CN/index.md)，查看[示例代码](examples/evolution-search/README.zh-CN.md)，或加入 [Discord](https://discord.gg/cZ4NBbHDk) 讨论。
+阅读[用户指南](docs/guide/zh-CN/index.md)，查看[示例代码](examples/evolution-search/README.zh-CN.md)，或加入 [Discord](https://discord.gg/ZduvAtS2k) 讨论。
 
 本地开发：
 

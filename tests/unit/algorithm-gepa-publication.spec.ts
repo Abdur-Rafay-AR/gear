@@ -49,6 +49,18 @@ async function setup() {
 }
 
 describe('GEPA publication provider', () => {
+  it('keeps restricted repair hooks under their explicit owner identity without weakening unbound hooks', async () => {
+    const f = await setup(), hooks = fixtures(20).hooks
+    const restricted = { commitChampion: async () => { throw new Error('repair cannot publish') } }
+    const root = join(f.root, 'identity-provider')
+    const identity = jsonDigest('frozen-hook-owner')
+    const describe = (hook: typeof restricted | typeof hooks, owner?: string) => new GepaPublicationProvider(
+      root, f.artifacts, f.publication, hook, owner === undefined ? {} : { hookIdentityDigest: owner }).describe().implementationDigest
+    expect(describe(hooks, identity)).toBe(describe(restricted, identity))
+    expect(describe(hooks, identity)).not.toBe(describe(restricted, jsonDigest('different-hook-owner')))
+    expect(describe(hooks)).not.toBe(describe(restricted))
+  })
+
   it('recovers an archive CAS whose response was lost without reissuing publication', async () => {
     const f = await setup(), envelope = f.envelope(f.base)
     const cas = f.publication.casArchive.bind(f.publication)
