@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { resolve } from 'node:path'
+import { delimiter, resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import type { AlgorithmDecision, AlgorithmWorker } from '../../src/domain/algorithm.js'
 import { algorithmProtocol } from '../../src/domain/algorithm-protocol.js'
@@ -8,7 +8,7 @@ import type { ProjectProvider, TrialResult } from '../../src/ports/project.js'
 import type { RunStore } from '../../src/ports/run-store.js'
 import { type ProjectRun, ProjectRuntime, type RunPlan } from '../../src/runtime/project.js'
 
-function fixture(interruptBridge = false) {
+function fixture(interruptBridge = false, entrypoint = 'gear.algorithms:StagedGEPA') {
   let saved: ProjectRun
   let interrupted = false
   const results = new Map<string, TrialResult>()
@@ -61,7 +61,7 @@ function fixture(interruptBridge = false) {
     async cancel() {},
   }
   const algorithm: AlgorithmWorker = {
-    identity: 'python-staged-fixture-v1',
+    identity: `python-fixture:${entrypoint}`,
     async step(view, state, context) {
       expect(JSON.stringify(view)).not.toContain('PRIVATE-HOLDOUT')
       expect(view.seed_tasks.every((t) => t.startsWith('seed-'))).toBe(true)
@@ -79,10 +79,10 @@ function fixture(interruptBridge = false) {
       }
       const raw = execFileSync(
         process.env.GEAR_TRAINING_TEST_PYTHON ?? 'python3',
-        ['-m', 'gear._protocol.worker', 'gear.algorithms:StagedGEPA'],
+        ['-m', 'gear._protocol.worker', entrypoint],
         {
           cwd: resolve(import.meta.dirname, '../..'),
-          env: { PYTHONPATH: 'python', PYTHONDONTWRITEBYTECODE: '1' },
+          env: { PYTHONPATH: ['python', 'examples/python-algorithm'].join(delimiter), PYTHONDONTWRITEBYTECODE: '1' },
           input: `${JSON.stringify(request)}\n`,
           encoding: 'utf8',
           stdio: ['pipe', 'pipe', 'pipe'],
@@ -152,4 +152,23 @@ describe('Python staged GEPA through the durable TypeScript runtime', () => {
     expect(f.generations.size).toBe(2)
     expect(run.operations.every((op) => op.status === 'complete')).toBe(true)
   })
+})
+
+it('runs an independent OneShot algorithm through baseline, proposal, full seed, final gate and resume', async () => {
+  const f = fixture(false, 'one_shot:build_algorithm')
+  const run = await f.runtime().start(f.plan, new AbortController().signal)
+  expect(run.status).toBe('complete')
+  expect(run.champion).toBe('one-shot')
+  expect(run.gate?.accepted).toBe(true)
+  expect(run.decisions.flatMap((d) => d.decision.operations.map((op) => op.kind))).toEqual([
+    'generate',
+    'evaluate_seed',
+    'nominate',
+  ])
+  expect(run.trials.filter((t) => t.candidate === 'one-shot' && t.split === 'seed')).toHaveLength(10)
+  expect(run.trials.filter((t) => t.candidate === 'one-shot' && t.split === 'held_out')).toHaveLength(2)
+  const submitted = [...f.calls]
+  expect(await f.runtime().resume(run.id, new AbortController().signal)).toEqual(run)
+  expect(f.calls).toEqual(submitted)
+  expect(f.generations.size).toBe(1)
 })
