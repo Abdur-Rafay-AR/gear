@@ -122,14 +122,18 @@ try {
       assert.equal((await app.report(report.run_id)).status,'complete')
       await app.export(report.run_id)
 
-      const harborProvider={...provider,capabilities:{...provider.capabilities,harborVerification:true},
+      const harborProvider={...provider,capabilities:{...provider.capabilities,harborVerification:true,observedConditions:true},
         async evaluate(input){
           assert.ok(input.task.harbor.files.some(f=>f.path==='tests/verify.py'))
-          const result={status:'completed',physicalAttempts:1,output:'1',verification:{operationId:input.operationId,
+          const result={status:'completed',physicalAttempts:1,conditionDigest:'sha256:'+'1'.repeat(64),output:'1',verification:{operationId:input.operationId,
             taskDigest:input.task.harbor.digest,metrics:{reward:input.target.id==='initial'?0:0.75}}}
           results.set(input.operationId,result);return result
         }}
       const harbor=new ProjectApplication(new URL('./'+adapter+'-harbor',import.meta.url).pathname,{provider:harborProvider,algorithm})
+      const unattested=new ProjectApplication(harbor.root,{provider:{...harborProvider,capabilities:{...harborProvider.capabilities,observedConditions:undefined}},algorithm})
+      const previousAttempts=results.size
+      await assert.rejects(unattested.run('refine',{rounds:1},new AbortController().signal),error=>error?.details?.code==='harbor-condition-evidence-required')
+      assert.equal(results.size,previousAttempts)
       const harborReport=await harbor.run('refine',{rounds:1},new AbortController().signal)
       assert.equal(harborReport.gate.policy,'paired-mean-reward-v1')
       assert.equal(harborReport.gate.accepted,true)

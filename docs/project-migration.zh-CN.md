@@ -66,7 +66,11 @@ Python 已提供历史 shared/local/cross 采样的纯函数与可选 `ScopeSamp
 
 Harbor 导入新增完整资源快照合同 v1：原始 task.toml、运行环境、verifier、solution、二进制资源、普通权限和空目录保留；清单显式绑定任务、family、分区与所选 metric。CSV/JSONL 的原解析规则移至共用 source 模块，移除重复实现。`check` 不运行任意 verifier，也不伪造模板正反例；编译导出保持完整内容，已有导出发生内容或权限漂移时拒绝覆盖。
 
-公共执行端口新增可选 `harborVerification`，运行层在 baseline 前做能力准入，冻结任务资源交给可信隔离 runner。原始 metrics 和评分有效性写入 trial，绑定 operation/task 身份；重用时核对原操作身份，未知提交保留预留且不重发。当前有界 mean reward 使用新策略身份 `paired-mean-reward-v1`，标准模板继续使用原 `paired-pass-rate-v1`；显式 objective 必须与 benchmark 匹配。输入和返回值使用独立副本，provider 对对象的修改不影响冻结任务和 Target。该合同没有迁写历史身份，也不实现通用 objective 或重复槽位计划。
+公共执行端口新增可选 `harborVerification`，运行层在 baseline 前做能力准入，冻结任务资源交给可信隔离 runner。原始 metrics 和评分有效性写入 trial，绑定 operation/task 身份；未知提交保留预留且不重发。当前有界 mean reward 使用新策略身份 `paired-mean-reward-v1`，标准模板继续使用原 `paired-pass-rate-v1`；显式 objective 必须与 benchmark 匹配。输入和返回值使用独立副本，provider 对对象的修改不影响冻结任务和 Target。该合同没有迁写历史身份，也不实现通用 objective 或重复槽位计划。
+
+Harbor 执行现在还要求 provider 声明 `observedConditions: true`，并为可评分 trial 返回可信的 `conditionDigest`。该摘要由 runner 依据实际任务镜像、资源限制、模型及 verifier/runtime 条件生成，排除待比较的候选身份；不能用配置名称或模型输出替代。计划冻结这一要求，baseline 按任务保存实测身份，后续候选和恢复结果逐任务核对。缺失或不一致的评分记为无效，已发生的尝试仍计费，不自动重跑，也不能晋升。
+
+声明该能力的 provider 不读取或写入现有静态证据缓存：执行后才知道的环境不能证明下一次调用的条件相同。终态恢复直接沿用该运行的原始记录；另开运行要重新取得证据。seed 的实际条件进入算法证据身份，held-out 的实际条件不进入 seed 视图。固定镜像 Docker 模板现有的静态缓存合同不变。新运行使用新的 runtime 身份；旧 Harbor provider 需补齐该合同，旧运行仍用匹配版本恢复，不改写历史身份和结果。内置 Hitch provider 对这些字段的真实采集和认证仍待接线。
 
 内置 Docker project provider 仍不具备任意 Harbor 环境和 verifier 执行能力；新 CLI 的导入、check/compile、可信 provider 评分/恢复合同已实现，实际原生 Harbor evaluate/refine 接入仍待完成。真实容器 verifier 检查与安装包内离线 provider 旅程分别验证，不将它们描述成真实模型的完整 Harbor 闭环。
 

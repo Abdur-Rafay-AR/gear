@@ -9,6 +9,7 @@ import { ProjectApplication } from '../../src/application/project.js'
 import { projectReport } from '../../src/application/project-report.js'
 import { projectCommand } from '../../src/cli/project.js'
 import type { AlgorithmWorker, SearchView } from '../../src/domain/algorithm.js'
+import { canonicalDigest } from '../../src/domain/canonical.js'
 import { harborScore, harborTaskDigest, validateHarborTask } from '../../src/domain/harbor.js'
 import { scoreOutput } from '../../src/domain/scoring.js'
 import type { CachedTrial } from '../../src/ports/evidence-cache.js'
@@ -83,12 +84,14 @@ async function runtimeFixture() {
       isolatedTarget: true,
       isolatedMeta: true,
       harborVerification: true,
+      observedConditions: true,
     },
     async evaluate(input) {
       calls.push(structuredClone(input))
       const result: TrialResult = {
         status: 'completed',
         physicalAttempts: 1,
+        conditionDigest: canonicalDigest(['environment', input.task.id]),
         output: '1',
         verification: {
           operationId: input.operationId,
@@ -147,6 +150,163 @@ async function runtimeFixture() {
   return { ...f, benchmark, store, results, calls, views, provider, algorithm, plan, runtime, cache }
 }
 const signal = () => new AbortController().signal
+
+async function observedFixture() {
+  const f = await runtimeFixture()
+  f.provider.capabilities.observedConditions = true
+  const evaluate = f.provider.evaluate.bind(f.provider)
+  f.provider.evaluate = async (input, signal) => {
+    const result = await evaluate(input, signal)
+    result.conditionDigest = canonicalDigest(['environment', input.task.id])
+    return result
+  }
+  return {
+    ...f,
+    runtime: new ProjectRuntime(f.store, f.provider, f.algorithm, async () => {}, undefined, {
+      async find() {
+        throw new Error('static cache cannot certify observed conditions')
+      },
+      async save() {
+        throw new Error('observed conditions must not enter the static cache')
+      },
+    }),
+  }
+}
+
+describe('observed execution conditions', () => {
+  it('pairs within each task, binds seed views, and executes a fresh run without static cache reuse', async () => {
+    const f = await observedFixture()
+    const first = await f.runtime.start(f.plan, signal())
+    expect(first.plan.conditionEvidence).toBe('required')
+    expect(first.champion).toBe('next')
+    expect(first.trials[0]!.result.conditionDigest).not.toBe(first.trials[2]!.result.conditionDigest)
+    expect(await f.runtime.resume(first.id, signal())).toEqual(first)
+    await f.runtime.start(f.plan, signal())
+    expect(f.calls).toHaveLength(8)
+    const before = f.views[0]!.evidence_condition
+    const evaluate = f.provider.evaluate.bind(f.provider)
+    f.provider.evaluate = async (input, s) => {
+      const result = await evaluate(input, s)
+      result.conditionDigest = canonicalDigest(['new-environment', input.task.id])
+      return result
+    }
+    await f.runtime.start(f.plan, signal())
+    expect(f.views.at(-1)!.evidence_condition).not.toBe(before)
+    expect(f.calls).toHaveLength(12)
+  })
+  it.each(['seed', 'held'] as const)(
+    'persists a %s mismatch as invalid and never promotes or resubmits it',
+    async (taskId) => {
+      const f = await observedFixture()
+      const evaluate = f.provider.evaluate.bind(f.provider)
+      f.provider.evaluate = async (input, s) => {
+        const result = await evaluate(input, s)
+        if (input.target.id === 'next' && input.task.id === taskId)
+          result.conditionDigest = canonicalDigest('changed image')
+        return result
+      }
+      await expect(f.runtime.start(f.plan, signal())).rejects.toMatchObject({
+        details: { code: 'incomplete-evidence' },
+      })
+      const run = f.store.run
+      const invalid = run.trials.find((t) => t.taskId === taskId && t.candidate === 'next')!
+      expect(invalid.score).toBeNull()
+      expect(invalid.scoreDetails).toEqual({ valid: false, reason: 'execution-condition-mismatch' })
+      expect(run.champion).toBe('initial')
+      expect(run.gate).toBeUndefined()
+      expect(projectReport(run)).toMatchObject({ physicalAttempts: taskId === 'seed' ? 2 : 4, reservedAttempts: 0 })
+      const count = f.calls.length
+      await expect(f.runtime.resume(run.id, signal())).rejects.toMatchObject({
+        details: { code: 'incomplete-evidence' },
+      })
+      expect(f.calls).toHaveLength(count)
+      expect(
+        f.views.every(
+          (view) => taskId !== 'seed' || view.candidates.every((c) => c.id !== 'next' || !Object.keys(c.scores).length),
+        ),
+      ).toBe(true)
+    },
+  )
+  it('accounts a missing baseline attestation as invalid and never starts the algorithm', async () => {
+    const f = await observedFixture()
+    const evaluate = f.provider.evaluate.bind(f.provider)
+    f.provider.evaluate = async (input, s) => {
+      const result = await evaluate(input, s)
+      delete result.conditionDigest
+      return result
+    }
+    await expect(f.runtime.start(f.plan, signal())).rejects.toMatchObject({ details: { code: 'incomplete-evidence' } })
+    expect(f.store.run.trials[0]).toMatchObject({
+      score: null,
+      scoreDetails: { reason: 'execution-condition-missing' },
+    })
+    expect(projectReport(f.store.run)).toMatchObject({ physicalAttempts: 1, reservedAttempts: 0 })
+    expect(f.views).toHaveLength(0)
+  })
+  it.each(['array', 'malformed'] as const)(
+    'rejects a %s attestation without releasing the reservation',
+    async (kind) => {
+      const f = await observedFixture()
+      const evaluate = f.provider.evaluate.bind(f.provider)
+      f.provider.evaluate = async (input, s) => {
+        const result = await evaluate(input, s)
+        result.conditionDigest = (kind === 'array' ? [canonicalDigest('environment')] : 'not-a-digest') as never
+        return result
+      }
+      await expect(f.runtime.start(f.plan, signal())).rejects.toThrow('invalid-provider-result')
+      expect(f.store.run.trials).toHaveLength(0)
+      expect(projectReport(f.store.run)).toMatchObject({ physicalAttempts: 0, reservedAttempts: 1 })
+      expect(f.calls).toHaveLength(1)
+    },
+  )
+  it('keeps held-out condition details out of the seed condition identity', async () => {
+    const f = await observedFixture()
+    await f.runtime.start(f.plan, signal())
+    const condition = f.views[0]!.evidence_condition
+    const evaluate = f.provider.evaluate.bind(f.provider)
+    f.provider.evaluate = async (input, s) => {
+      const result = await evaluate(input, s)
+      if (input.task.id === 'held') result.conditionDigest = canonicalDigest('different held-out environment')
+      return result
+    }
+    expect((await f.runtime.start(f.plan, signal())).champion).toBe('next')
+    expect(f.views.at(-1)!.evidence_condition).toBe(condition)
+  })
+  it('preserves infrastructure failure classification when there is no scorable observation', async () => {
+    const f = await observedFixture()
+    f.provider.evaluate = async () => ({ status: 'infrastructure-failed', physicalAttempts: 1, reason: 'build failed' })
+    const run = await f.runtime.start({ ...f.plan, kind: 'evaluate' }, signal())
+    expect(run.trials[0]).toMatchObject({ score: null, scoreDetails: { reason: 'infrastructure-failed' } })
+    expect(projectReport(run)).toMatchObject({ physicalAttempts: 1, reservedAttempts: 0 })
+  })
+  it('validates recovered conditions before comparison without another physical attempt', async () => {
+    const f = await observedFixture()
+    const evaluate = f.provider.evaluate.bind(f.provider)
+    f.provider.evaluate = async (input, s) => {
+      const result = await evaluate(input, s)
+      if (input.target.id === 'next') {
+        result.conditionDigest = canonicalDigest('drift before response loss')
+        throw new Error('response lost')
+      }
+      return result
+    }
+    await expect(f.runtime.start(f.plan, signal())).rejects.toThrow('response lost')
+    expect(projectReport(f.store.run)).toMatchObject({ physicalAttempts: 1, reservedAttempts: 1 })
+    await expect(f.runtime.resume(f.store.run.id, signal())).rejects.toMatchObject({
+      details: { code: 'incomplete-evidence' },
+    })
+    expect(projectReport(f.store.run)).toMatchObject({ physicalAttempts: 2, reservedAttempts: 0 })
+    expect(f.store.run.trials[1]!.scoreDetails?.reason).toBe('execution-condition-mismatch')
+    expect(f.calls).toHaveLength(2)
+  })
+  it('freezes the attestation requirement across recovery even if provider identity is incorrectly reused', async () => {
+    const f = await observedFixture()
+    const run = await f.runtime.start({ ...f.plan, kind: 'evaluate' }, signal())
+    delete f.provider.capabilities.observedConditions
+    await expect(f.runtime.resume(run.id, signal())).rejects.toMatchObject({ details: { code: 'identity-mismatch' } })
+    expect(f.calls).toHaveLength(1)
+  })
+})
 
 describe('existing Harbor task import', () => {
   for (const adapter of ['dsh', 'pi'])
@@ -312,7 +472,17 @@ describe('Harbor verifier evidence', () => {
     expect(f.calls).toHaveLength(0)
     expect(f.store.values.size).toBe(0)
   })
-  it('preserves valid zero, fractional rewards, identity-bound reuse and private resources', async () => {
+  it('requires actual-condition evidence capability before accepting a Harbor provider', async () => {
+    const f = await runtimeFixture()
+    delete f.provider.capabilities.observedConditions
+    const runtime = new ProjectRuntime(f.store, f.provider, f.algorithm, async () => {})
+    await expect(runtime.start(f.plan, signal())).rejects.toMatchObject({
+      details: { code: 'harbor-condition-evidence-required' },
+    })
+    expect(f.calls).toHaveLength(0)
+    expect(f.store.values.size).toBe(0)
+  })
+  it('preserves valid zero, fractional rewards, terminal recovery and private resources', async () => {
     const f = await runtimeFixture(),
       run = await f.runtime.start(f.plan, signal()),
       report = projectReport(run)
@@ -326,11 +496,12 @@ describe('Harbor verifier evidence', () => {
     expect(run.trials[0]!.result.verification!.metrics.reward).toBe(0)
     const resumed = await f.runtime.resume(run.id, signal())
     expect(resumed.gate).toEqual(run.gate)
-    const reused = await f.runtime.start(f.plan, signal())
-    expect(reused.trials.map((t) => t.score)).toEqual([0, 0.75, 0, 0.75])
-    expect(reused.trials.every((t) => t.reusedFrom?.runId === run.id)).toBe(true)
-    expect(projectReport(reused).physicalAttempts).toBe(0)
-    expect(f.calls).toHaveLength(4)
+    const nextRun = await f.runtime.start(f.plan, signal())
+    expect(nextRun.trials.map((t) => t.score)).toEqual([0, 0.75, 0, 0.75])
+    expect(nextRun.trials.every((t) => t.reusedFrom === undefined)).toBe(true)
+    expect(projectReport(nextRun).physicalAttempts).toBe(4)
+    expect(f.calls).toHaveLength(8)
+    expect(f.cache.size).toBe(0)
   })
   it.each(['missing', 'operation', 'task', 'out-of-range', 'missing-metric', 'task-failed', 'scorer-failed'] as const)(
     'accounts %s evidence as invalid, never an invented zero or cached result',

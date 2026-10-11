@@ -17,5 +17,12 @@ export function admitHarbor(benchmark: BenchmarkSpec, provider: ProjectProvider)
         retryable: false,
         next_action: 'Configure a Harbor-capable provider; benchmark compile can export the frozen tasks for Hitch.',
       })
+    if (provider.capabilities.observedConditions !== true)
+      throw new GearError({
+        code: 'harbor-condition-evidence-required',
+        message: 'Harbor comparison requires runner evidence of the actual task execution conditions',
+        retryable: false,
+        next_action: 'Use a provider that attests observed conditions for each trial; a profile name is insufficient.',
+      })
   }
 }

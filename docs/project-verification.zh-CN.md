@@ -337,3 +337,15 @@ typecheck、Biome、223 模块边界、协议、Ruff 和 14 项 CI/发布规则�
 DSH/Pi 的真实 Linux 容器构建、二次缓存、封存产物完整性和原生版本检查另有 2 项全部通过，日志 `/tmp/gear-stable-carrier-build.log`。该回归没有启用 Luna 行为测试，不作为新的模型实测。存储历史值、Hitch 执行条件、封存 Harbor 入口和持久化操作四文件 29 项通过；发布清单 1 项通过。build、typecheck、Biome、224 模块边界与协议检查通过。
 
 本轮未修改 Python 算法或训练、README、原用户工作区和历史数据。未重跑完整 Python 或 tgz/wheel 旅程；已执行上述与来源变更相关的回归，CI 继续承担完整门禁。固定来源仅消除了路径引起的条件漂移；实际任务镜像/资源、backend identity、物理尝试数认证与完整项目 Harbor provider 接线仍待完成。
+
+## 按任务核对实际执行条件
+
+`5e495a3` 的 [固定来源 CI](https://github.com/rsi-gear/gear/actions/runs/38139312557) 已全部通过。后续审计确认原项目运行层只按静态 provider/config 身份比较与缓存 Harbor 结果，没有比较实际执行环境的入口。
+
+Harbor 准入现在要求 `observedConditions`，运行计划冻结该能力。可信 runner 返回 `conditionDigest` 后，运行层逐任务核对 baseline 和候选：缺失、环境漂移或缺少有效 baseline 时分数为无效，不伪造零分，不进入排名和晋升；物理尝试与完成状态照常落盘。响应丢失后的 inspect 走相同核对，保留原预算且不重发。基础设施失败仍保留其原分类，不因没有可评分环境证据而改成环境漂移。
+
+后验条件 provider 禁用静态跨运行缓存；终态恢复仍使用原记录。seed 条件进入 `evidence_condition` 及候选执行身份，不同 seed 环境不能共享旧算法证据身份；held-out 条件不加入 seed 投影。现有固定条件模板仍通过原缓存合同。该要求也在恢复时核对，不能以相同 provider 字符串身份绕过能力变更。
+
+项目离线全量 20 文件 347 项通过；最终补充摘要类型检查后，运行层与 Harbor 两文件定向复验 79 项通过，新增拒绝可被字符串强制转换的数组摘要。用例覆盖 seed/held-out 漂移、缺失 baseline 证明、丢失响应、预算结算、不重跑、不晋升、恢复能力变动、跨运行环境变化及 held-out 投影边界。这里的 provider 与条件摘要是固定测试夹具，不是对真实 Docker/Harbor 镜像的采集证明；完整内置 Hitch 采集、认证和项目执行接线仍未完成。
+
+tgz/wheel 安装旅程增加缺少能力时在提交前拒绝的合同，首次失败来自 Node `assert.rejects` 对嵌套对象的严格比较，实际错误码符合预期；改为显式错误码谓词后完整重跑通过。六种模板/Target、两个 Harbor 导入与评分、evaluate/refine/report/resume/export、诊断预算、工作计划及双语言 SDK/作者入口均通过离线夹具旅程。最终 build、typecheck、Biome、224 模块边界、协议和 diff 检查通过。没有模型调用、README 修改、原工作区写入或历史身份迁写。

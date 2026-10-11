@@ -15,6 +15,15 @@ export function projectView(run: ProjectRun, sharedEvidence: boolean): SearchVie
     provider: run.plan.providerIdentity,
     benchmark: run.plan.benchmark.digest,
     repetition: 0,
+    ...(run.plan.conditionEvidence === 'required'
+      ? {
+          observed: tasks.map((task) => [
+            task.id,
+            run.trials.find((trial) => trial.taskId === task.id && trial.candidate === run.plan.target.id)?.result
+              .conditionDigest ?? null,
+          ]),
+        }
+      : {}),
   })
   return {
     seed_tasks: seed,

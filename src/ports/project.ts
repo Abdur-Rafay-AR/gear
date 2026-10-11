@@ -11,6 +11,8 @@ export interface TargetSnapshot {
   files: Record<string, string>
 }
 export interface TrialResult {
+  /** Trusted runner attestation of actual comparison conditions, excluding candidate identity. */
+  conditionDigest?: string
   /** Produced by the trusted verifier runner, never by Target/model output. */
   verification?: HarborVerification
   status: 'completed' | 'task-failed' | 'scorer-failed' | 'infrastructure-failed'
@@ -41,6 +43,8 @@ export interface ProjectProvider {
     isolatedMeta: true
     /** The runner preserves task environments and withholds tests/solution/reward writes from Target and Meta. */
     harborVerification?: true
+    /** Actual conditions are known only after execution; static cache keys cannot authorize reuse. */
+    observedConditions?: true
   }
   evaluate(input: EvaluationInput, signal: AbortSignal): Promise<TrialResult>
   inspectEvaluation(operationId: string, signal: AbortSignal): Promise<TrialResult | undefined>

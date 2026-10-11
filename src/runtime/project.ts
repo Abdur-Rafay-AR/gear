@@ -17,6 +17,7 @@ import { admitHarbor } from './project-harbor.js'
 import { projectView } from './project-view.js'
 
 export interface RunPlan {
+  conditionEvidence?: 'required'
   promotion?: ProjectGate['policy']
   runtimeIdentity?: string
   kind: 'evaluate' | 'refine'
@@ -95,6 +96,8 @@ function validTrial(result: TrialResult): void {
     !Number.isSafeInteger(result.physicalAttempts) ||
     result.physicalAttempts < 0 ||
     result.physicalAttempts > 1 ||
+    (result.conditionDigest !== undefined &&
+      (typeof result.conditionDigest !== 'string' || !/^sha256:[a-f0-9]{64}$/u.test(result.conditionDigest))) ||
     (result.output !== undefined && typeof result.output !== 'string')
   )
     throw new TypeError('invalid-provider-result')
@@ -140,11 +143,16 @@ export class ProjectRuntime {
     readonly sealTarget?: (snapshot: TargetSnapshot, parent?: TargetSnapshot) => Promise<TargetSnapshot>,
     readonly evidenceCache?: EvidenceCache,
     readonly identity?: string,
-  ) {}
+  ) {
+    // Post-execution observations cannot certify a future invocation's static cache key.
+    if (provider.capabilities?.observedConditions === true) this.evidenceCache = undefined
+  }
 
   async start(plan: RunPlan, signal: AbortSignal): Promise<ProjectRun> {
     plan = structuredClone({ ...plan, promotion: promotionFor(plan.benchmark.metric.name) })
     if (this.identity) plan = { ...plan, runtimeIdentity: this.identity }
+    if (this.provider.capabilities?.observedConditions === true) plan = { ...plan, conditionEvidence: 'required' }
+    else if (plan.conditionEvidence) throw new Error('condition-evidence-provider-required')
     const capabilities = this.provider.capabilities
     if (
       !capabilities?.meteredAttempts ||
@@ -207,6 +215,8 @@ export class ProjectRuntime {
         run.plan.algorithmIdentity !== this.algorithm.identity
       )
         fault('identity-mismatch', 'Frozen configuration, provider or algorithm changed', id)
+      if ((run.plan.conditionEvidence === 'required') !== (this.provider.capabilities?.observedConditions === true))
+        fault('identity-mismatch', 'Required execution condition evidence changed', id)
       admitDiagnosis(run.plan, this.provider)
       admitHarbor(run.plan.benchmark, this.provider)
       if (run.status !== 'running') return run
@@ -342,8 +352,20 @@ export class ProjectRuntime {
     }
     validTrial(result)
     result = structuredClone(result)
-    const scoreDetails =
-      task.scorer.kind === 'harbor'
+    const baseline = run.trials.find((trial) => trial.taskId === task.id && trial.candidate === run.plan.target.id)
+    const conditionFailure =
+      run.plan.conditionEvidence === 'required' && ['completed', 'task-failed'].includes(result.status)
+        ? !result.conditionDigest
+          ? 'execution-condition-missing'
+          : candidate !== run.plan.target.id && (!baseline?.result.conditionDigest || baseline.score === null)
+            ? 'execution-condition-baseline-missing'
+            : baseline && baseline.result.conditionDigest !== result.conditionDigest
+              ? 'execution-condition-mismatch'
+              : undefined
+        : undefined
+    const scoreDetails = conditionFailure
+      ? { valid: false, reason: conditionFailure }
+      : task.scorer.kind === 'harbor'
         ? ['completed', 'task-failed'].includes(result.status)
           ? harborScore(result.verification, cached?.operationId ?? id, task.scorer.taskDigest, task.scorer.metric)
           : { valid: false, reason: result.status }
