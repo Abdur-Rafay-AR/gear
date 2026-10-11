@@ -9,6 +9,7 @@ import tempfile
 import unittest
 
 from gear.algorithms import Candidate, Decision, Operation, SearchView
+from gear.algorithms.gepa.proposal import CandidateWorkPlan, GenerationBudget
 from gear._protocol.canonical import digest
 from gear._protocol.generated import PROTOCOL, validate_wire_type
 
@@ -36,7 +37,8 @@ class PayloadTests(unittest.TestCase):
 
     def test_author_dataclasses_cover_generated_fields(self):
         for author, name in [(Candidate, "CandidateView"), (SearchView, "SearchView"),
-                             (Operation, "AlgorithmOperation"), (Decision, "AlgorithmDecision")]:
+                             (Operation, "AlgorithmOperation"), (Decision, "AlgorithmDecision"),
+                             (CandidateWorkPlan, "CandidateWorkPlan"), (GenerationBudget, "GenerationBudget")]:
             self.assertEqual({f.name for f in fields(author)}, set(PROTOCOL["types"][name]["properties"]))
         validate_wire_type("AlgorithmRequest", request())
         validate_wire_type("AlgorithmDecision", asdict(Decision({}, (Operation("stop"),), "done")))

@@ -42,7 +42,8 @@ export const algorithmProtocol = {
     "generation_diagnosis_binding": "receipt-v1",
     "payload_schema": "algorithm-payload-v1",
     "max_json_depth": 64,
-    "seed_diagnosis_budget": "requests-and-tokens-v1"
+    "seed_diagnosis_budget": "requests-and-tokens-v1",
+    "generation_workplan": "certified-boundary-v1"
   },
   "requestFields": [
     "protocol_version",
@@ -259,6 +260,16 @@ export const algorithmProtocol = {
               "type": "null"
             }
           ]
+        },
+        "workplan": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CandidateWorkPlan"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -428,6 +439,156 @@ export const algorithmProtocol = {
         "decision"
       ],
       "additionalProperties": false
+    },
+    "GenerationBudget": {
+      "type": "object",
+      "properties": {
+        "deadline_ms": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "max_tokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "max_model_requests": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "deadline_ms",
+        "max_tokens",
+        "max_model_requests"
+      ],
+      "additionalProperties": false
+    },
+    "CandidateWorkPlan": {
+      "type": "object",
+      "properties": {
+        "candidate_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "batch_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parent_identity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dossier_identity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cluster_identity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "family_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hypothesis": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "local_plan_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_task_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "required_diagnosis_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "modification_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "required_seed_tasks": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "generation_budget": {
+          "$ref": "#/$defs/GenerationBudget"
+        },
+        "on_insufficient_scope": {
+          "enum": [
+            "retain-research-only"
+          ]
+        }
+      },
+      "required": [
+        "candidate_id",
+        "batch_id",
+        "parent_identity",
+        "dossier_identity",
+        "cluster_identity",
+        "family_id",
+        "hypothesis",
+        "scope_id",
+        "local_plan_id",
+        "target_task_ids",
+        "required_diagnosis_refs",
+        "modification_paths",
+        "required_seed_tasks",
+        "generation_budget",
+        "on_insufficient_scope"
+      ],
+      "additionalProperties": false
     }
   }
 } as const
@@ -437,12 +598,14 @@ export type OperationKind = "diagnose_seed" | "generate" | "evaluate_seed" | "no
 export type DiagnosisBudget = { requests: number; inputTokens: number; outputTokens: number }
 export type CandidateView = { id: string; scores: Record<string, number>; content_digest?: string | null; execution_digest?: string | null; score_evidence?: Record<string, string> }
 export type SearchView = { seed_tasks: Array<string>; candidates: Array<CandidateView>; champion: string; max_candidates: number; remaining_evaluations: number; random_seed: string; completed: Record<string, JsonObject>; task_families?: Record<string, string>; evidence_condition?: string | null; diagnosis_budget?: DiagnosisBudget | null }
-export type AlgorithmOperation = { kind: OperationKind; candidate: string; tasks: Array<string>; parent: string; diagnosis_id?: string | null }
+export type AlgorithmOperation = { kind: OperationKind; candidate: string; tasks: Array<string>; parent: string; diagnosis_id?: string | null; workplan?: CandidateWorkPlan | null }
 export type AlgorithmDecision = { state: JsonObject; operations: Array<AlgorithmOperation>; reason: string }
 export type AlgorithmInput = { view: SearchView; state: JsonObject }
 export type ProtocolEnvelope = { protocol_version: 1; request_id: string; run_id: string; step_id: number; input_digest: string; capabilities: JsonObject }
 export type AlgorithmRequest = { protocol_version: 1; request_id: string; run_id: string; step_id: number; input_digest: string; capabilities: JsonObject; input: AlgorithmInput }
 export type AlgorithmResponse = { protocol_version: 1; request_id: string; run_id: string; step_id: number; input_digest: string; capabilities: JsonObject; decision: AlgorithmDecision }
+export type GenerationBudget = { deadline_ms: number | null; max_tokens: number | null; max_model_requests: number | null }
+export type CandidateWorkPlan = { candidate_id: string; batch_id: string; parent_identity: string; dossier_identity: string; cluster_identity: string; family_id: string; hypothesis: string; scope_id: string; local_plan_id: string; target_task_ids: Array<string>; required_diagnosis_refs: Array<string>; modification_paths: Array<string>; required_seed_tasks: Array<string>; generation_budget: GenerationBudget; on_insufficient_scope: "retain-research-only" }
 
 export function validateWireType(name: keyof typeof algorithmProtocol.types, value: unknown): void {
   validateWire(value, name, algorithmProtocol.types, algorithmProtocol.capabilities.max_json_depth)
@@ -490,4 +653,12 @@ export function validateAlgorithmRequest(value: unknown): asserts value is Algor
 
 export function validateAlgorithmResponse(value: unknown): asserts value is AlgorithmResponse {
   validateWireType('AlgorithmResponse', value)
+}
+
+export function validateGenerationBudget(value: unknown): asserts value is GenerationBudget {
+  validateWireType('GenerationBudget', value)
+}
+
+export function validateCandidateWorkPlan(value: unknown): asserts value is CandidateWorkPlan {
+  validateWireType('CandidateWorkPlan', value)
 }

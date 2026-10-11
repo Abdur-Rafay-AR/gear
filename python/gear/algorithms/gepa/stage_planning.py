@@ -14,6 +14,7 @@ from .stage_catalog import add_scope, make_scope, read_family, read_scope, sampl
 from .stage_evidence import eligible, missing, nominate
 from .stage_locals import generate, plan_locals
 from .stage_parents import batches, freeze_parents
+from .stage_proposals import propose
 from .stopping import diagnosis_capacity
 
 
@@ -26,6 +27,8 @@ def plan_generation(
     batch_size: int,
     selection_policy: ParentSelectionPolicy | None,
 ) -> Decision:
+    if state["stage"] == "propose":
+        return propose(view, state, config)
     if state["stage"] == "parents":
         if (
             state["index"] >= view.max_candidates

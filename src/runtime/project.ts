@@ -7,6 +7,7 @@ import { GearError, GenerationFailed } from '../domain/errors.js'
 import { MutationValidationError } from '../domain/harness.js'
 import { type ProjectGate, passRateGate, passRatePromotion } from '../domain/promotion.js'
 import { scoreOutput } from '../domain/scoring.js'
+import { prepareWorkplan, validateWorkplanMutation, type WorkplanDelivery } from '../domain/workplan.js'
 import type { EvidenceCache } from '../ports/evidence-cache.js'
 import type { ProjectProvider, TargetSnapshot, TrialResult } from '../ports/project.js'
 import type { RunStore } from '../ports/run-store.js'
@@ -48,6 +49,7 @@ interface PendingOperation {
   candidate: string
   parent?: string
   diagnosisId?: string
+  delivery?: WorkplanDelivery
   taskId?: string
   diagnosis?: { input: DiagnosisInput; result?: DiagnosisResult }
   status: 'reserved' | 'complete'
@@ -117,6 +119,7 @@ function validateDecision(decision: AlgorithmDecision, view: SearchView, runId: 
       if (op.kind !== 'generate' || source?.kind !== 'diagnose_seed' || source.candidate !== op.parent)
         throw new TypeError('invalid-generation-diagnosis-binding')
     }
+    prepareWorkplan(op, view)
     if ((op.kind === 'stop' || op.kind === 'nominate') && index !== decision.operations.length - 1)
       throw new TypeError('terminal-operation-must-be-last')
     if (op.kind === 'evaluate_seed' && !op.tasks.length) throw new TypeError('empty-seed-evaluation')
@@ -425,29 +428,38 @@ export class ProjectRuntime {
             parent: op.parent,
             status: 'reserved',
             ...(diagnosisId ? { diagnosisId } : {}),
+            ...(op.workplan ? { delivery: prepareWorkplan(op, projectView(run, !!this.evidenceCache))! } : {}),
           }
           run.operations.push(pending)
           await this.store.write(run.id, run)
           files = await this.provider.generate(
-            {
+            structuredClone({
               operationId: id,
               parent: run.candidates.find((c) => c.id === op.parent)!,
               ...(() => {
                 const diagnosisId = pending!.diagnosisId
-                return diagnosisId ? { diagnosisId, diagnosis: run.completed![diagnosisId]! } : {}
+                return pending!.delivery
+                  ? { diagnosisId: diagnosisId!, delivery: pending!.delivery }
+                  : diagnosisId
+                    ? { diagnosisId, diagnosis: run.completed![diagnosisId]! }
+                    : {}
               })(),
               seed: run.plan.benchmark.tasks
-                .filter((t) => t.split === 'seed')
+                .filter(
+                  (t) => t.split === 'seed' && (!pending!.delivery || pending!.delivery.scopeTaskIds.includes(t.id)),
+                )
                 .map((t) => ({
                   id: t.id,
                   instruction: t.instruction,
                   score: run.trials.find((x) => x.taskId === t.id && x.candidate === op.parent)?.score ?? null,
                 })),
-            },
+            }),
             signal,
           )
         }
+        files = structuredClone(files)
         await this.validateCandidate(files)
+        validateWorkplanMutation(pending?.delivery, run.candidates.find((c) => c.id === op.parent)!.files, files)
       } catch (error) {
         if (!(error instanceof GenerationFailed) && !(error instanceof MutationValidationError)) throw error
         if (pending) pending.status = 'complete'
@@ -456,6 +468,9 @@ export class ProjectRuntime {
           candidate: op.candidate,
           status: 'invalid-candidate',
           ...(pending?.diagnosisId ? { diagnosis_id: pending.diagnosisId } : {}),
+          ...(pending?.delivery
+            ? { workplan_identity: pending.delivery.workplanIdentity, delivery_identity: pending.delivery.identity }
+            : {}),
           ...(error instanceof GenerationFailed ? { reason: error.reason } : {}),
         }
         await this.store.write(run.id, run)
@@ -477,6 +492,9 @@ export class ProjectRuntime {
         status: 'complete',
         digest: snapshot.digest,
         ...(pending!.diagnosisId ? { diagnosis_id: pending!.diagnosisId } : {}),
+        ...(pending!.delivery
+          ? { workplan_identity: pending!.delivery.workplanIdentity, delivery_identity: pending!.delivery.identity }
+          : {}),
       }
       await this.store.write(run.id, run)
     } else if (op.kind === 'evaluate_seed') {

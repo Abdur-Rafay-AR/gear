@@ -1,5 +1,6 @@
 import type { BenchmarkTask } from '../domain/benchmark.js'
 import type { TargetManifest } from '../domain/harness.js'
+import type { WorkplanDelivery } from '../domain/workplan.js'
 import type { DiagnosisProvider } from './diagnosis.js'
 export interface TargetSnapshot {
   id: string
@@ -25,6 +26,7 @@ export interface GenerationInput {
   seed: Array<{ id: string; instruction: string; score: number | null }>
   diagnosis?: Record<string, unknown>
   diagnosisId?: string
+  delivery?: WorkplanDelivery
 }
 export interface ProjectProvider {
   readonly identity: string

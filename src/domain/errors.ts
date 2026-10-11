@@ -28,7 +28,7 @@ export function invalid(message: string, location?: string): never {
 
 /** A provider has observed a terminal Meta operation with no usable proposal. */
 export class GenerationFailed extends Error {
-  constructor(readonly reason: 'process-exit' | 'missing-proposal' | 'invalid-proposal') {
+  constructor(readonly reason: 'process-exit' | 'missing-proposal' | 'invalid-proposal' | 'workplan-boundary') {
     super(`Meta generation failed: ${reason}`)
     this.name = 'GenerationFailed'
   }

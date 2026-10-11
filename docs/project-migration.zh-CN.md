@@ -40,7 +40,7 @@ Python 已提供历史 shared/local/cross 采样的纯函数与可选 `ScopeSamp
 
 新 worker 输入增加可选 `execution_digest`、`score_evidence` 和 `evidence_condition`。执行身份与 Target 内容身份分开：共享缓存别名去重，独立执行的相同内容分别保留。旧构造和缺少字段的自定义 view 继续可用；新 runtime 只传 seed 分数与不含原始内容的引用。运行内冻结采样截止点不重算历史摘要，也不接管原始证据日志。完整历史导入/修订、模型诊断和 process/objective 执行仍是后续迁移项。
 
-`StagedGEPA` 的最新状态为 `staged-gepa-v3`。新增 `parent_selection_policy(ParentInput, RandomSource) -> ParentPlan`，完整分配列表经校验后展开为有来源 scope、父代、额度和随机索引的批次；默认仍为一个分配，原单父代覆盖保持兼容，但两种覆盖不能同时配置。v1/v2 状态需匹配原冻结 runtime，不原地转写。55 份旧 TS 完整批次输出与 Python 对照通过。
+`StagedGEPA` 的多父代版本使用 `staged-gepa-v3`（后续工作计划阶段升级为下述 v4）。新增 `parent_selection_policy(ParentInput, RandomSource) -> ParentPlan`，完整分配列表经校验后展开为有来源 scope、父代、额度和随机索引的批次；默认仍为一个分配，原单父代覆盖保持兼容，但两种覆盖不能同时配置。v1/v2 状态需匹配原冻结 runtime，不原地转写。55 份旧 TS 完整批次输出与 Python 对照通过。
 
 周期准备保留从同一旧 scope 抽出的全部父代；局部计划按每个批次的额度执行，重复父代/题族去重，重叠父代 baseline 按槽位并集报价。各批次只有冻结 archive 元数据和自己的探测证据，完整分配、排除原因与输入摘要进入原 decision。父代冻结、catalog、epoch 编排和局部计划已拆分，移除原单父代规划实现。真实 Python worker 的多父代回合及准备阶段恢复已有离线证据；完整模型诊断、regression、objective 与跨运行 archive 仍待后续迁移。
 
@@ -57,3 +57,9 @@ Python 已提供历史 shared/local/cross 采样的纯函数与可选 `ScopeSamp
 诊断单独预留请求/input/output token，写入实际用量后再认证同父代 seed 日志引用；坏事实和超额结果不抹去已发生费用。恢复保持原操作、输入和预留，未知状态不重发；只有明确的 `not-started` 允许原输入提交。端口取消与主评测 provider 分离。回执可直接供 Python `failure_clusters` 消费，但不宣称已完成原始 verifier、重复槽位或 objective 证据认证。
 
 生成协议新增可空 `diagnosis_budget` 和能力 `seed_diagnosis_budget: requests-and-tokens-v1`。旧 worker 不满足能力时明确拒绝；Python dataclass 只在末尾增加可选参数。GEPA 和 StagedGEPA 根据余额结束或排除新诊断，已经执行的候选仍可完成评测与提名。新源文件照常进入实现身份，新运行使用新合同；历史 run 继续使用其冻结 runtime，不迁写旧状态、摘要或数据。
+
+当前阶段进一步升级为 `staged-gepa-v4`：模型诊断和候选生成分开提交，`stage_proposals.py` 只消费本批新诊断，按已支持假设冻结工作计划。没有因果依据或已使用的同父代/题族/假设保留排除记录，不凭评分补造根因，不转移空余额度。旧 v3 仍需原 runtime，不能将旧状态原地标成 v4。默认 GEPA 和未配置模型诊断的评分投影路径保持各自版本合同。
+
+`Operation` 末尾增加可空 `workplan`，schema 生成其完整结构，协议能力增加 `generation_workplan: certified-boundary-v1`。父代/dossier/引用/假设/路径由运行层核对后冻结交付；Meta 只获得所分配范围的 seed 文本与摘录。新增、修改和删除均受已认证路径约束；越界记为无效候选并保留成本，恢复只 inspect 原生成。作者的 scope/cluster 标识为计划标签，不能绕过证据认证。
+
+`GenerationBudget()` 现在允许所有值为 None；显式正 deadline 或非负 token/request 仍保留声明语义，但当前运行层一律拒绝实际生成携带这些未能可靠执行的限制。真实消费审计和原生生成计量仍未完成，工作计划交付身份不充当“已读”证明。纯策略固定样例原样保留，新运行使用新的实现身份。

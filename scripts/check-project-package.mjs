@@ -49,6 +49,7 @@ try {
     join(temp, 'journey.mjs'),
     `
     import assert from 'node:assert/strict'
+    import {execFileSync} from 'node:child_process'
     import {readFile,writeFile} from 'node:fs/promises'
     import {ProjectApplication} from 'rsi-gear/project'
     const results=new Map(),generations=new Map()
@@ -77,7 +78,10 @@ try {
           assert.deepEqual(input.limits,{requests:1,inputTokens:100,outputTokens:50})
           assert.ok(input.observations.length>0)
           assert.ok(input.observations.every(o=>o.evidenceRef&&o.score===0))
-          const result={facts:[],usage:{requests:1,inputTokens:10,outputTokens:5}}
+          const result={facts:input.observations.map(o=>({task_id:o.taskId,evidence_refs:[o.evidenceRef],
+            status:'supported-hypothesis',family_id:'instruction-handling',hypothesis:'Follow the seed instruction',
+            mechanism:'Verified seed output mismatch',modification_paths:['AGENTS.md']})),
+            usage:{requests:1,inputTokens:10,outputTokens:5}}
           diagnoses.set(input.operationId,result); return result
         },
         async inspectDiagnosis(id){const result=diagnoses.get(id);return result?{status:'complete',result}:{status:'pending'}},
@@ -86,23 +90,20 @@ try {
       const metered=new ProjectApplication(new URL('./'+adapter+'-text',import.meta.url).pathname,{
         provider:{...provider,diagnosis,async generate(input){
           assert.ok(input.diagnosisId)
-          assert.equal(input.diagnosis.dossier.parent_identity,input.parent.digest)
-          assert.equal(input.diagnosis.dossier.classifier_identity,diagnosis.identity)
+          assert.equal(input.diagnosis,undefined)
+          assert.equal(input.delivery.dossier.parent_identity,input.parent.digest)
+          assert.equal(input.delivery.dossier.classifier_identity,diagnosis.identity)
+          assert.deepEqual(input.delivery.workplan.modification_paths,['AGENTS.md'])
           return provider.generate(input)
         }},
-        algorithm:{identity:'package-metered-algorithm-v1',async step(view,state){
-          const n=state.n??0
-          assert.equal(view.diagnosis_budget.requests,n===0?1:0)
-          const receipt=Object.keys(view.completed).find(key=>view.completed[key].kind==='diagnose_seed')
-          const ops=[{kind:'diagnose_seed',candidate:'initial',parent:'',tasks:view.seed_tasks},
-            {kind:'generate',candidate:'next',parent:'initial',tasks:[],diagnosis_id:receipt},
-            {kind:'evaluate_seed',candidate:'next',parent:'',tasks:view.seed_tasks},
-            {kind:'nominate',candidate:'next',parent:'',tasks:[]}]
-          return {state:{n:n+1},operations:[ops[n]],reason:'metered package journey'}
+        algorithm:{identity:'package-staged-workplan-v1',async step(view,state){
+          return JSON.parse(execFileSync(process.env.GEAR_PACKAGE_PYTHON,['-c',
+            'import json,sys\\nfrom dataclasses import asdict\\nfrom gear.algorithms import Candidate, SearchView, StagedGEPA\\nfrom gear.algorithms.gepa.scopes import ScopeConfig, TaskSetLimit\\np=json.load(sys.stdin)\\nv=p["view"]\\nv["candidates"]=tuple(Candidate(**c) for c in v["candidates"])\\nv["seed_tasks"]=tuple(v["seed_tasks"])\\na=StagedGEPA(ScopeConfig(local=TaskSetLimit(1),shared=TaskSetLimit(0),cross=TaskSetLimit(0),bridge=TaskSetLimit(1)),batch_size=1)\\nprint(json.dumps(asdict(a.step(SearchView(**v),p["state"]))))'
+          ],{input:JSON.stringify({view,state}),encoding:'utf8'}))
         }}
       })
       const diagnosed=await metered.run('refine',{rounds:1},new AbortController().signal)
-      assert.equal(diagnosed.champion,'next'); assert.equal(diagnosed.gate.accepted,true)
+      assert.equal(diagnosed.champion,'candidate-1'); assert.equal(diagnosed.gate.accepted,true)
       assert.deepEqual(diagnosed.diagnosisBudget.spent,{requests:1,inputTokens:10,outputTokens:5})
       assert.deepEqual(diagnosed.diagnosisBudget.reserved,{requests:0,inputTokens:0,outputTokens:0})
       assert.deepEqual(await metered.resume(diagnosed.run_id,new AbortController().signal),diagnosed)
@@ -110,7 +111,6 @@ try {
     }
   `,
   )
-  run(process.execPath, [join(temp, 'journey.mjs')])
   const wheels = join(temp, 'wheels')
   await mkdir(wheels)
   run(python, ['-m', 'pip', 'wheel', '--no-deps', '--wheel-dir', wheels, join(temp, 'node_modules/rsi-gear/python')])
@@ -119,6 +119,7 @@ try {
   const wheel = (await readdir(wheels)).find((name) => name.endsWith('.whl'))
   assert.ok(wheel)
   run(installed, ['-m', 'pip', 'install', join(wheels, wheel)])
+  run(process.execPath, [join(temp, 'journey.mjs')], temp, { GEAR_PACKAGE_PYTHON: installed })
   run(installed, [
     '-c',
     "import sys; from gear.training import TrainingLoop; from gear_training import TrainingLoop as Legacy; from gear.benchmark import Benchmark; from gear.refine import refine; assert TrainingLoop is Legacy; assert not ({'torch','slime'} & set(sys.modules))",
@@ -217,7 +218,7 @@ assert asyncio.run(p.acompile()) == Benchmark(p).compile()
 `,
   ])
   console.log(
-    'Published tgz and wheel: six templates, both Target layouts, evaluate/refine/report/resume/export, metered diagnosis, CPU imports, sync/async SDK, source freezing and both algorithm author CLIs passed (offline fixture provider).',
+    'Published tgz and wheel: six templates, both Target layouts, evaluate/refine/report/resume/export, metered diagnosis and StagedGEPA workplans, CPU imports, sync/async SDK, source freezing and both algorithm author CLIs passed (offline fixture provider).',
   )
 } finally {
   await rm(temp, { recursive: true, force: true })

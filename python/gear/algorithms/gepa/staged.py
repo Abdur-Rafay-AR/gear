@@ -46,10 +46,10 @@ class StagedGEPA:
         return nominate(view, state, self.scope_config.guard_task_ids, reason)
 
     def step(self, view: SearchView, state: Mapping[str, Any]) -> Decision:
-        if state and state.get("recipe") != "staged-gepa-v3":
+        if state and state.get("recipe") != "staged-gepa-v4":
             raise ValueError("State belongs to another recipe; use its frozen runtime")
         current = {
-            "recipe": "staged-gepa-v3",
+            "recipe": "staged-gepa-v4",
             "stage": "parents",
             "index": 0,
             "round": 0,
@@ -62,7 +62,7 @@ class StagedGEPA:
             return Decision(current, (Operation("stop"),), "Search finished")
         config = replace(self.scope_config, seed=view.random_seed)
         tasks = tuple(SamplingTask(t, view.task_families.get(t, "seed")) for t in view.seed_tasks)
-        if stage in ("parents", "epochs", "epoch-results", "generate"):
+        if stage in ("parents", "epochs", "epoch-results", "generate", "propose"):
             return plan_generation(
                 view,
                 current,

@@ -9,12 +9,12 @@
 | 检查 | 结果与边界 |
 | --- | --- |
 | TypeScript 全量回归 | `697a63d` 的远端 CI：104 个测试文件通过、7 个按环境跳过；无模型环境项单独验证 |
-| 项目定向回归 | 独立诊断端口接入后：15 个文件、229 项通过，含跨语言结构正反例、诊断计量/认证/恢复、固定 GEPA fixture、真实 worker 闭环与恢复、作者 CLI |
-| Python 全量回归 | 独立诊断预算接入后本地 367 项：363 项通过，4 项按环境跳过 |
+| 项目定向回归 | 工作计划执行接入后：16 个文件、262 项通过，含跨语言结构正反例、诊断计量/认证/恢复、修改边界、固定 GEPA fixture、真实 worker 闭环与恢复、作者 CLI |
+| Python 全量回归 | 工作计划阶段接入后本地 371 项：367 项通过，4 项按环境跳过 |
 | Python 公共 API | Ruff lint/format、Mypy strict 通过 |
-| TS 质量 | typecheck、Biome、协议生成一致性、210 个模块依赖/循环检查通过 |
+| TS 质量 | typecheck、Biome、协议生成一致性、211 个模块依赖/循环检查通过 |
 | CI/发布规则 | 14 项规则测试通过；dev 代码变更启用完整回归 |
-| 独立 tgz/wheel | 六组 Target/模板组合；check/compile；共享应用 evaluate/refine/report/resume/export；独立诊断预留/结算及终态恢复；SDK；无 GPU CPU loop 及恢复通过 |
+| 独立 tgz/wheel | 六组 Target/模板组合；check/compile；共享应用 evaluate/refine/report/resume/export；独立诊断、安装后 StagedGEPA 工作计划与终态恢复；SDK；无 GPU CPU loop 及恢复通过 |
 | Python 真实 sandbox | macOS 实测拒绝工作目录之外的私有测试文件、宿主凭据环境变量和已监听的 loopback 端口 |
 | Harbor verifier | 三种模板在真实 Docker 容器运行正反例；不安全软链接输出被拒绝；第四项验证输入附件的冻结内容、独立挂载和 inspect 一致性 |
 | DSH 固定 carrier | rc.2 的有效 Skill 与完整 Harness 两组原生加载、prompt assembly、Skill 读取检查通过 |
@@ -37,6 +37,22 @@
 `c88f2f5` 的 [诊断策略及引用绑定 CI](https://github.com/rsi-gear/gear/actions/runs/38124628907) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。以下 payload schema 属于后续新改动，验证单独记录。
 
 `f3efe44` 的 [完整 payload schema CI](https://github.com/rsi-gear/gear/actions/runs/38125680393) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。独立诊断端口属于后续新增代码，验证如下。
+
+`4645fef` 的 [独立诊断账本 CI](https://github.com/rsi-gear/gear/actions/runs/38127378206) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。工作计划实际执行的新改动另列如下。
+
+## 诊断后的工作计划与实际修改边界
+
+StagedGEPA v4 在启用模型诊断时分开提交诊断和生成，`stage_proposals.py` 从当前阶段的新回执选择有支持证据的假设，冻结工作计划并绑定诊断 ID。父代/题族/假设跨批去重，未使用配额保留排除理由，不重分配。诊断预算用尽仍能完成已支持候选的后续阶段；未解析事实不能授权生成。因果题族可不同于数据分层，复用原任务/权重并登记新的 scope 身份；旧 v3 状态明确拒绝，须用其原 runtime。
+
+运行层在提交 decision 前核对工作计划的父代、dossier、假设、完整 seed manifest、目标任务、引用和修改路径。按分配范围摘录 seed 文本和诊断事实，将完整交付与身份保存到生成 reservation；恢复 inspect 原生成，不重新挑选诊断或计划。新增、编辑和删除均先过 Target 验证，再核对认证路径；越界保留生成成本与来源，记录 `workplan-boundary`，不封存候选。生成输入及返回文件已解除共享对象引用。
+
+21 项执行回归通过，包含真实 Python StagedGEPA 的诊断/工作计划/local/最终 gate/终态恢复、生成响应丢失后恢复、范围内文本与事实投影、返回文件隔离、五种越界/输入篡改、十二种伪造或未支持限制、无支持假设时保留研究记录。Python 另有四项多父代工作计划测试，覆盖预算用尽、配额去重、不支持事实、旧状态/陈旧回执/错误父代拒绝和生成 wire 合同。
+
+协议新增 `generation_workplan: certified-boundary-v1`，schema 生成完整 workplan 与 GenerationBudget 字段；原 51 组 wire 样例不变，新增 12 组，现为 63 组。公开 Python dataclass 字段覆盖检查也包含这两个结构。旧历史 GEPA 固定样例未修改，不用新阶段输出作为历史等价证明。
+
+项目回归 262 项全部通过；Python 全量 371 项中 367 通过、4 跳过。Ruff（43 文件）、Mypy strict（39 文件）、typecheck、Biome、211 模块边界及协议生成检查通过；macOS 实际 worker sandbox 两项通过。安装后的 tgz/wheel 在 DSH/Pi 布局各运行一次独立 Python 进程的 StagedGEPA，检查工作计划、诊断用量、最终 gate 和恢复；原六组模板、SDK、作者 CLI、源码封存和 CPU training 继续通过。发布探针的嵌入脚本先发现换行转义错误，修正后重跑通过；一次未指定解释器的调用被 Python 版本预检拒绝，未计为成功。
+
+边界：工作计划执行当前不接受任何显式 deadline/token/request 限制，均在生成预留前拒绝；None 只表示没有声明该限制。交付身份采用新项目传输格式，不冒用旧纯策略 delivery 身份或作为模型已读凭证。真实消费/阅读审计、原生诊断与生成请求前硬限制及可信用量仍待接入。没有新增 Luna 调用，未改 README、历史身份或原工作区；M3 仍未完成。
 
 ## 独立诊断端口、计量与 seed 来源认证
 

@@ -65,12 +65,15 @@ def plan_hypotheses(
 
 @dataclass(frozen=True)
 class GenerationBudget:
-    deadline_ms: int
+    deadline_ms: int | None = None
     max_tokens: int | None = None
     max_model_requests: int | None = None
 
     def __post_init__(self) -> None:
-        if (type(self.deadline_ms) is not int or not 1 <= self.deadline_ms <= 2**53 - 1) or any(
+        if (
+            self.deadline_ms is not None
+            and (type(self.deadline_ms) is not int or not 1 <= self.deadline_ms <= 2**53 - 1)
+        ) or any(
             v is not None and (type(v) is not int or not 0 <= v <= 2**53 - 1)
             for v in (self.max_tokens, self.max_model_requests)
         ):

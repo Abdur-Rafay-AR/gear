@@ -39,6 +39,7 @@ class Operation:
     tasks: tuple[str, ...] = ()
     parent: str = ""
     diagnosis_id: str | None = None
+    workplan: Mapping[str, Any] | None = None
 
 
 @dataclass(frozen=True)

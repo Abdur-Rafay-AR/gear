@@ -86,7 +86,7 @@ def build_algorithm():
 
 项目适配器 `project_sampling_evidence(view)` 使用 v1 的单次 pass-rate 槽位。runtime 提供 `Candidate.execution_digest`、逐题 `score_evidence` 和 `SearchView.evidence_condition`：共享缓存别名计为同一执行版本，独立执行的相同 Target 内容分别计数。只有 `content_digest` 时不能推测证据复用；旧 toy/custom views 按候选 ID 区分版本。新增字段可省略，原来的构造参数顺序保持兼容。
 
-`ScopeSampler` 和 `StagedGEPA` 共用这个投影。Staged 在批次开始冻结采样元数据和已知题目集合，准备阶段只允许当前父代在本次探测范围内的新证据进入后续诊断，避免其他 scope 的准备结果改变当前采样。状态只保存 cutoff、派生元数据和计划，不复制原始观察。当前自动诊断仍是确定性 seed 评分分类，不生成未知的模块路径或子模式。
+`ScopeSampler` 和 `StagedGEPA` 共用这个投影。Staged 在批次开始冻结采样元数据和已知题目集合，准备阶段只允许当前父代在本次探测范围内的新证据进入后续诊断，避免其他 scope 的准备结果改变当前采样。状态只保存 cutoff、派生元数据和计划，不复制原始观察。未配置模型诊断端口时，自动诊断仍是确定性 seed 评分分类，不生成未知的模块路径或子模式。
 
 `test-contracts/gepa-history-v1.json` 的 10 组旧实现固定样例覆盖重复槽位完整性、缓存去重、独立版本、无效观察、阈值与最小化 utility、诊断标签合并和 objective 的未知难度。它验证历史元数据投影，不替代完整 GEPA 决策序列或跨运行历史导入的验收。
 
@@ -117,7 +117,7 @@ def build_algorithm():
 
 分发包中的 `multi_parent.py` 可用双算法 CLI 检查。重复抽到同一父代/题族时，当前确定性诊断不会重复生成同一个假设；未使用额度不自动转移给其他批次，排除原因保存在 decision 中。每个父代诊断只读取冻结历史与自身 probe，前一批的新标签或其他准备结果不会进入后一批采样。每批只额外保存 cutoff 和派生元数据摘要，避免按父代数量复制整套题目元数据。重叠 local scopes 的同一父代 baseline 槽位只报价一次，再为候选 local 评测和完整 seed 扩展保留余量。
 
-生成前会给 local baseline、候选评测与完整 seed 扩展预留保守余量；bridge 规划按实际缺失的观察槽位计算整组开销，并保留可能胜者的后续扩展预算。最终物理预算、receipt、取消和恢复仍由 runtime 管理。当前状态标识为 `staged-gepa-v3`，不能装载 v1/v2、默认 recipe 或历史 GEPA 的状态；旧运行继续用其冻结 runtime。中断后运行层复用已经提交的整个决策。无效生成消耗一次候选额度，不会重发。完整 seed 尚未覆盖的候选不能进入最终排名。
+生成前会给 local baseline、候选评测与完整 seed 扩展预留保守余量；bridge 规划按实际缺失的观察槽位计算整组开销，并保留可能胜者的后续扩展预算。最终物理预算、receipt、取消和恢复仍由 runtime 管理。当前状态标识为 `staged-gepa-v4`，不能装载 v1/v2/v3、默认 recipe 或历史 GEPA 的状态；旧运行继续用其冻结 runtime。中断后运行层复用已经提交的整个决策。无效生成消耗一次候选额度，不会重发。完整 seed 尚未覆盖的候选不能进入最终排名。
 
 默认 `EpochPolicy()` 复用同一 scope。需要周期更新时，在 factory 中使用 `StagedGEPA(epoch_policy=EpochPolicy(update_every_rounds=2, max_historical_specialists=1))`，并从 `gear.algorithms` 导入 `EpochPolicy`。这里的 round 是 recipe 内的生成批次计数，不是物理任务尝试或 worker step。每个 epoch 的共享成功题输入只冻结一次；不会因批次父代变更而在相同 epoch 内重采样。
 
@@ -147,9 +147,15 @@ python -m gear algorithm test archive_policy:build_algorithm --source ./examples
 
 诊断策略核有独立的公开合同：`failure_clusters` 接收已经认证的 `DiagnosisDossier`，只将有证据引用、机制、假设和修改路径的 `supported-hypothesis` 合并成失败族，不从失败分数推断根因。成功对照按同题族、同原始分层或修改路径交集关联；优先级为受保护失败、失败任务数、明确的冻结顺序。`FailureCluster.sampling_diagnosis()` 可将标签交给既有采样器。旧 locale 次序需显式提供；默认新顺序为 UTF-16。
 
-`plan_hypotheses` 按额度选择并以父代/题族/假设去重；`candidate_workplan` 固定候选、批次、dossier、scope、局部计划、完整 seed 和修改范围。`deliver_workplan` 只交付目标任务与分配 scope 的诊断事实；`consumption_receipt` / `validate_receipt` 校验候选、会话、workplan、dossier、交付摘要和必需引用。`GenerationBudget` 声明 UTC epoch 毫秒截止点及可选 token/request 上限，不执行模型调用或计量。
+`plan_hypotheses` 按额度选择并以父代/题族/假设去重；`candidate_workplan` 固定候选、批次、dossier、scope、局部计划、完整 seed 和修改范围。`deliver_workplan` 只交付目标任务与分配 scope 的诊断事实；`consumption_receipt` / `validate_receipt` 校验候选、会话、workplan、dossier、交付摘要和必需引用。`GenerationBudget` 声明可选的 UTC epoch 毫秒截止点及 token/request 上限，不执行模型调用或计量；`GenerationBudget()` 的三个值均为 None，表示未声明这些限制。
 
-以上丰富 workplan 尚未接入 StagedGEPA 与真实 Meta 执行。原始 verifier 证据认证、原生模型请求前硬限制及可信用量、实际阅读审计和修改边界执行仍需 provider 集成；声明已读引用本身不是模型实际消费证据的证明。`gepa-diagnosis-v1.json` 的 10 组旧 TS 固定样例验证纯策略、摘录与回执合同，不证明完整历史 GEPA 等价，也不重写历史身份。
+StagedGEPA v4 在启用独立模型诊断时，先提交各父代诊断，再由 `stage_proposals.py` 从本阶段的新回执中提取已支持假设，通过 `candidate_workplan` 生成 `Operation.workplan`。没有可支持假设时保留研究记录并提名，不能仅凭失败评分授权因果假设。父代/题族/假设重复时保留排除记录，未用额度不重分配；因果题族不同于原数据分层时，沿用已冻结的任务/权重，登记新的题族 scope 身份。未启用模型诊断时继续使用明确的评分投影路径，默认 GEPA 尚未切换。
+
+workplan 必须绑定同一父代已提交的 `diagnosis_id`。运行层在提交 decision 前独立核对父代、dossier、假设、任务、引用和修改路径；scope/cluster/local-plan 的作者标签是冻结的计划标识，不赋予额外证据权限。`generate.tasks` 指定实际交付范围，必须覆盖该假设族的目标任务；Meta 只接收范围内 seed 文本和 dossier 摘录。完整交付及其身份在调用前写入 reservation，恢复沿用它；Meta 输入、返回文件均复制，不能通过对象引用改写日志。
+
+新增、编辑和删除均须落在 workplan 的 `modification_paths` 内，并继续通过 Target adapter 的全局修改政策。越界结果记为 `invalid-candidate / workplan-boundary`，保留生成额度及 workplan/delivery 身份，不封存候选或重复提交。当前运行层尚无可信生成计量端口，任何非空 deadline/token/request 声明都会在预留前报 `generation-limits-unsupported`；不把模型看到的声明当作硬保证。协议能力 `generation_workplan: certified-boundary-v1` 两端必须匹配，工作计划和预算结构也由同一 schema 生成。
+
+实际交付和修改边界已有运行回归，但真实模型消费/阅读审计仍未接入；回执声明或交付摘要本身不能证明模型阅读了证据。原始 verifier 证据认证、原生请求前硬限制及可信用量仍需集成。`gepa-diagnosis-v1.json` 的 10 组旧 TS 固定样例保持原样，验证纯策略、摘录与回执合同，不证明完整历史 GEPA 等价，也不重写历史身份。
 
 当前 recipe 使用完整 seed baseline、确定性父代选择、失败题局部评测、完整 seed 扩展和一次最终 gate。默认诊断是已观察 seed 评分投影，不产生隐式额外 LLM 调用；它以稳定操作 ID 持久化，经 `view.completed` 提供给后续策略，并传入 Meta 的生成输入。生成与 seed 评测也记录完成结果。无效候选或已终止但缺少有效输出的 Meta 操作消耗一次生成额度，算法可以据此结束或继续；runtime 不重发同一次生成。同批依赖失败的操作记为 `prerequisite-failed`，不会提交无效 Target。存储或环境故障保持待恢复状态，与候选格式错误分开处理。一个 decision 可包含最多 64 个顺序执行的操作，最终提名或停止只能在末尾。随机策略应只从 `view.random_seed` 推导。`toy_round` 用固定假执行器验证接口，不能代替真实 Target 集成或证明收益。
 

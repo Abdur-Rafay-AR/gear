@@ -1610,6 +1610,400 @@
         }
       },
       "valid": false
+    },
+    {
+      "name": "workplan-valid-unbounded",
+      "type": "CandidateWorkPlan",
+      "valid": true,
+      "value": {
+        "candidate_id": "next",
+        "batch_id": "batch",
+        "parent_identity": "parent",
+        "dossier_identity": "dossier",
+        "cluster_identity": "cluster",
+        "family_id": "family",
+        "hypothesis": "Handle the observed failure",
+        "scope_id": "scope",
+        "local_plan_id": "local",
+        "target_task_ids": [
+          "seed"
+        ],
+        "required_diagnosis_refs": [
+          "ref"
+        ],
+        "modification_paths": [
+          "prompts"
+        ],
+        "required_seed_tasks": [
+          "seed"
+        ],
+        "generation_budget": {
+          "deadline_ms": null,
+          "max_tokens": null,
+          "max_model_requests": null
+        },
+        "on_insufficient_scope": "retain-research-only"
+      }
+    },
+    {
+      "name": "workplan-valid-declared-limits",
+      "type": "CandidateWorkPlan",
+      "valid": true,
+      "value": {
+        "candidate_id": "next",
+        "batch_id": "batch",
+        "parent_identity": "parent",
+        "dossier_identity": "dossier",
+        "cluster_identity": "cluster",
+        "family_id": "family",
+        "hypothesis": "Handle the observed failure",
+        "scope_id": "scope",
+        "local_plan_id": "local",
+        "target_task_ids": [
+          "seed"
+        ],
+        "required_diagnosis_refs": [
+          "ref"
+        ],
+        "modification_paths": [
+          "prompts"
+        ],
+        "required_seed_tasks": [
+          "seed"
+        ],
+        "generation_budget": {
+          "deadline_ms": 1767225660000,
+          "max_tokens": 0,
+          "max_model_requests": 1
+        },
+        "on_insufficient_scope": "retain-research-only"
+      }
+    },
+    {
+      "name": "workplan-invalid-boolean-deadline_ms",
+      "type": "CandidateWorkPlan",
+      "valid": false,
+      "value": {
+        "candidate_id": "next",
+        "batch_id": "batch",
+        "parent_identity": "parent",
+        "dossier_identity": "dossier",
+        "cluster_identity": "cluster",
+        "family_id": "family",
+        "hypothesis": "Handle the observed failure",
+        "scope_id": "scope",
+        "local_plan_id": "local",
+        "target_task_ids": [
+          "seed"
+        ],
+        "required_diagnosis_refs": [
+          "ref"
+        ],
+        "modification_paths": [
+          "prompts"
+        ],
+        "required_seed_tasks": [
+          "seed"
+        ],
+        "generation_budget": {
+          "deadline_ms": true,
+          "max_tokens": null,
+          "max_model_requests": null
+        },
+        "on_insufficient_scope": "retain-research-only"
+      }
+    },
+    {
+      "name": "workplan-invalid-boolean-max_tokens",
+      "type": "CandidateWorkPlan",
+      "valid": false,
+      "value": {
+        "candidate_id": "next",
+        "batch_id": "batch",
+        "parent_identity": "parent",
+        "dossier_identity": "dossier",
+        "cluster_identity": "cluster",
+        "family_id": "family",
+        "hypothesis": "Handle the observed failure",
+        "scope_id": "scope",
+        "local_plan_id": "local",
+        "target_task_ids": [
+          "seed"
+        ],
+        "required_diagnosis_refs": [
+          "ref"
+        ],
+        "modification_paths": [
+          "prompts"
+        ],
+        "required_seed_tasks": [
+          "seed"
+        ],
+        "generation_budget": {
+          "deadline_ms": null,
+          "max_tokens": true,
+          "max_model_requests": null
+        },
+        "on_insufficient_scope": "retain-research-only"
+      }
+    },
+    {
+      "name": "workplan-invalid-boolean-max_model_requests",
+      "type": "CandidateWorkPlan",
+      "valid": false,
+      "value": {
+        "candidate_id": "next",
+        "batch_id": "batch",
+        "parent_identity": "parent",
+        "dossier_identity": "dossier",
+        "cluster_identity": "cluster",
+        "family_id": "family",
+        "hypothesis": "Handle the observed failure",
+        "scope_id": "scope",
+        "local_plan_id": "local",
+        "target_task_ids": [
+          "seed"
+        ],
+        "required_diagnosis_refs": [
+          "ref"
+        ],
+        "modification_paths": [
+          "prompts"
+        ],
+        "required_seed_tasks": [
+          "seed"
+        ],
+        "generation_budget": {
+          "deadline_ms": null,
+          "max_tokens": null,
+          "max_model_requests": true
+        },
+        "on_insufficient_scope": "retain-research-only"
+      }
+    },
+    {
+      "name": "workplan-missing-dossier",
+      "type": "CandidateWorkPlan",
+      "valid": false,
+      "value": {
+        "candidate_id": "next",
+        "batch_id": "batch",
+        "parent_identity": "parent",
+        "cluster_identity": "cluster",
+        "family_id": "family",
+        "hypothesis": "Handle the observed failure",
+        "scope_id": "scope",
+        "local_plan_id": "local",
+        "target_task_ids": [
+          "seed"
+        ],
+        "required_diagnosis_refs": [
+          "ref"
+        ],
+        "modification_paths": [
+          "prompts"
+        ],
+        "required_seed_tasks": [
+          "seed"
+        ],
+        "generation_budget": {
+          "deadline_ms": null,
+          "max_tokens": null,
+          "max_model_requests": null
+        },
+        "on_insufficient_scope": "retain-research-only"
+      }
+    },
+    {
+      "name": "workplan-duplicate-refs",
+      "type": "CandidateWorkPlan",
+      "valid": false,
+      "value": {
+        "candidate_id": "next",
+        "batch_id": "batch",
+        "parent_identity": "parent",
+        "dossier_identity": "dossier",
+        "cluster_identity": "cluster",
+        "family_id": "family",
+        "hypothesis": "Handle the observed failure",
+        "scope_id": "scope",
+        "local_plan_id": "local",
+        "target_task_ids": [
+          "seed"
+        ],
+        "required_diagnosis_refs": [
+          "ref",
+          "ref"
+        ],
+        "modification_paths": [
+          "prompts"
+        ],
+        "required_seed_tasks": [
+          "seed"
+        ],
+        "generation_budget": {
+          "deadline_ms": null,
+          "max_tokens": null,
+          "max_model_requests": null
+        },
+        "on_insufficient_scope": "retain-research-only"
+      }
+    },
+    {
+      "name": "workplan-empty-boundary",
+      "type": "CandidateWorkPlan",
+      "valid": false,
+      "value": {
+        "candidate_id": "next",
+        "batch_id": "batch",
+        "parent_identity": "parent",
+        "dossier_identity": "dossier",
+        "cluster_identity": "cluster",
+        "family_id": "family",
+        "hypothesis": "Handle the observed failure",
+        "scope_id": "scope",
+        "local_plan_id": "local",
+        "target_task_ids": [
+          "seed"
+        ],
+        "required_diagnosis_refs": [
+          "ref"
+        ],
+        "modification_paths": [],
+        "required_seed_tasks": [
+          "seed"
+        ],
+        "generation_budget": {
+          "deadline_ms": null,
+          "max_tokens": null,
+          "max_model_requests": null
+        },
+        "on_insufficient_scope": "retain-research-only"
+      }
+    },
+    {
+      "name": "workplan-unknown-budget-field",
+      "type": "CandidateWorkPlan",
+      "valid": false,
+      "value": {
+        "candidate_id": "next",
+        "batch_id": "batch",
+        "parent_identity": "parent",
+        "dossier_identity": "dossier",
+        "cluster_identity": "cluster",
+        "family_id": "family",
+        "hypothesis": "Handle the observed failure",
+        "scope_id": "scope",
+        "local_plan_id": "local",
+        "target_task_ids": [
+          "seed"
+        ],
+        "required_diagnosis_refs": [
+          "ref"
+        ],
+        "modification_paths": [
+          "prompts"
+        ],
+        "required_seed_tasks": [
+          "seed"
+        ],
+        "generation_budget": {
+          "deadline_ms": null,
+          "max_tokens": null,
+          "max_model_requests": null,
+          "unmetered": true
+        },
+        "on_insufficient_scope": "retain-research-only"
+      }
+    },
+    {
+      "name": "workplan-forbidden-fallback",
+      "type": "CandidateWorkPlan",
+      "valid": false,
+      "value": {
+        "candidate_id": "next",
+        "batch_id": "batch",
+        "parent_identity": "parent",
+        "dossier_identity": "dossier",
+        "cluster_identity": "cluster",
+        "family_id": "family",
+        "hypothesis": "Handle the observed failure",
+        "scope_id": "scope",
+        "local_plan_id": "local",
+        "target_task_ids": [
+          "seed"
+        ],
+        "required_diagnosis_refs": [
+          "ref"
+        ],
+        "modification_paths": [
+          "prompts"
+        ],
+        "required_seed_tasks": [
+          "seed"
+        ],
+        "generation_budget": {
+          "deadline_ms": null,
+          "max_tokens": null,
+          "max_model_requests": null
+        },
+        "on_insufficient_scope": "accept-anyway"
+      }
+    },
+    {
+      "name": "operation-null-workplan",
+      "type": "AlgorithmOperation",
+      "valid": true,
+      "value": {
+        "kind": "stop",
+        "candidate": "",
+        "parent": "",
+        "tasks": [],
+        "workplan": null
+      }
+    },
+    {
+      "name": "operation-workplan",
+      "type": "AlgorithmOperation",
+      "valid": true,
+      "value": {
+        "kind": "generate",
+        "candidate": "next",
+        "parent": "initial",
+        "tasks": [
+          "seed"
+        ],
+        "diagnosis_id": "receipt",
+        "workplan": {
+          "candidate_id": "next",
+          "batch_id": "batch",
+          "parent_identity": "parent",
+          "dossier_identity": "dossier",
+          "cluster_identity": "cluster",
+          "family_id": "family",
+          "hypothesis": "Handle the observed failure",
+          "scope_id": "scope",
+          "local_plan_id": "local",
+          "target_task_ids": [
+            "seed"
+          ],
+          "required_diagnosis_refs": [
+            "ref"
+          ],
+          "modification_paths": [
+            "prompts"
+          ],
+          "required_seed_tasks": [
+            "seed"
+          ],
+          "generation_budget": {
+            "deadline_ms": null,
+            "max_tokens": null,
+            "max_model_requests": null
+          },
+          "on_insufficient_scope": "retain-research-only"
+        }
+      }
     }
   ]
 }

@@ -30,7 +30,8 @@ class DiagnosisBudgetTests(unittest.TestCase):
         limited = recipe.step(view, {})
         self.assertGreater(sum(op.kind == "diagnose_seed" for op in unmetered.operations), 1)
         self.assertEqual(sum(op.kind == "diagnose_seed" for op in limited.operations), 1)
-        self.assertEqual(sum(op.kind == "generate" for op in limited.operations), 1)
+        self.assertEqual(sum(op.kind == "generate" for op in limited.operations), 0)
+        self.assertEqual(limited.state["stage"], "propose")
         self.assertEqual(limited.state["parent_batches"], unmetered.state["parent_batches"])
         self.assertTrue(any(e["reason"] == "diagnosis-budget" for e in limited.state["planning_exclusions"]))
 

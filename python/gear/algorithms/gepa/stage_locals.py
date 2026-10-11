@@ -215,6 +215,16 @@ def generate(view: SearchView, state: dict[str, Any], config: ScopeConfig) -> De
     state.pop("planning_family_history", None)
     state["index"] += len(confirmed)
     state["plans"] = [asdict(p) for p in confirmed]
+    if view.diagnosis_budget is not None:
+        state["stage"] = "propose"
+        state["diagnosis_before"] = list(view.completed)
+        return Decision(
+            state,
+            tuple(
+                Operation("diagnose_seed", candidate=p.parent, tasks=p.task_ids) for p in confirmed
+            ),
+            "Commit certified parent diagnoses before assigning hypothesis workplans",
+        )
     state["stage"] = "local"
     return Decision(
         state,

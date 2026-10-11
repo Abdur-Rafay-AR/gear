@@ -212,7 +212,7 @@ export class DockerProjectProvider implements ProjectProvider {
       name: `gear-${input.operationId.slice(7, 39)}`,
       inputDigest: canonicalDigest(input),
     }
-    const prompt = `Improve the ${this.adapter} Target using these seed observations. Write /app/candidate.json containing a JSON object mapping every candidate relative file path to its complete text, including unchanged files. Do not include credentials or dependencies.\n${JSON.stringify({ files: input.parent.files, seed: input.seed, diagnosisId: input.diagnosisId, diagnosis: input.diagnosis })}`
+    const prompt = `Improve the ${this.adapter} Target using these seed observations. When a workplan is provided, address its hypothesis and restrict every addition, edit and deletion to its modification_paths. Write /app/candidate.json containing a JSON object mapping every candidate relative file path to its complete text, including unchanged files. Do not include credentials or dependencies.\n${JSON.stringify({ files: input.parent.files, seed: input.seed, diagnosisId: input.diagnosisId, diagnosis: input.diagnosis, delivery: input.delivery })}`
     await this.submit(input.operationId, receipt, input.parent.files, this.meta, prompt, signal)
     const files = await this.inspectGeneration(input.operationId, signal)
     if (!files) throw new Error('Generation has not settled; resume to inspect it')
