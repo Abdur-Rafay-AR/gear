@@ -1,9 +1,14 @@
 import { isDeepStrictEqual } from 'node:util'
 import type { HitchConfig } from '../../config.js'
 import { digestJson } from '../../state/digest.js'
-import type { EvaluationRequest, HitchEvaluationEvidence, RefinementRound } from '../../types.js'
+import type { EvaluationRequest, HitchEvaluationEvidence } from '../../types.js'
 import { isExactGitCommit } from '../../types.js'
-import { HitchEvaluationError, type HitchEvaluationIdentity, type JsonRecord } from './contracts.js'
+import {
+  HitchEvaluationError,
+  type HitchEvaluationIdentity,
+  type HitchExecutionContext,
+  type JsonRecord,
+} from './contracts.js'
 import { integer, memorySizeBytes, record, sha256, string, stringArray } from './wire-primitives.js'
 
 type HitchControlPlaneOptions = NonNullable<HitchConfig['controlPlane']>
@@ -50,7 +55,7 @@ export class HitchExecutionContract {
     ]
   }
 
-  assertEvaluationRequest(round: Readonly<RefinementRound>, request: Readonly<EvaluationRequest>): void {
+  assertEvaluationRequest(round: Readonly<HitchExecutionContext>, request: Readonly<EvaluationRequest>): void {
     if (!isExactGitCommit(request.harnessRef)) throw new TypeError('Hitch evaluation requires a full Git commit OID')
     if (request.dataset.length === 0) throw new TypeError('Hitch evaluation dataset must not be empty')
     if (request.condition.dataset.ref !== request.dataset || request.condition.timeoutMs !== round.taskBudgetMs) {
@@ -63,7 +68,7 @@ export class HitchExecutionContract {
     }
   }
 
-  daemonIdempotencyKey(round: Readonly<RefinementRound>, request: Readonly<EvaluationRequest>): string {
+  daemonIdempotencyKey(round: Readonly<HitchExecutionContext>, request: Readonly<EvaluationRequest>): string {
     return `gear-eval-v1-${sha256(
       JSON.stringify({
         evolutionId: round.evolutionId,
@@ -79,7 +84,7 @@ export class HitchExecutionContract {
     ).slice('sha256:'.length)}`
   }
 
-  baseParity(round: Readonly<RefinementRound>, request: Readonly<EvaluationRequest>): JsonRecord {
+  baseParity(round: Readonly<HitchExecutionContext>, request: Readonly<EvaluationRequest>): JsonRecord {
     return {
       conditionId: request.condition.conditionId,
       executable: this.options.executable,
@@ -112,7 +117,7 @@ export class HitchExecutionContract {
   }
 
   daemonEvaluationIdentity(
-    round: Readonly<RefinementRound>,
+    round: Readonly<HitchExecutionContext>,
     request: Readonly<EvaluationRequest>,
     inspection: JsonRecord,
     identity: HitchEvaluationIdentity,
@@ -341,7 +346,7 @@ export class HitchExecutionContract {
     return { id: benchmarkId, revision: benchmarkRevision }
   }
 
-  effectiveConfigDigest(round: Readonly<RefinementRound>, request: Readonly<EvaluationRequest>): string {
+  effectiveConfigDigest(round: Readonly<HitchExecutionContext>, request: Readonly<EvaluationRequest>): string {
     return sha256(
       JSON.stringify({
         provider: 'hitch-cli',

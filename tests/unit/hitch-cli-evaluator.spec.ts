@@ -4,6 +4,8 @@ import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 import { HitchCliEvaluator } from '../../src/evaluator/hitch-cli.js'
+import { HitchEvaluationClient } from '../../src/adapters/hitch/evaluation-client.js'
+import type { HitchExecutionContext } from '../../src/adapters/hitch/contracts.js'
 import { RefineStateStore } from '../../src/state/store.js'
 import { digestDatasetRef } from '../../src/state/dataset.js'
 import { RefineCapabilities } from '../../src/capabilities.js'
@@ -471,6 +473,29 @@ else {
 }
 
 describe('HitchCliEvaluator', () => {
+  it.each(['direct', 'daemon'] as const)('uses the reusable %s execution client without legacy round state', async mode => {
+    const { fixture, evaluator, invocationLog } = await setup('0.2.6', {}, {
+      controlPlane: { mode, requireModelCapture: false }, followSubmission: true,
+    })
+    const client = new HitchEvaluationClient(evaluator.options)
+    const input = request('seed', fixture.championRef), signal = new AbortController().signal
+    const context: HitchExecutionContext = {
+      evolutionId: 'project-run', roundId: 'evaluation-operation', workspaceRoot: fixture.root,
+      taskBudgetMs: input.condition.timeoutMs, sandboxProfileRef: 'project-harbor-v1',
+    }
+    const intent = client.prepareSubmission(context, input)
+    const reservation = await client.reserve(context, input, signal, intent)
+    const result = await client.evaluate(context, input, signal, reservation)
+    expect(result).toMatchObject({ evalId: reservation.evalId, actualCommit: fixture.championRef, completeness: 'complete' })
+    const before = (await readFile(invocationLog, 'utf8')).trim().split('\n').length
+    const restored = new HitchEvaluationClient(evaluator.options)
+    const recovered = await restored.inspectResult(context, input, reservation, signal, intent)
+    expect(recovered.status).toBe('complete')
+    if (recovered.status === 'complete') expect(recovered.evidence.trials).toEqual(result.trials)
+    const calls = (await readFile(invocationLog, 'utf8')).trim().split('\n').slice(before).map(line => JSON.parse(line) as string[])
+    expect(calls.some(c => c[0] === 'eval' && ['run', 'submit', 'rerun', 'watch'].includes(c[1]!))).toBe(false)
+    expect('inspectVerifierDiagnosticPage' in client).toBe(false)
+  })
   it.each(['queued', 'planning', 'running', 'finalizing', 'cancelling', 'failed', 'cancelled', 'succeeded'])('reads existing control state %s without a new execution', async controlStateWithoutResult => {
     const { fixture, evaluator, invocationLog } = await setup('0.2.5', { controlStateWithoutResult })
     const state = round(fixture.root, fixture.championRef, fixture.manifest.digest), input = request('seed', fixture.championRef)

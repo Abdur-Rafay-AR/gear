@@ -69,3 +69,7 @@ Harbor 导入新增完整资源快照合同 v1：原始 task.toml、运行环境
 公共执行端口新增可选 `harborVerification`，运行层在 baseline 前做能力准入，冻结任务资源交给可信隔离 runner。原始 metrics 和评分有效性写入 trial，绑定 operation/task 身份；重用时核对原操作身份，未知提交保留预留且不重发。当前有界 mean reward 使用新策略身份 `paired-mean-reward-v1`，标准模板继续使用原 `paired-pass-rate-v1`；显式 objective 必须与 benchmark 匹配。输入和返回值使用独立副本，provider 对对象的修改不影响冻结任务和 Target。该合同没有迁写历史身份，也不实现通用 objective 或重复槽位计划。
 
 内置 Docker project provider 仍不具备任意 Harbor 环境和 verifier 执行能力；新 CLI 的导入、check/compile、可信 provider 评分/恢复合同已实现，实际原生 Harbor evaluate/refine 接入仍待完成。真实容器 verifier 检查与安装包内离线 provider 旅程分别验证，不将它们描述成真实模型的完整 Harbor 闭环。
+
+Hitch 的提交、reservation 恢复、观察、取消、rerun 及运行身份检查现统一由 `adapters/hitch/evaluation-client.ts` 的 `HitchEvaluationClient` 执行。它只要求 `HitchExecutionContext` 的五项执行坐标，不需要伪造完整的历史 `RefinementRound`。旧 `HitchCliEvaluator` 继承同一客户端并保留诊断/轨迹读取与缓存，原公开类名、options 类型及方法调用保持兼容；旧执行实现已从 facade 移除，没有维护第二套提交逻辑。
+
+新客户端加入当前 Hitch 实现身份闭包，源码和正式构建身份相同；历史固定身份与摘要规则不变。此拆分是新项目 Harbor provider 的接入基础，还没有完成 DSH/Pi Target 的 Hitch carrier 构建、原生执行配置与共享项目回合，不能据此标记 Harbor 真实闭环完成。

@@ -172,18 +172,22 @@ describe('component identity across formal builds', () => {
   })
 
   it.each([
-    ['evaluate', (source: string) => source.replace(
+    ['evaluate', 'src/adapters/hitch/evaluation-client.ts', (source: string) => source.replace(
       'Hitch daemon evaluation requires a durable reservation',
       'Hitch daemon evaluation requires a durable owned reservation',
     )],
-    ['evaluation helper', (source: string) => source.replace("'--max-concurrent'", "'--parallelism'")],
-    ['evaluation call to diagnostic reader', (source: string) => source.replace(
-      '    try {\n      this.execution.assertEvaluationRequest(round, request)',
-      '    try {\n      void this.inspectVerifierDiagnosticPage\n      this.execution.assertEvaluationRequest(round, request)',
+    ['evaluation helper', 'src/adapters/hitch/evaluation-client.ts', (source: string) => source.replace("'--max-concurrent'", "'--parallelism'")],
+    ['evaluation call to diagnostic reader', 'src/evaluator/hitch-cli.ts', (source: string) => source.replace(
+      '  private trajectoryCacheBytes = 0',
+      `  private trajectoryCacheBytes = 0
+  async evaluate(...args: Parameters<HitchEvaluationClient['evaluate']>) {
+    void this.inspectVerifierDiagnosticPage
+    return super.evaluate(...args)
+  }`,
     )],
-  ] as const)('changes Hitch rollout identity for an %s mutation', async (_label, mutate) => {
+  ] as const)('changes Hitch rollout identity for an %s mutation', async (_label, file, mutate) => {
     const root = await packageCopy()
-    const path = join(root, 'src/evaluator/hitch-cli.ts')
+    const path = join(root, file)
     const source = await readFile(path, 'utf8')
     const changed = mutate(source)
     expect(changed).not.toBe(source)

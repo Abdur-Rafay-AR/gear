@@ -12,7 +12,7 @@
 | 项目定向回归 | Harbor 导入接入后：17 个文件、292 项通过，含跨语言结构正反例、诊断计量/认证/恢复、修改边界、固定 GEPA fixture、真实 worker 闭环与恢复、作者 CLI |
 | Python 全量回归 | 工作计划阶段接入后本地 371 项：367 项通过，4 项按环境跳过 |
 | Python 公共 API | Ruff lint/format、Mypy strict 通过 |
-| TS 质量 | typecheck、Biome、协议生成一致性、216 个模块依赖/循环检查通过 |
+| TS 质量 | typecheck、Biome、协议生成一致性、217 个模块依赖/循环检查通过 |
 | CI/发布规则 | 14 项规则测试通过；dev 代码变更启用完整回归 |
 | 独立 tgz/wheel | 六组 Target/模板组合与两个 Harbor 导入；check/compile；共享应用 evaluate/refine/report/resume/export；独立诊断、安装后 StagedGEPA 工作计划与终态恢复；SDK；无 GPU CPU loop 及恢复通过 |
 | Python 真实 sandbox | macOS 实测拒绝工作目录之外的私有测试文件、宿主凭据环境变量和已监听的 loopback 端口 |
@@ -231,3 +231,16 @@ Pi Meta 返回了相同文件，因此相同代码/题目/重复槽位使用同�
 - 先按 CONTRIBUTING 设置镜像与凭据引用，再执行 `npx vitest run tests/integration/project-native.spec.ts`：两项计费模型行为测试。
 
 运行日志仅在本机临时验证目录保存；文档只保存非秘密结果与可复现命令。
+
+
+`779869a` 的 [Harbor 资源导入 CI](https://github.com/rsi-gear/gear/actions/runs/38130215993) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。以下执行客户端拆分有独立本地证据。
+
+## Hitch 可复用执行客户端
+
+新 `HitchEvaluationClient` 把版本/能力检查、提交意图、reservation 恢复、eval/watch/inspect、取消与 rerun 集中在一个执行客户端。执行上下文只保留 evolutionId、roundId、workspaceRoot、taskBudgetMs、sandboxProfileRef；不要求 legacy round 的候选池、状态或搜索计划。旧 `HitchCliEvaluator` 保留诊断/轨迹视图及缓存并继承相同客户端，原执行方法从 facade 删除，原公开接口继续通过类型检查。
+
+针对拆分前 `779869a` 的 38 个运行方法，对转译后 AST 做方法体对照，忽略括号与排版差异后全部相同。原冻结的 3 组执行合同 fixture 未修改。两个新增测试直接用五字段上下文运行 direct/daemon 提交及新实例 inspect，确认恢复没有 run/submit/rerun/watch 副作用；它们不构造旧 round 状态。
+
+定向 evaluator、执行合同、当前/历史身份与构建身份共 129 项最终通过：第一轮只有当前实现摘要预期变化失败，源码/构建一致性及新模块篡改识别通过后更新当前快照，单文件 7 项重跑通过。历史身份 fixtures 原样保留。真实 CLI/daemon 使用 CI 固定的 Hitch `90d4cc3a5d98df53b02e57b54762e16ac1c6d942` 临时构建，3 项 abort/lost-observer/late-submit 取消和资源释放检查通过；该测试只替换昂贵的 Harbor executor，不宣称真实 Target 执行。
+
+typecheck、Biome、217 个模块边界、协议生成一致性通过；独立外部搜索包及项目 tgz/wheel 通过，包含六组模板/Target、两个 Harbor 导入、诊断/workplan、CPU training 恢复及 SDK。没有调用模型或修改 Python 算法。尚待完成：新项目 Hitch provider 的 durable operation 绑定、DSH/Pi carrier 与原生配置、真实 Harbor 回合；完整阶段状态仍以目标跟踪表为准。

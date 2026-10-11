@@ -187,7 +187,7 @@ describe('component implementation identity', () => {
     expect(hitchCliImplementation()).toEqual({
       package: generator.package,
       version: generator.version,
-      integrity: 'sha256:1ccadb2e32eabccfaf21a28f33b93bc9e3d11a5ddf521353c22381b3a7056fab',
+      integrity: 'sha256:adcea396558d5e92c7dfe219bf809a10ee39bec77841581df41be046f8b6fb40',
     })
     expect(stableLlmVerifierImplementation()).toMatchObject({ package: generator.package, version: generator.version })
   })

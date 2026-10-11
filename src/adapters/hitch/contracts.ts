@@ -1,5 +1,14 @@
 import type { EvaluationTrialScores, FailedEvaluationEvidence } from '../../types.js'
 
+/** Only execution coordinates; callers need no legacy round state or search decisions. */
+export interface HitchExecutionContext {
+  evolutionId: string
+  roundId: string
+  workspaceRoot: string
+  taskBudgetMs: number
+  sandboxProfileRef: string
+}
+
 export interface ProcessResult {
   stdout: string
   stderr: string
