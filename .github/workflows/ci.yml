@@ -71,7 +71,8 @@ jobs:
       - name: Test standard verifiers in a real container
         run: |
           docker pull python:3.12-slim
-          GEAR_VERIFIER_TEST_IMAGE=python:3.12-slim npx vitest run tests/integration/project-verifier.spec.ts
+          # Vitest's config cache was created by the service-user test above.
+          sudo env "PATH=$PATH" GEAR_VERIFIER_TEST_IMAGE=python:3.12-slim npx vitest run tests/integration/project-verifier.spec.ts
       - name: Test the published project API and Python wheel
         run: node scripts/check-project-package.mjs
       - name: Test the published search API from an external package
