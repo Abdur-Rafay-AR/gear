@@ -23,6 +23,7 @@
 ## 推送后修复
 
 - `paired-pass-rate-v1` 修正最终 gate：先检查 seed 改善，再检查 held-out 不退步；拒绝的 seed 不触发 held-out 试验。32 项运行时测试通过，其中 16 组评分组合与历史 GEPA `decideFinal` 交叉比较，覆盖持平、退步、改善、预算和终态恢复。typecheck 通过。
+- capabilities 拆分后，50 项经验、能力和轨迹回归通过，2 项真实日志测试按环境跳过；typecheck 和 202 模块边界/循环检查通过。
 - 以下 Luna 记录为首批实现的真实运行证据，使用当时冻结的 gate；不能据此声称修正后的门禁已完成模型验收。
 
 ## Luna 项目闭环

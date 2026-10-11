@@ -4,6 +4,7 @@ import ts from 'typescript'
 
 const root = resolve(import.meta.dirname, '..')
 const rules = {
+  capabilities: ['application', 'runtime', 'adapters', 'training'],
   domain: ['application', 'runtime', 'adapters', 'training', 'types.ts'],
   ports: ['application', 'runtime', 'adapters', 'training', 'types.ts'],
   runtime: ['application', 'adapters', 'training', 'types.ts'],
@@ -45,7 +46,7 @@ const active = new Set(),
 function visit(name, path = []) {
   if (active.has(name)) {
     const cycle = [...path.slice(path.indexOf(name)), name]
-    if (cycle.some((file) => /^(domain|ports|runtime|adapters|application)\//.test(file)))
+    if (cycle.some((file) => /^(domain|ports|runtime|adapters|application|capabilities)\//.test(file)))
       errors.push(`New runtime cycle: ${cycle.join(' -> ')}`)
     return
   }

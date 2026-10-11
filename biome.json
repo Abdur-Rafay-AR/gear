@@ -3,6 +3,7 @@
   "files": {
     "includes": [
       "src/application/**",
+      "src/capabilities/**",
       "src/domain/**",
       "src/ports/**",
       "src/runtime/**",

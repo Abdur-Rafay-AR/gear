@@ -16,6 +16,6 @@
 
 训练模块迁移会改变新运行的模块名与源码身份。旧 import 转发通过，不代表新版本可以恢复活跃旧任务。活跃旧 run 必须继续使用启动时锁定的 npm/wheel、解释器和后端；旧 checkpoint 来源与预算记录保留原样。无需迁移状态即可读取原报告。回退时先终止或核对新 run 的外部操作，再选择原入口和匹配版本；旧 runtime 不读取新项目状态。
 
-本分支的项目 recipe 是明确版本化的新流程：全 seed 比较、失败题局部检查、最终 held-out gate。历史 GEPA 的多 scope archive、bridge、regression proposal、通用 objective 和自动 repair 仍由旧入口提供。它们尚未全部等价迁入 Python；不得把此分支标为设计规范 M3/M5 全部验收完成。旧 service 的 baseline 复用、证据投影、生成状态、评测修复和提交状态已拆为独立模块；Hitch 的 verifier/result/trajectory 解码和进程 transport 已独立，并全部纳入新的组件实现摘要。旧 orchestrator、capabilities 的其余兼容实现仍保留，新的 domain/ports/runtime/adapters 边界由 CI 检查，后续迁移不能弱化原合同。
+本分支的项目 recipe 是明确版本化的新流程：全 seed 比较、失败题局部检查、最终 held-out gate。历史 GEPA 的多 scope archive、bridge、regression proposal、通用 objective 和自动 repair 仍由旧入口提供。它们尚未全部等价迁入 Python；不得把此分支标为设计规范 M3/M5 全部验收完成。旧 service 的 baseline 复用、证据投影、生成状态、评测修复和提交状态已拆为独立模块；Hitch 的 verifier/result/trajectory 解码和进程 transport 已独立，并全部纳入新的组件实现摘要。旧 capabilities 的经验查询与分页、轨迹投影缓存、参数校验和有界文本展示已拆成独立模块，旧 facade 保持鉴权与诊断流程；其余 orchestrator 和兼容实现仍保留，新的 domain/ports/runtime/adapters 边界由 CI 检查，后续迁移不能弱化原合同。
 
 发布检查脚本 `scripts/check-project-package.mjs` 从真正的 tgz/wheel 安装，验证三套模板、两个 Target、共享应用的 evaluate/refine/report/resume/export、CPU 导入和 SDK。离线 provider 证明调用与恢复合同；真实 Luna/Target 和 Docker/verifier 分别验收。设计规范中的五名新用户易用性测验需要实际参与者，不能用自动化结果替代。
