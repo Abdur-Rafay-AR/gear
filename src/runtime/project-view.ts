@@ -1,6 +1,7 @@
 import type { SearchView } from '../domain/algorithm.js'
 import { canonicalDigest } from '../domain/canonical.js'
 import type { ProjectRun } from './project.js'
+import { diagnosisAccounting } from './project-diagnosis.js'
 
 /** Only verified seed scores and opaque provenance cross into algorithm workers. */
 export function projectView(run: ProjectRun, sharedEvidence: boolean): SearchView {
@@ -44,5 +45,6 @@ export function projectView(run: ProjectRun, sharedEvidence: boolean): SearchVie
     completed: structuredClone(run.completed ?? {}),
     task_families: Object.fromEntries(tasks.map((t) => [t.id, t.family])),
     evidence_condition: condition,
+    ...(run.plan.diagnosis ? { diagnosis_budget: diagnosisAccounting(run).remaining } : {}),
   }
 }

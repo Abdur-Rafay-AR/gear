@@ -2,6 +2,7 @@ import type { AlgorithmDecision, AlgorithmOperation, AlgorithmWorker, SearchView
 import { validateAlgorithmDecision } from '../domain/algorithm-protocol.js'
 import type { BenchmarkSpec, BenchmarkTask, Split } from '../domain/benchmark.js'
 import { canonicalDigest } from '../domain/canonical.js'
+import type { DiagnosisInput, DiagnosisResult, DiagnosisUsage } from '../domain/diagnosis.js'
 import { GearError, GenerationFailed } from '../domain/errors.js'
 import { MutationValidationError } from '../domain/harness.js'
 import { type ProjectGate, passRateGate, passRatePromotion } from '../domain/promotion.js'
@@ -9,6 +10,7 @@ import { scoreOutput } from '../domain/scoring.js'
 import type { EvidenceCache } from '../ports/evidence-cache.js'
 import type { ProjectProvider, TargetSnapshot, TrialResult } from '../ports/project.js'
 import type { RunStore } from '../ports/run-store.js'
+import { admitDiagnosis, executeDiagnosis, seedDiagnosis } from './project-diagnosis.js'
 import { projectView } from './project-view.js'
 
 export interface RunPlan {
@@ -28,6 +30,7 @@ export interface RunPlan {
   validation: 'holdout' | 'research'
   maxEvaluations: number
   maxCandidates: number
+  diagnosis?: { providerIdentity: string; limits: DiagnosisUsage }
   split: Split
   taskIds: string[]
 }
@@ -41,11 +44,12 @@ interface Trial {
 }
 interface PendingOperation {
   id: string
-  kind: 'evaluation' | 'generation'
+  kind: 'evaluation' | 'generation' | 'diagnosis'
   candidate: string
   parent?: string
   diagnosisId?: string
   taskId?: string
+  diagnosis?: { input: DiagnosisInput; result?: DiagnosisResult }
   status: 'reserved' | 'complete'
 }
 export interface ProjectRun {
@@ -89,8 +93,11 @@ function validTrial(result: TrialResult): void {
   )
     throw new TypeError('invalid-provider-result')
 }
-function validateDecision(decision: AlgorithmDecision, view: SearchView): void {
+function validateDecision(decision: AlgorithmDecision, view: SearchView, runId: string): void {
   validateAlgorithmDecision(decision)
+  const diagnoses = decision.operations.filter((op) => op.kind === 'diagnose_seed').length
+  if (view.diagnosis_budget && diagnoses > Math.min(...Object.values(view.diagnosis_budget)))
+    fault('diagnosis-budget-exhausted', 'The complete diagnosis batch needs more request/token budget', runId)
   const candidates = view.candidates.map((c) => c.id)
   for (const [index, op] of decision.operations.entries()) {
     if (op.tasks.some((id) => !view.seed_tasks.includes(id))) throw new TypeError('invalid-algorithm-operation')
@@ -141,6 +148,7 @@ export class ProjectRuntime {
       throw new Error('Provider lacks required accounting, recovery or isolation capabilities')
     if (plan.providerIdentity !== this.provider.identity || plan.algorithmIdentity !== this.algorithm.identity)
       throw new Error('admission-identity-mismatch')
+    admitDiagnosis(plan, this.provider)
     if (
       !Number.isSafeInteger(plan.maxEvaluations) ||
       plan.maxEvaluations < 1 ||
@@ -191,6 +199,7 @@ export class ProjectRuntime {
         run.plan.algorithmIdentity !== this.algorithm.identity
       )
         fault('identity-mismatch', 'Frozen configuration, provider or algorithm changed', id)
+      admitDiagnosis(run.plan, this.provider)
       if (run.status !== 'running') return run
       if (run.plan.promotion !== passRatePromotion)
         fault('identity-mismatch', 'Promotion policy changed; use the original runtime', id)
@@ -217,7 +226,7 @@ export class ProjectRuntime {
                 signal,
               ),
             )
-            validateDecision(decision, view)
+            validateDecision(decision, view, run.id)
             saved = { step: run.decisions.length, inputDigest: canonicalDigest(view), decision, done: false }
             run.decisions.push(saved)
             run.algorithmState = decision.state
@@ -249,7 +258,8 @@ export class ProjectRuntime {
     signal.throwIfAborted()
     if (await this.store.cancelRequested(run.id)) {
       for (const operation of run.operations.filter((op) => op.status === 'reserved'))
-        await this.provider.cancel(operation.id, signal)
+        if (operation.kind === 'diagnosis') await this.provider.diagnosis!.cancel(operation.id, signal)
+        else await this.provider.cancel(operation.id, signal)
       run.status = 'cancelled'
       await this.store.write(run.id, run)
       fault('run-cancelled', 'Cancellation recorded; pending reservations remain accounted', run.id)
@@ -371,32 +381,23 @@ export class ProjectRuntime {
       return
     }
     if (op.kind === 'diagnose_seed') {
-      // This recipe uses deterministic diagnosis. A model-based diagnosis must
-      // be a separate provider operation with its own request/token accounting.
       const ids = op.tasks.length
         ? op.tasks
         : run.plan.benchmark.tasks.filter((t) => t.split === 'seed').map((t) => t.id)
-      const tasks = ids.map((id) => {
-        const task = run.plan.benchmark.tasks.find((t) => t.id === id && t.split === 'seed')!
-        const trial = run.trials.find((t) => t.candidate === op.candidate && t.taskId === id)
-        return {
-          id,
-          family: task.family,
-          score: trial?.score ?? null,
-          status:
-            trial?.score === undefined || trial.score === null
-              ? 'unavailable'
-              : trial.score < 1
-                ? 'failure'
-                : 'success',
-        }
-      })
-      run.completed[receiptId] = {
-        kind: 'diagnose_seed',
-        candidate: op.candidate,
-        method: 'seed-score-projection-v1',
-        tasks,
-      }
+      run.completed[receiptId] = run.plan.diagnosis
+        ? await executeDiagnosis(
+            run,
+            receiptId,
+            op.candidate,
+            ids,
+            this.provider.diagnosis!,
+            this.store,
+            signal,
+            run.decisions[step]!.decision.operations.slice(index).filter(
+              (operation) => operation.kind === 'diagnose_seed',
+            ).length,
+          )
+        : seedDiagnosis(run, op.candidate, ids)
       await this.store.write(run.id, run)
       return
     }

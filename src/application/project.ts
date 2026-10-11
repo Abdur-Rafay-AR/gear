@@ -142,6 +142,18 @@ export class ProjectApplication {
       validation: config.validation.mode,
       maxCandidates: options.rounds ?? config.budget.rounds,
       maxEvaluations: config.budget.max_evaluations,
+      ...(kind === 'refine' && config.budget.diagnosis
+        ? {
+            diagnosis: {
+              providerIdentity: runtime.provider.diagnosis?.identity ?? 'unavailable',
+              limits: {
+                requests: config.budget.diagnosis.max_requests,
+                inputTokens: config.budget.diagnosis.max_input_tokens,
+                outputTokens: config.budget.diagnosis.max_output_tokens,
+              },
+            },
+          }
+        : {}),
       split,
       taskIds: ids,
     }

@@ -1,4 +1,5 @@
 import type { ProjectRun } from '../runtime/project.js'
+import { diagnosisAccounting } from '../runtime/project-diagnosis.js'
 
 function plannedTasks(run: ProjectRun, candidate: string, split: 'seed' | 'held_out'): Set<string> {
   const ids = new Set(run.trials.filter((t) => t.candidate === candidate && t.split === split).map((t) => t.taskId))
@@ -83,6 +84,7 @@ export function projectReport(run: ProjectRun, view: 'operator' | 'meta' = 'oper
     reservedAttempts: run.operations.filter((o) => o.kind === 'evaluation' && o.status === 'reserved').length,
     maxEvaluations: run.plan.maxEvaluations,
     generationAttempts: run.operations.filter((o) => o.kind === 'generation').length,
+    ...(run.plan.diagnosis ? { diagnosisBudget: diagnosisAccounting(run) } : {}),
     invalidCandidates: Object.values(run.completed ?? {})
       .filter((r) => r.kind === 'generate' && r.status === 'invalid-candidate')
       .map((r) => r.candidate),

@@ -56,7 +56,10 @@ describe('versioned Python protocol', () => {
     ).rejects.toThrow('protocol-invalid-utf8')
   })
   it('rejects stale, duplicate, malformed and capability-mismatched responses', () => {
-    const request = vectors.cases.find((v) => v.name === 'request')!.value as AlgorithmRequest
+    const request = {
+      ...(vectors.cases.find((v) => v.name === 'request')!.value as AlgorithmRequest),
+      capabilities: algorithmProtocol.capabilities,
+    }
     const decision = vectors.cases.find((v) => v.name === 'decision')!.value
     const { input: _input, ...envelope } = request
     const response = { ...envelope, decision }

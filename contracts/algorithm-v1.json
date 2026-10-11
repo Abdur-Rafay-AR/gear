@@ -38,7 +38,8 @@
     "canonical_version": "gear-canonical-v1",
     "generation_diagnosis_binding": "receipt-v1",
     "payload_schema": "algorithm-payload-v1",
-    "max_json_depth": 64
+    "max_json_depth": 64,
+    "seed_diagnosis_budget": "requests-and-tokens-v1"
   },
   "$defs": {
     "JsonObject": {
@@ -53,6 +54,32 @@
         "nominate",
         "stop"
       ]
+    },
+    "DiagnosisBudget": {
+      "type": "object",
+      "properties": {
+        "requests": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "inputTokens": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "outputTokens": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "requests",
+        "inputTokens",
+        "outputTokens"
+      ],
+      "additionalProperties": false
     },
     "CandidateView": {
       "type": "object",
@@ -148,6 +175,16 @@
           "anyOf": [
             {
               "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "diagnosis_budget": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DiagnosisBudget"
             },
             {
               "type": "null"

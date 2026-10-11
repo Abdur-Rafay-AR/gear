@@ -23,6 +23,7 @@ from .stage_catalog import (
 )
 from .stage_evidence import eligible, missing, nominate, profiles
 from .stage_parents import batches
+from .stopping import diagnosis_capacity
 
 
 def merge_family(old: dict[str, Any] | None, current: FailureFamily) -> FailureFamily:
@@ -158,14 +159,18 @@ def plan_locals(view: SearchView, state: dict[str, Any], config: ScopeConfig) ->
             used.add(key)
     # A shared parent baseline slot is paid once, including overlapping scopes.
     while proposed and (
-        sum(missing(view, (p,), ts) for p, ts in parent_tasks(proposed).items())
+        len(proposed) > diagnosis_capacity(view)
+        or sum(missing(view, (p,), ts) for p, ts in parent_tasks(proposed).items())
         + sum(len(p.task_ids) for p in proposed)
         + len(view.seed_tasks)
         > view.remaining_evaluations
     ):
+        reason = (
+            "diagnosis-budget" if len(proposed) > diagnosis_capacity(view) else "local-group-budget"
+        )
         removed = proposed.pop()
         state["planning_exclusions"].append(
-            {"batch_id": removed.batch_id, "family": removed.family, "reason": "local-group-budget"}
+            {"batch_id": removed.batch_id, "family": removed.family, "reason": reason}
         )
     if not proposed:
         return nominate(

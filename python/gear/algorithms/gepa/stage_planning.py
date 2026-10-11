@@ -14,6 +14,7 @@ from .stage_catalog import add_scope, make_scope, read_family, read_scope, sampl
 from .stage_evidence import eligible, missing, nominate
 from .stage_locals import generate, plan_locals
 from .stage_parents import batches, freeze_parents
+from .stopping import diagnosis_capacity
 
 
 def plan_generation(
@@ -26,8 +27,10 @@ def plan_generation(
     selection_policy: ParentSelectionPolicy | None,
 ) -> Decision:
     if state["stage"] == "parents":
-        if state["index"] >= view.max_candidates or view.remaining_evaluations < len(
-            view.seed_tasks
+        if (
+            state["index"] >= view.max_candidates
+            or view.remaining_evaluations < len(view.seed_tasks)
+            or diagnosis_capacity(view) == 0
         ):
             return nominate(
                 view, state, config.guard_task_ids, "Nominate from complete common seed evidence"

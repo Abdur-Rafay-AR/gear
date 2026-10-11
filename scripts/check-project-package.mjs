@@ -49,6 +49,7 @@ try {
     join(temp, 'journey.mjs'),
     `
     import assert from 'node:assert/strict'
+    import {readFile,writeFile} from 'node:fs/promises'
     import {ProjectApplication} from 'rsi-gear/project'
     const results=new Map(),generations=new Map()
     const provider={identity:'isolated-fixture-v1',capabilities:{meteredAttempts:true,recovery:true,isolatedMeta:true,isolatedTarget:true},
@@ -63,6 +64,49 @@ try {
       assert.deepEqual(await app.resume(report.run_id,new AbortController().signal),report)
       assert.equal((await app.report(report.run_id)).status,'complete')
       await app.export(report.run_id)
+
+      const config=new URL('./'+adapter+'-text/gear.yaml',import.meta.url)
+      const yaml=await readFile(config,'utf8')
+      assert.ok(yaml.includes('budget: {rounds: 1, max_evaluations: 40}'))
+      await writeFile(config,yaml.replace('budget: {rounds: 1, max_evaluations: 40}',
+        'budget: {rounds: 1, max_evaluations: 40, diagnosis: {max_requests: 1, max_input_tokens: 100, max_output_tokens: 50}}'))
+      const diagnoses=new Map()
+      const diagnosis={identity:'package-diagnosis-fixture-v1',
+        capabilities:{boundedRequests:true,boundedTokens:true,recovery:true,isolated:true},
+        async diagnose(input){
+          assert.deepEqual(input.limits,{requests:1,inputTokens:100,outputTokens:50})
+          assert.ok(input.observations.length>0)
+          assert.ok(input.observations.every(o=>o.evidenceRef&&o.score===0))
+          const result={facts:[],usage:{requests:1,inputTokens:10,outputTokens:5}}
+          diagnoses.set(input.operationId,result); return result
+        },
+        async inspectDiagnosis(id){const result=diagnoses.get(id);return result?{status:'complete',result}:{status:'pending'}},
+        async cancel(){}
+      }
+      const metered=new ProjectApplication(new URL('./'+adapter+'-text',import.meta.url).pathname,{
+        provider:{...provider,diagnosis,async generate(input){
+          assert.ok(input.diagnosisId)
+          assert.equal(input.diagnosis.dossier.parent_identity,input.parent.digest)
+          assert.equal(input.diagnosis.dossier.classifier_identity,diagnosis.identity)
+          return provider.generate(input)
+        }},
+        algorithm:{identity:'package-metered-algorithm-v1',async step(view,state){
+          const n=state.n??0
+          assert.equal(view.diagnosis_budget.requests,n===0?1:0)
+          const receipt=Object.keys(view.completed).find(key=>view.completed[key].kind==='diagnose_seed')
+          const ops=[{kind:'diagnose_seed',candidate:'initial',parent:'',tasks:view.seed_tasks},
+            {kind:'generate',candidate:'next',parent:'initial',tasks:[],diagnosis_id:receipt},
+            {kind:'evaluate_seed',candidate:'next',parent:'',tasks:view.seed_tasks},
+            {kind:'nominate',candidate:'next',parent:'',tasks:[]}]
+          return {state:{n:n+1},operations:[ops[n]],reason:'metered package journey'}
+        }}
+      })
+      const diagnosed=await metered.run('refine',{rounds:1},new AbortController().signal)
+      assert.equal(diagnosed.champion,'next'); assert.equal(diagnosed.gate.accepted,true)
+      assert.deepEqual(diagnosed.diagnosisBudget.spent,{requests:1,inputTokens:10,outputTokens:5})
+      assert.deepEqual(diagnosed.diagnosisBudget.reserved,{requests:0,inputTokens:0,outputTokens:0})
+      assert.deepEqual(await metered.resume(diagnosed.run_id,new AbortController().signal),diagnosed)
+      assert.equal(diagnoses.size,1)
     }
   `,
   )
@@ -173,7 +217,7 @@ assert asyncio.run(p.acompile()) == Benchmark(p).compile()
 `,
   ])
   console.log(
-    'Published tgz and wheel: six templates, both Target layouts, evaluate/refine/report/resume/export, CPU imports, sync/async SDK, source freezing and both algorithm author CLIs passed (offline fixture provider).',
+    'Published tgz and wheel: six templates, both Target layouts, evaluate/refine/report/resume/export, metered diagnosis, CPU imports, sync/async SDK, source freezing and both algorithm author CLIs passed (offline fixture provider).',
   )
 } finally {
   await rm(temp, { recursive: true, force: true })

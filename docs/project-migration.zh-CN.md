@@ -51,3 +51,9 @@ Python 已提供历史 shared/local/cross 采样的纯函数与可选 `ScopeSamp
 随后补齐完整 payload 字段的生成与结构校验：合同 `$defs` 生成 TS/Python 候选、视图、操作、决策和消息类型，替代手写 TS 重复类型。作者 dataclass 保留原位置参数和默认值；可空的内容/执行/诊断身份与 evidence condition 明确区分于不可为空的容器。状态和回执扩展仍是有界 JSON 对象，业务证据认证不委托给 schema。
 
 新增 `payload_schema: algorithm-payload-v1` 与 `max_json_depth: 64` 能力。未知固定字段、非法数字/Unicode/JSON、超深内容、重复操作任务、超过 64 个操作会在外部执行或状态提交前拒绝；消息上限包含结尾换行。响应必须是一条 UTF-8 JSON 行，重复和过期回复不被接受。旧 worker 不满足能力协商时明确拒绝；不原地迁写旧 run 身份或数据。当前 scope/diagnosis 等固定历史比较保持原规则，这次收紧只适用于新运行的 wire 合同。
+
+独立诊断的运行层合同现已接入：可选 `ProjectProvider.diagnosis`、显式 `budget.diagnosis` 和冻结的 provider 身份。未配置仍走零模型调用的评分投影。配置后缺少合格端口时在 baseline 前拒绝；原生 Docker DSH/Pi 尚未具备请求前硬限制和可信模型用量采集，不能仅凭容器次数启用这项能力。
+
+诊断单独预留请求/input/output token，写入实际用量后再认证同父代 seed 日志引用；坏事实和超额结果不抹去已发生费用。恢复保持原操作、输入和预留，未知状态不重发；只有明确的 `not-started` 允许原输入提交。端口取消与主评测 provider 分离。回执可直接供 Python `failure_clusters` 消费，但不宣称已完成原始 verifier、重复槽位或 objective 证据认证。
+
+生成协议新增可空 `diagnosis_budget` 和能力 `seed_diagnosis_budget: requests-and-tokens-v1`。旧 worker 不满足能力时明确拒绝；Python dataclass 只在末尾增加可选参数。GEPA 和 StagedGEPA 根据余额结束或排除新诊断，已经执行的候选仍可完成评测与提名。新源文件照常进入实现身份，新运行使用新合同；历史 run 继续使用其冻结 runtime，不迁写旧状态、摘要或数据。

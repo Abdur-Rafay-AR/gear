@@ -29,6 +29,7 @@ class SearchView:
     completed: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
     task_families: Mapping[str, str] = field(default_factory=dict)
     evidence_condition: str | None = None
+    diagnosis_budget: Mapping[str, int] | None = None
 
 
 @dataclass(frozen=True)

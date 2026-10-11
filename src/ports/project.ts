@@ -1,5 +1,6 @@
 import type { BenchmarkTask } from '../domain/benchmark.js'
 import type { TargetManifest } from '../domain/harness.js'
+import type { DiagnosisProvider } from './diagnosis.js'
 export interface TargetSnapshot {
   id: string
   gitRef?: string
@@ -27,6 +28,7 @@ export interface GenerationInput {
 }
 export interface ProjectProvider {
   readonly identity: string
+  readonly diagnosis?: DiagnosisProvider
   readonly capabilities: { meteredAttempts: true; recovery: true; isolatedTarget: true; isolatedMeta: true }
   evaluate(input: EvaluationInput, signal: AbortSignal): Promise<TrialResult>
   inspectEvaluation(operationId: string, signal: AbortSignal): Promise<TrialResult | undefined>

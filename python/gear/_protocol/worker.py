@@ -49,6 +49,9 @@ def main():
         view["completed"],
         view.get("task_families", {}),
         view.get("evidence_condition"),
+        None
+        if view.get("diagnosis_budget") is None
+        else {key: int(value) for key, value in view["diagnosis_budget"].items()},
     )
     with redirect_stdout(sys.stderr):
         algorithm = GEPA()

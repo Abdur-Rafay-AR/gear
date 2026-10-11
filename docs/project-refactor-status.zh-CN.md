@@ -10,7 +10,7 @@
 | M1 新手闭环 | CSV/JSONL、输入附件、三种模板、check/compile、项目配置、发布包闭环、Luna 实测 | 已有 Harbor 导入；无 split 时可审阅的按 family 分组方案；setup 认证探测；完整解析计划与提交前预算展示；进阶 scorer/metric 合同 |
 | M1b 多 Target | DSH/Pi 原生布局、统一 mutation policy、扩展加载与 Luna 行为评分、相同任务闭环 | 最终默认算法切换后重跑发布产物上的两种 Target 旅程 |
 | M2 Python 作者 | 公开策略、完整算法协议、toy/离线 CLI、源码封存、同步/异步 SDK、受限 worker；基础 wheel/CPU training；完整 payload 类型生成和双语言结构校验、响应关联及拒绝合同 | 完整身份/取消错误码与最终发布旅程仍需审计；独立 OneShot 的完整回合及安装后 toy 已补证 |
-| M3 默认算法 | scope、frontier、bridge、archive/父代分配与 epoch 准入固定样例；StagedGEPA v3 接入多父代配额、多 scope 父代、持久化 catalog、周期准备、等价去重与准备阶段恢复；完整执行版本难度、诊断元数据与冻结采样截止点；诊断/假设/workplan/回执纯策略及生成诊断引用冻结 | 独立计量的模型诊断与原始证据认证、丰富 workplan 的实际交付/消费审计/修改边界执行；历史证据修订与跨运行 archive 生命周期、regression proposals、process/objective；完整 shadow/replay、差异说明和默认切换 |
+| M3 默认算法 | scope、frontier、bridge、archive/父代分配与 epoch 准入固定样例；StagedGEPA v3 接入多父代配额、多 scope 父代、持久化 catalog、周期准备、等价去重与准备阶段恢复；完整执行版本难度、诊断元数据与冻结采样截止点；诊断/假设/workplan/回执纯策略及生成引用冻结；独立诊断端口、请求/token 预留结算、seed 评分日志来源认证和预算耗尽收尾 | 原生 DSH/Pi 的模型请求前硬限制与可信实际用量采集；原始 verifier、重复槽位与 objective 证据认证；丰富 workplan 的实际交付/消费审计/修改边界执行；历史证据修订与跨运行 archive 生命周期、regression proposals、process/objective；完整 shadow/replay、差异说明和默认切换 |
 | M4 执行层 | baseline/修复/提交状态、Hitch wire/transport/执行合同、capabilities 辅助职责已拆；训练唯一实现 | service/evaluator/capabilities 的剩余编排拆分、根 types 分域、provider 能力归拢、存储原语与训练公共类型边界审计 |
 | M5 收尾 | 新入口、双语言入门、发布包与 CI 检查；兼容转发保留 | schema/help/样例一致性；配置迁移 dry-run/字段映射；迁移回退演练；旧入口收拢至 compat；完成下表全部验收 |
 

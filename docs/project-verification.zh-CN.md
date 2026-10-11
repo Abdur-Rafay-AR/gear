@@ -9,12 +9,12 @@
 | 检查 | 结果与边界 |
 | --- | --- |
 | TypeScript 全量回归 | `697a63d` 的远端 CI：104 个测试文件通过、7 个按环境跳过；无模型环境项单独验证 |
-| 项目定向回归 | 完整 payload schema 接入后：14 个文件、208 项通过，含跨语言结构正反例、协议拒绝、固定 GEPA fixture、真实 worker 闭环与恢复、作者 CLI |
-| Python 全量回归 | payload schema 接入后本地 365 项：361 项通过，4 项按环境跳过 |
+| 项目定向回归 | 独立诊断端口接入后：15 个文件、229 项通过，含跨语言结构正反例、诊断计量/认证/恢复、固定 GEPA fixture、真实 worker 闭环与恢复、作者 CLI |
+| Python 全量回归 | 独立诊断预算接入后本地 367 项：363 项通过，4 项按环境跳过 |
 | Python 公共 API | Ruff lint/format、Mypy strict 通过 |
-| TS 质量 | typecheck、Biome、协议生成一致性、207 个模块依赖/循环检查通过 |
+| TS 质量 | typecheck、Biome、协议生成一致性、210 个模块依赖/循环检查通过 |
 | CI/发布规则 | 14 项规则测试通过；dev 代码变更启用完整回归 |
-| 独立 tgz/wheel | 六组 Target/模板组合；check/compile；共享应用 evaluate/refine/report/resume/export；SDK；无 GPU CPU loop 及恢复通过 |
+| 独立 tgz/wheel | 六组 Target/模板组合；check/compile；共享应用 evaluate/refine/report/resume/export；独立诊断预留/结算及终态恢复；SDK；无 GPU CPU loop 及恢复通过 |
 | Python 真实 sandbox | macOS 实测拒绝工作目录之外的私有测试文件、宿主凭据环境变量和已监听的 loopback 端口 |
 | Harbor verifier | 三种模板在真实 Docker 容器运行正反例；不安全软链接输出被拒绝；第四项验证输入附件的冻结内容、独立挂载和 inspect 一致性 |
 | DSH 固定 carrier | rc.2 的有效 Skill 与完整 Harness 两组原生加载、prompt assembly、Skill 读取检查通过 |
@@ -35,6 +35,22 @@
 `c17efd2` 的 [多父代阶段 CI](https://github.com/rsi-gear/gear/actions/runs/38123146789) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。下述诊断与提案策略有独立本地记录，不将该 CI 算作新提交验证。
 
 `c88f2f5` 的 [诊断策略及引用绑定 CI](https://github.com/rsi-gear/gear/actions/runs/38124628907) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。以下 payload schema 属于后续新改动，验证单独记录。
+
+`f3efe44` 的 [完整 payload schema CI](https://github.com/rsi-gear/gear/actions/runs/38125680393) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。独立诊断端口属于后续新增代码，验证如下。
+
+## 独立诊断端口、计量与 seed 来源认证
+
+新增可选 `DiagnosisProvider` 和显式 `budget.diagnosis`，按冻结端口身份准入，在调用前写入请求/input/output token 预留。实际用量先持久化再校验事实，坏事实与超额输出保留成本；未知提交只 inspect，不重发。仅明确的 `not-started` 允许使用原冻结输入继续提交。诊断取消走独立端口，未核实的预留不会退还。批次预检在提交 decision 前完成，各次调用按尚待执行数量分配剩余 token。
+
+回执只引用同父代的 seed 评分日志，拒绝越界任务/引用、成功冒充失败、失败冒充成功、有效观察被标无效和非法修改路径；省略事实填为未解析或有依据的状态。证据引用绑定原任务/scorer/trial/父代，端口收到有界 seed 文本和不透明引用，不接收 held-out 或 scorer 答案。公开 dossier 不复制原始输出，实际运行层生成的 dossier 已通过 Python `failure_clusters` 消费测试。
+
+17 项诊断运行回归通过：实际结算、同批额度、丢响应、结算写入失败、未知状态、明确未开始、取消、身份变更、预算耗尽、六类非法结果、配置准入和真实默认 Python recipe 闭环。两项 Python 预算测试覆盖 GEPA/StagedGEPA 的耗尽提名、局部计划排除和原父代配额保留。真实 Python 进程使用离线 provider，未调用 Luna。
+
+协议追加 `seed_diagnosis_budget: requests-and-tokens-v1`、可空的剩余诊断预算及四组正反例，原 47 组 payload 样例保持不变，现为 51 组。项目回归 229 项全部通过；Python 全量 367 项中 363 通过、4 跳过。Ruff（42 文件）、Mypy strict（38 文件）、typecheck、Biome、210 模块边界和协议生成检查通过。补充跨语言 dossier 探针后定向 17 项再次通过；真实 macOS worker sandbox 两项通过。
+
+独立安装 tgz/wheel 后，两种 Target 布局分别通过诊断 → 绑定生成 → seed → gate → report/resume，实际用量与零未结算预留均符合预期；六组模板、SDK、双作者 CLI、源码封存、CPU 训练和恢复继续通过。该发布探针仍是离线 fixture，不能视作原生模型计量的验证。
+
+边界：原生 DSH/Pi 的模型请求前硬限制和可信实际用量采集尚未实现，内置 provider 在显式开启诊断预算时会于 baseline 前拒绝。当前来源认证覆盖 seed 评分日志，不等于已迁完原始 verifier、重复槽位和 objective 合同；丰富 workplan 消费审计与修改边界仍待接入。未修改 README、历史身份或原工作区，M3 继续保持部分完成。
 
 ## 生成的完整算法 payload 合同
 

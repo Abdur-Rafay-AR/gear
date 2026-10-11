@@ -41,7 +41,8 @@ export const algorithmProtocol = {
     "canonical_version": "gear-canonical-v1",
     "generation_diagnosis_binding": "receipt-v1",
     "payload_schema": "algorithm-payload-v1",
-    "max_json_depth": 64
+    "max_json_depth": 64,
+    "seed_diagnosis_budget": "requests-and-tokens-v1"
   },
   "requestFields": [
     "protocol_version",
@@ -81,6 +82,32 @@ export const algorithmProtocol = {
         "nominate",
         "stop"
       ]
+    },
+    "DiagnosisBudget": {
+      "type": "object",
+      "properties": {
+        "requests": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "inputTokens": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "outputTokens": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "requests",
+        "inputTokens",
+        "outputTokens"
+      ],
+      "additionalProperties": false
     },
     "CandidateView": {
       "type": "object",
@@ -176,6 +203,16 @@ export const algorithmProtocol = {
           "anyOf": [
             {
               "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "diagnosis_budget": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DiagnosisBudget"
             },
             {
               "type": "null"
@@ -397,8 +434,9 @@ export const algorithmProtocol = {
 
 export type JsonObject = Record<string, unknown>
 export type OperationKind = "diagnose_seed" | "generate" | "evaluate_seed" | "nominate" | "stop"
+export type DiagnosisBudget = { requests: number; inputTokens: number; outputTokens: number }
 export type CandidateView = { id: string; scores: Record<string, number>; content_digest?: string | null; execution_digest?: string | null; score_evidence?: Record<string, string> }
-export type SearchView = { seed_tasks: Array<string>; candidates: Array<CandidateView>; champion: string; max_candidates: number; remaining_evaluations: number; random_seed: string; completed: Record<string, JsonObject>; task_families?: Record<string, string>; evidence_condition?: string | null }
+export type SearchView = { seed_tasks: Array<string>; candidates: Array<CandidateView>; champion: string; max_candidates: number; remaining_evaluations: number; random_seed: string; completed: Record<string, JsonObject>; task_families?: Record<string, string>; evidence_condition?: string | null; diagnosis_budget?: DiagnosisBudget | null }
 export type AlgorithmOperation = { kind: OperationKind; candidate: string; tasks: Array<string>; parent: string; diagnosis_id?: string | null }
 export type AlgorithmDecision = { state: JsonObject; operations: Array<AlgorithmOperation>; reason: string }
 export type AlgorithmInput = { view: SearchView; state: JsonObject }
@@ -416,6 +454,10 @@ export function validateJsonObject(value: unknown): asserts value is JsonObject 
 
 export function validateOperationKind(value: unknown): asserts value is OperationKind {
   validateWireType('OperationKind', value)
+}
+
+export function validateDiagnosisBudget(value: unknown): asserts value is DiagnosisBudget {
+  validateWireType('DiagnosisBudget', value)
 }
 
 export function validateCandidateView(value: unknown): asserts value is CandidateView {

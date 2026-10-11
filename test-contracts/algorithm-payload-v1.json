@@ -1502,6 +1502,114 @@
         }
       },
       "valid": false
+    },
+    {
+      "name": "diagnosis budget snapshot",
+      "type": "SearchView",
+      "value": {
+        "seed_tasks": [
+          "种子😀"
+        ],
+        "candidates": [
+          {
+            "id": "initial",
+            "scores": {
+              "种子😀": 0.0
+            }
+          }
+        ],
+        "champion": "initial",
+        "max_candidates": 1,
+        "remaining_evaluations": 20,
+        "random_seed": "seed",
+        "completed": {},
+        "diagnosis_budget": {
+          "requests": 1,
+          "inputTokens": 100,
+          "outputTokens": 20
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "null diagnosis budget",
+      "type": "SearchView",
+      "value": {
+        "seed_tasks": [
+          "种子😀"
+        ],
+        "candidates": [
+          {
+            "id": "initial",
+            "scores": {
+              "种子😀": 0.0
+            }
+          }
+        ],
+        "champion": "initial",
+        "max_candidates": 1,
+        "remaining_evaluations": 20,
+        "random_seed": "seed",
+        "completed": {},
+        "diagnosis_budget": null
+      },
+      "valid": true
+    },
+    {
+      "name": "boolean diagnosis request limit",
+      "type": "SearchView",
+      "value": {
+        "seed_tasks": [
+          "种子😀"
+        ],
+        "candidates": [
+          {
+            "id": "initial",
+            "scores": {
+              "种子😀": 0.0
+            }
+          }
+        ],
+        "champion": "initial",
+        "max_candidates": 1,
+        "remaining_evaluations": 20,
+        "random_seed": "seed",
+        "completed": {},
+        "diagnosis_budget": {
+          "requests": true,
+          "inputTokens": 100,
+          "outputTokens": 20
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "negative diagnosis token limit",
+      "type": "SearchView",
+      "value": {
+        "seed_tasks": [
+          "种子😀"
+        ],
+        "candidates": [
+          {
+            "id": "initial",
+            "scores": {
+              "种子😀": 0.0
+            }
+          }
+        ],
+        "champion": "initial",
+        "max_candidates": 1,
+        "remaining_evaluations": 20,
+        "random_seed": "seed",
+        "completed": {},
+        "diagnosis_budget": {
+          "requests": 1,
+          "inputTokens": -1,
+          "outputTokens": 20
+        }
+      },
+      "valid": false
     }
   ]
 }

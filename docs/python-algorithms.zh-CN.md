@@ -149,9 +149,29 @@ python -m gear algorithm test archive_policy:build_algorithm --source ./examples
 
 `plan_hypotheses` 按额度选择并以父代/题族/假设去重；`candidate_workplan` 固定候选、批次、dossier、scope、局部计划、完整 seed 和修改范围。`deliver_workplan` 只交付目标任务与分配 scope 的诊断事实；`consumption_receipt` / `validate_receipt` 校验候选、会话、workplan、dossier、交付摘要和必需引用。`GenerationBudget` 声明 UTC epoch 毫秒截止点及可选 token/request 上限，不执行模型调用或计量。
 
-以上丰富 workplan 尚未接入 StagedGEPA 与真实 Meta 执行。原始证据认证、独立模型诊断及硬预算、实际阅读审计和修改边界执行仍需 runtime/provider 集成；声明已读引用本身不是模型实际消费证据的证明。`gepa-diagnosis-v1.json` 的 10 组旧 TS 固定样例验证纯策略、摘录与回执合同，不证明完整历史 GEPA 等价，也不重写历史身份。
+以上丰富 workplan 尚未接入 StagedGEPA 与真实 Meta 执行。原始 verifier 证据认证、原生模型请求前硬限制及可信用量、实际阅读审计和修改边界执行仍需 provider 集成；声明已读引用本身不是模型实际消费证据的证明。`gepa-diagnosis-v1.json` 的 10 组旧 TS 固定样例验证纯策略、摘录与回执合同，不证明完整历史 GEPA 等价，也不重写历史身份。
 
-当前 recipe 使用完整 seed baseline、确定性父代选择、失败题局部评测、完整 seed 扩展和一次最终 gate。诊断是已观察 seed 评分投影，不产生隐式额外 LLM 调用；它以稳定操作 ID 持久化，经 `view.completed` 提供给后续策略，并传入 Meta 的生成输入。生成与 seed 评测也记录完成结果。无效候选或已终止但缺少有效输出的 Meta 操作消耗一次生成额度，算法可以据此结束或继续；runtime 不重发同一次生成。同批依赖失败的操作记为 `prerequisite-failed`，不会提交无效 Target。存储或环境故障保持待恢复状态，与候选格式错误分开处理。一个 decision 可包含最多 64 个顺序执行的操作，最终提名或停止只能在末尾。随机策略应只从 `view.random_seed` 推导。`toy_round` 用固定假执行器验证接口，不能代替真实 Target 集成或证明收益。
+当前 recipe 使用完整 seed baseline、确定性父代选择、失败题局部评测、完整 seed 扩展和一次最终 gate。默认诊断是已观察 seed 评分投影，不产生隐式额外 LLM 调用；它以稳定操作 ID 持久化，经 `view.completed` 提供给后续策略，并传入 Meta 的生成输入。生成与 seed 评测也记录完成结果。无效候选或已终止但缺少有效输出的 Meta 操作消耗一次生成额度，算法可以据此结束或继续；runtime 不重发同一次生成。同批依赖失败的操作记为 `prerequisite-failed`，不会提交无效 Target。存储或环境故障保持待恢复状态，与候选格式错误分开处理。一个 decision 可包含最多 64 个顺序执行的操作，最终提名或停止只能在末尾。随机策略应只从 `view.random_seed` 推导。`toy_round` 用固定假执行器验证接口，不能代替真实 Target 集成或证明收益。
+
+高级 provider 可通过 `rsi-gear/project/api` 的 `DiagnosisProvider` 提供独立诊断端口，并在 `gear.yaml` 显式启用其预算：
+
+```yaml
+budget:
+  rounds: 1
+  max_evaluations: 40
+  diagnosis:
+    max_requests: 3
+    max_input_tokens: 12000
+    max_output_tokens: 2000
+```
+
+这三个限制均为正整数。应用在 baseline 之前核对端口身份、隔离、恢复和请求/token 硬限制能力；缺少合格端口会报 `diagnosis-provider-required`，不会先花费评测预算。当前内置 Docker DSH/Pi provider 尚未提供该端口，因此此配置只适用于显式接入的合格 provider。容器启动次数不等于模型请求次数，不能作为其计量实现。
+
+每次诊断的输入、操作 ID 和限制先写入运行日志，再交给 provider。一个 decision 中的诊断按剩余次数分配 token 额度；完整批次不能容纳时在提交前拒绝。有效实际用量先持久化结算，再认证事实；事实不合法或超过原限制时仍保留已发生费用。断线只调用 `inspectDiagnosis`：`pending` 保持全部预留，`complete` 复用原结果，只有明确的 `not-started` 才允许提交原冻结输入。取消通过诊断端口执行，不释放尚未核实的预留。
+
+端口只能接收同一父代的 seed 指令、截断并去除控制字符的输出、评分和不透明引用；不提供 scorer 答案或 held-out 内容。回执认证引用属于该父代和任务，失败假设不能引用成功或缺失评分，成功对照必须有完整成功结果；未提供的事实填为未解析、成功对照或基础设施无效。`seed-text-projection-v1` 是有界文本投影，不宣称通用秘密脱敏。它认证当前 seed 评分日志的来源和观察结果，不证明假设为真，也不替代尚待迁移的原始 verifier、重复槽位和 objective 合同。
+
+新增 `SearchView.diagnosis_budget` 暴露未被预留的 requests/inputTokens/outputTokens；未启用时为缺失或 null，旧 Python 位置参数保持兼容。GEPA 耗尽预算后完成当前候选并提名；StagedGEPA 在准备前停止无预算的新批次，并记录 `diagnosis-budget` 排除项，保留原父代额度而不重新分配。报告展示实际用量、预留和余额。协议能力 `seed_diagnosis_budget: requests-and-tokens-v1` 必须两端匹配。
 
 正式运行冻结代码及依赖身份，把 Python worker 放入断网 sandbox。它看不到 tasks.csv、项目目录、.gear、凭据或 held-out 数据。修改源码、依赖或 profile 后开新 run；已提交 decision 会在 resume 时复用。插件的 stdout 会重定向到 stderr，worker 的 stdout 保留给有版本的 JSON 协议。
 

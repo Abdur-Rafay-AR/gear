@@ -1,3 +1,4 @@
+import type { DiagnosisUsage } from '../domain/diagnosis.js'
 import type { ErrorDetails } from '../domain/errors.js'
 
 /** Human output is separate from the stable JSON interface used by SDK/Skill. */
@@ -42,6 +43,17 @@ export function renderProjectResult(value: unknown): string {
     lines.push(
       `Generation attempts: ${result.generationAttempts}; invalid proposals: ${Array.isArray(result.invalidCandidates) ? result.invalidCandidates.length : 0}`,
     )
+    if (result.diagnosisBudget) {
+      const budget = result.diagnosisBudget as {
+        limits: DiagnosisUsage
+        spent: DiagnosisUsage
+        reserved: DiagnosisUsage
+      }
+      lines.push(
+        `Diagnosis requests: ${budget.spent.requests}/${budget.limits.requests}; reserved: ${budget.reserved.requests}`,
+        `Diagnosis tokens: input ${budget.spent.inputTokens}/${budget.limits.inputTokens}, output ${budget.spent.outputTokens}/${budget.limits.outputTokens}; reserved input/output: ${budget.reserved.inputTokens}/${budget.reserved.outputTokens}`,
+      )
+    }
     if (Array.isArray(result.changes))
       lines.push(`Changed files: ${result.changes.map((file: { path: string }) => file.path).join(', ') || 'none'}`)
   } else if (result.ok === true && result.scope === 'cpu-toy-contract') {
