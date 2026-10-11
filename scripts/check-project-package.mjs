@@ -93,6 +93,10 @@ try {
   assert.equal(toy.nominee, 'candidate-1')
   run(installed, [
     '-c',
+    "from gear.algorithms import GEPA, ScopeSampler; from gear.testing import toy_round; assert toy_round(GEPA(task_sampler=ScopeSampler()))['nominee'] == 'candidate-1'",
+  ])
+  run(installed, [
+    '-c',
     `from gear import Project; assert Project(${JSON.stringify(join(temp, 'pi-json'))}, command=(${JSON.stringify(process.execPath)},${JSON.stringify(cli)})).check()['ok']`,
   ])
   console.log(

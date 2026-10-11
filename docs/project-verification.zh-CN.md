@@ -6,11 +6,11 @@
 
 | 检查 | 结果与边界 |
 | --- | --- |
-| TypeScript 全量回归 | 101 个测试文件通过，1299 项通过、38 项跳过；无模型环境项单独验证 |
-| 最终项目定向回归 | 5 个文件、32 项通过，覆盖取消边界、Meta 视图、相同槽位复用、Git 快照、批量操作、终态生成失败与输入导入 |
+| TypeScript 全量回归 | `140c5da` 的远端 CI：101 个测试文件通过，1320 项通过、36 项跳过；无模型环境项单独验证 |
+| 项目定向回归 | Python scope 迁移后：6 个文件、61 项通过，覆盖运行时合同及 10 组历史采样固定 fixture |
 | Python 全量回归 | 298 项：294 项通过，4 项按环境跳过 |
 | Python 公共 API | Ruff lint/format、Mypy strict 通过 |
-| TS 质量 | typecheck、Biome、协议生成一致性、197 个模块依赖/循环检查通过 |
+| TS 质量 | typecheck、Biome、协议生成一致性、202 个模块依赖/循环检查通过 |
 | CI/发布规则 | 14 项规则测试通过；dev 代码变更启用完整回归 |
 | 独立 tgz/wheel | 六组 Target/模板组合；check/compile；共享应用 evaluate/refine/report/resume/export；SDK；无 GPU CPU loop 及恢复通过 |
 | Python 真实 sandbox | macOS 实测拒绝工作目录之外的私有测试文件、宿主凭据环境变量和已监听的 loopback 端口 |
@@ -18,7 +18,7 @@
 | DSH 固定 carrier | rc.2 的有效 Skill 与完整 Harness 两组原生加载、prompt assembly、Skill 读取检查通过 |
 | DSH/Pi 原生行为 | 发布用 runner 在真实 Docker 中各完成一次 Luna 调用；插件/extension 指定输出，经可信评分器得 1；运行后 inspect 一致 |
 
-完整回归之后的终态生成失败处理由最终定向回归和发布包测试覆盖。Linux/macOS CI 已配置真实 worker 隔离门禁；`c811b1f` 的 [远端 CI](https://github.com/rsi-gear/gear/actions/runs/38109997985) 中两个平台的隔离、CPU 训练和 Hitch 合同检查已经通过。Quality 首次全量为 1317 项通过、36 项跳过，唯一失败是 1000 题旧 GEPA 测试超出 90 秒；相关性能修复已进入后续验证。平台模型测试是显式启用项，不把跳过记为通过。未运行 GPU 训练，也未用自动化代替人工易用性测试。
+`140c5da` 的 [远端 CI](https://github.com/rsi-gear/gear/actions/runs/38113613109) 已全部通过：Quality 全量、真实容器 verifier 的 4 项测试、独立项目 tgz/wheel、外部搜索 API、Linux/macOS sandbox、CPU 训练及 Hitch 合同。Python 此次远端仍为 298 项（294 通过、4 跳过）；后续 scope 迁移新增 8 项 Python 测试，本地全部通过，原公共 API 的 7 项也通过。平台模型测试是显式启用项，不把跳过记为通过。未运行 GPU 训练，也未用自动化代替人工易用性测试。
 
 ## 推送后修复
 
@@ -29,7 +29,15 @@
 - 修正后的 gate 已完成两种 Target 的真实 Luna 复测：Pi 和 DSH 的 smoke 均 1/1，seed 都是 1 → 1，均以 `seed-not-improved` 保留原 champion，未运行 held-out。refine 新增物理评测分别为 0 和 1，两者终态 resume 一致。随后的 seed 预算预检和报告调整由上述定向回归覆盖。
 - 下表保留首批实现的真实运行证据，使用当时冻结的 gate，与这次修复后的记录分开。
 
-旧 GEPA 的槽位复用、返回值匹配和缺口核验现改为单次调用内的 Map/Set 索引，避免重复嵌套计算 SHA。保留全部摘要核验、来源验证和 1700 个候选 seed 槽位断言，未放宽原 90 秒上限。本地大规模测试通过，单次耗时由约 70 秒降至约 46 秒；这属于诊断测量，不是稳定性能基准。性能修复后的完整搜索回归共 21 个文件、307 项全部通过。[最新远端 CI](https://github.com/rsi-gear/gear/actions/runs/38110698297) 已重跑，最终状态以该链接为准。新的源码身份由现有机制生成，旧 run 仍使用其冻结 runtime。
+旧 GEPA 的槽位复用、返回值匹配和缺口核验现改为单次调用内的 Map/Set 索引，避免重复嵌套计算 SHA。保留全部摘要核验、来源验证和 1700 个候选 seed 槽位断言，未放宽原 90 秒上限。本地大规模测试通过，单次耗时由约 70 秒降至约 46 秒；这属于诊断测量，不是稳定性能基准。性能修复后的完整搜索回归共 21 个文件、307 项全部通过。随后远端全量测试通过，但 verifier 步骤遇到前序 root 测试留下的 Vite 缓存权限错误；`140c5da` 让两个 Vitest 步骤使用同一服务用户后，整条 CI 已通过。新的源码身份由现有机制生成，旧 run 仍使用其冻结 runtime。
+
+## Python scope 采样迁移
+
+新增公开 `ScopeSampler` 以及 `create_scope` / `resolve_sizing` 和类型化输入。`test-contracts/gepa-scopes-v1.json` 的 10 组期望值来自未修改的旧 TypeScript 采样实现（源提交 `140c5da`），覆盖成功对照、难度/成本分层、模块与子模式覆盖、共享范围、跨题族与 fallback、epoch、Unicode、guard-only 零权重、空失败族、配额和容量不足。TypeScript 和 Python 各自比较固定输出，不由 Python 自己生成期望值。
+
+本地验证：项目合同 61 项通过；新增 Python 8 项及已有公共 API 7 项通过；Ruff lint/format、Mypy strict、typecheck、Biome、边界与协议检查通过。独立 tgz/wheel 的六组模板、两种 Target、CPU loop/恢复、SDK 检查通过，并新增从安装后的 wheel 运行 `GEPA(task_sampler=ScopeSampler())`。本次为纯离线策略迁移，没有新增模型测试。
+
+默认 recipe 未切换。适配器只消费选题结果，完整加权阶段、动态 scope 生命周期、历史难度证据构建、archive/bridge 和通用 objective 仍待迁移。fixture 不比较或重写历史身份；此结果不代表整个历史 GEPA 等价。
 
 ## Luna 项目闭环
 

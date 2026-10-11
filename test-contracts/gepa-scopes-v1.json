@@ -1,0 +1,2759 @@
+{
+  "version": 1,
+  "source_commit": "140c5da",
+  "projection": "sampling semantics only; legacy digests are deliberately excluded",
+  "cases": [
+    {
+      "name": "mixed-cost-difficulty-module-and-control",
+      "tasks": [
+        {
+          "id": "t0",
+          "stratum": "A",
+          "estimated_cost": 1,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0
+        },
+        {
+          "id": "t1",
+          "stratum": "A",
+          "estimated_cost": 5,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.25
+        },
+        {
+          "id": "t2",
+          "stratum": "A",
+          "estimated_cost": 1,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.26
+        },
+        {
+          "id": "t3",
+          "stratum": "A",
+          "estimated_cost": 8,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.75
+        },
+        {
+          "id": "t4",
+          "stratum": "A",
+          "estimated_cost": 2,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.76
+        },
+        {
+          "id": "t5",
+          "stratum": "A",
+          "estimated_cost": 3,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 1
+        },
+        {
+          "id": "t6",
+          "stratum": "B",
+          "estimated_cost": 2,
+          "family_ids": [
+            "B",
+            "C"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0
+        },
+        {
+          "id": "t7",
+          "stratum": "B",
+          "estimated_cost": 7,
+          "family_ids": [
+            "B"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.25
+        },
+        {
+          "id": "t8",
+          "stratum": "B",
+          "estimated_cost": 3,
+          "family_ids": [
+            "B"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.26
+        },
+        {
+          "id": "t9",
+          "stratum": "B",
+          "estimated_cost": 1,
+          "family_ids": [
+            "B"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.75
+        }
+      ],
+      "config": {
+        "seed": "19",
+        "local": {
+          "ratio": 0.4
+        },
+        "shared": {
+          "ratio": 0.2
+        },
+        "cross": {
+          "ratio": 0.3
+        },
+        "bridge": {
+          "ratio": 0.4
+        },
+        "bucket_weights": {
+          "shared": 0.25,
+          "local": 0.6,
+          "cross": 0.15
+        },
+        "shared_core_task_ids": [
+          "t6"
+        ],
+        "guard_task_ids": [
+          "t9"
+        ]
+      },
+      "family": {
+        "id": "A",
+        "task_ids": [
+          "t0",
+          "t1",
+          "t2",
+          "t3",
+          "t4"
+        ],
+        "successful_control_task_ids": [
+          "t5"
+        ],
+        "modification_paths": [
+          "src/a/deep"
+        ]
+      },
+      "successful_ids": [
+        "t6",
+        "t7"
+      ],
+      "epoch": 1,
+      "expected": {
+        "quantities": {
+          "local": {
+            "requested": 4,
+            "resolved": 4,
+            "reasons": []
+          },
+          "shared": {
+            "requested": 2,
+            "resolved": 2,
+            "reasons": []
+          },
+          "cross": {
+            "requested": 3,
+            "resolved": 3,
+            "reasons": []
+          },
+          "bridge": {
+            "requested": 4,
+            "resolved": 4,
+            "reasons": []
+          }
+        },
+        "representative": [
+          "t4",
+          "t9",
+          "t2",
+          "t6",
+          "t0",
+          "t5",
+          "t8",
+          "t7",
+          "t1",
+          "t3"
+        ],
+        "cross": {
+          "ids": [
+            "t6",
+            "t7",
+            "t9",
+            "t8",
+            "t5"
+          ],
+          "general_ids": [
+            "t5"
+          ]
+        },
+        "scope": {
+          "family_id": "A",
+          "epoch": 1,
+          "buckets": {
+            "shared": [
+              "t6",
+              "t7"
+            ],
+            "local": [
+              "t4",
+              "t3",
+              "t2",
+              "t5"
+            ],
+            "cross": [
+              "t9",
+              "t8"
+            ]
+          },
+          "task_ids": [
+            "t2",
+            "t3",
+            "t4",
+            "t5",
+            "t6",
+            "t7",
+            "t8",
+            "t9"
+          ],
+          "weights": {
+            "t2": 0.15,
+            "t3": 0.15,
+            "t4": 0.15,
+            "t5": 0.15,
+            "t6": 0.125,
+            "t7": 0.125,
+            "t8": 0.075,
+            "t9": 0.075
+          },
+          "sampling": {
+            "shared": {
+              "requested": 2,
+              "selected": 2,
+              "reasons": []
+            },
+            "local": {
+              "requested": 4,
+              "selected": 4,
+              "reasons": [
+                "successful-control-included"
+              ]
+            },
+            "cross": {
+              "requested": 3,
+              "selected": 2,
+              "reasons": [
+                "eligible-pool-exhausted-after-deduplication"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "resampled-epoch",
+      "tasks": [
+        {
+          "id": "t0",
+          "stratum": "A",
+          "estimated_cost": 1,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0
+        },
+        {
+          "id": "t1",
+          "stratum": "A",
+          "estimated_cost": 5,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.25
+        },
+        {
+          "id": "t2",
+          "stratum": "A",
+          "estimated_cost": 1,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.26
+        },
+        {
+          "id": "t3",
+          "stratum": "A",
+          "estimated_cost": 8,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.75
+        },
+        {
+          "id": "t4",
+          "stratum": "A",
+          "estimated_cost": 2,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.76
+        },
+        {
+          "id": "t5",
+          "stratum": "A",
+          "estimated_cost": 3,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 1
+        },
+        {
+          "id": "t6",
+          "stratum": "B",
+          "estimated_cost": 2,
+          "family_ids": [
+            "B",
+            "C"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0
+        },
+        {
+          "id": "t7",
+          "stratum": "B",
+          "estimated_cost": 7,
+          "family_ids": [
+            "B"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.25
+        },
+        {
+          "id": "t8",
+          "stratum": "B",
+          "estimated_cost": 3,
+          "family_ids": [
+            "B"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.26
+        },
+        {
+          "id": "t9",
+          "stratum": "B",
+          "estimated_cost": 1,
+          "family_ids": [
+            "B"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.75
+        }
+      ],
+      "config": {
+        "seed": "19",
+        "local": {
+          "ratio": 0.4
+        },
+        "shared": {
+          "ratio": 0.2
+        },
+        "cross": {
+          "ratio": 0.3
+        },
+        "bridge": {
+          "ratio": 0.4
+        },
+        "bucket_weights": {
+          "shared": 0.25,
+          "local": 0.6,
+          "cross": 0.15
+        },
+        "shared_core_task_ids": [
+          "t6"
+        ],
+        "guard_task_ids": [
+          "t9"
+        ]
+      },
+      "family": {
+        "id": "A",
+        "task_ids": [
+          "t0",
+          "t1",
+          "t2",
+          "t3",
+          "t4"
+        ],
+        "successful_control_task_ids": [
+          "t5"
+        ],
+        "modification_paths": [
+          "src/a/deep"
+        ]
+      },
+      "successful_ids": [
+        "t6",
+        "t7"
+      ],
+      "epoch": 3,
+      "expected": {
+        "quantities": {
+          "local": {
+            "requested": 4,
+            "resolved": 4,
+            "reasons": []
+          },
+          "shared": {
+            "requested": 2,
+            "resolved": 2,
+            "reasons": []
+          },
+          "cross": {
+            "requested": 3,
+            "resolved": 3,
+            "reasons": []
+          },
+          "bridge": {
+            "requested": 4,
+            "resolved": 4,
+            "reasons": []
+          }
+        },
+        "representative": [
+          "t4",
+          "t9",
+          "t2",
+          "t6",
+          "t0",
+          "t5",
+          "t8",
+          "t7",
+          "t1",
+          "t3"
+        ],
+        "cross": {
+          "ids": [
+            "t6",
+            "t7",
+            "t9",
+            "t8",
+            "t5"
+          ],
+          "general_ids": [
+            "t5"
+          ]
+        },
+        "scope": {
+          "family_id": "A",
+          "epoch": 3,
+          "buckets": {
+            "shared": [
+              "t6",
+              "t7"
+            ],
+            "local": [
+              "t4",
+              "t3",
+              "t2",
+              "t5"
+            ],
+            "cross": [
+              "t9",
+              "t8"
+            ]
+          },
+          "task_ids": [
+            "t2",
+            "t3",
+            "t4",
+            "t5",
+            "t6",
+            "t7",
+            "t8",
+            "t9"
+          ],
+          "weights": {
+            "t2": 0.15,
+            "t3": 0.15,
+            "t4": 0.15,
+            "t5": 0.15,
+            "t6": 0.125,
+            "t7": 0.125,
+            "t8": 0.075,
+            "t9": 0.075
+          },
+          "sampling": {
+            "shared": {
+              "requested": 2,
+              "selected": 2,
+              "reasons": []
+            },
+            "local": {
+              "requested": 4,
+              "selected": 4,
+              "reasons": [
+                "successful-control-included"
+              ]
+            },
+            "cross": {
+              "requested": 3,
+              "selected": 2,
+              "reasons": [
+                "eligible-pool-exhausted-after-deduplication"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "control-quota-unavailable",
+      "tasks": [
+        {
+          "id": "t0",
+          "stratum": "A",
+          "estimated_cost": 1,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0
+        },
+        {
+          "id": "t1",
+          "stratum": "A",
+          "estimated_cost": 5,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.25
+        },
+        {
+          "id": "t2",
+          "stratum": "A",
+          "estimated_cost": 1,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.26
+        },
+        {
+          "id": "t3",
+          "stratum": "A",
+          "estimated_cost": 8,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.75
+        },
+        {
+          "id": "t4",
+          "stratum": "A",
+          "estimated_cost": 2,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.76
+        },
+        {
+          "id": "t5",
+          "stratum": "A",
+          "estimated_cost": 3,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 1
+        },
+        {
+          "id": "t6",
+          "stratum": "B",
+          "estimated_cost": 2,
+          "family_ids": [
+            "B",
+            "C"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0
+        },
+        {
+          "id": "t7",
+          "stratum": "B",
+          "estimated_cost": 7,
+          "family_ids": [
+            "B"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.25
+        },
+        {
+          "id": "t8",
+          "stratum": "B",
+          "estimated_cost": 3,
+          "family_ids": [
+            "B"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.26
+        },
+        {
+          "id": "t9",
+          "stratum": "B",
+          "estimated_cost": 1,
+          "family_ids": [
+            "B"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.75
+        }
+      ],
+      "config": {
+        "seed": "19",
+        "local": {
+          "ratio": 0.1
+        },
+        "shared": {
+          "ratio": 0.2
+        },
+        "cross": {
+          "ratio": 0.3
+        },
+        "bridge": {
+          "ratio": 0.4
+        },
+        "bucket_weights": {
+          "shared": 0.25,
+          "local": 0.6,
+          "cross": 0.15
+        },
+        "shared_core_task_ids": [
+          "t6"
+        ],
+        "guard_task_ids": [
+          "t9"
+        ]
+      },
+      "family": {
+        "id": "A",
+        "task_ids": [
+          "t0",
+          "t1",
+          "t2",
+          "t3",
+          "t4"
+        ],
+        "successful_control_task_ids": [
+          "t5"
+        ],
+        "modification_paths": [
+          "src/a/deep"
+        ]
+      },
+      "successful_ids": [
+        "t6",
+        "t7"
+      ],
+      "epoch": 1,
+      "expected": {
+        "quantities": {
+          "local": {
+            "requested": 1,
+            "resolved": 1,
+            "reasons": []
+          },
+          "shared": {
+            "requested": 2,
+            "resolved": 2,
+            "reasons": []
+          },
+          "cross": {
+            "requested": 3,
+            "resolved": 3,
+            "reasons": []
+          },
+          "bridge": {
+            "requested": 4,
+            "resolved": 4,
+            "reasons": []
+          }
+        },
+        "representative": [
+          "t4",
+          "t9",
+          "t2",
+          "t6",
+          "t0",
+          "t5",
+          "t8",
+          "t7",
+          "t1",
+          "t3"
+        ],
+        "cross": {
+          "ids": [
+            "t6",
+            "t7",
+            "t9",
+            "t8",
+            "t5"
+          ],
+          "general_ids": [
+            "t5"
+          ]
+        },
+        "scope": {
+          "family_id": "A",
+          "epoch": 1,
+          "buckets": {
+            "shared": [
+              "t6",
+              "t7"
+            ],
+            "local": [
+              "t4"
+            ],
+            "cross": [
+              "t9",
+              "t8",
+              "t5"
+            ]
+          },
+          "task_ids": [
+            "t4",
+            "t5",
+            "t6",
+            "t7",
+            "t8",
+            "t9"
+          ],
+          "weights": {
+            "t4": 0.6,
+            "t5": 0.049999999999999996,
+            "t6": 0.125,
+            "t7": 0.125,
+            "t8": 0.049999999999999996,
+            "t9": 0.049999999999999996
+          },
+          "sampling": {
+            "shared": {
+              "requested": 2,
+              "selected": 2,
+              "reasons": []
+            },
+            "local": {
+              "requested": 1,
+              "selected": 1,
+              "reasons": [
+                "successful-control-quota-unavailable"
+              ]
+            },
+            "cross": {
+              "requested": 3,
+              "selected": 3,
+              "reasons": [
+                "general-seed-sampling-fallback"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "general-fallback-and-deduplication",
+      "tasks": [
+        {
+          "id": "t0",
+          "stratum": "A",
+          "estimated_cost": 1,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0
+        },
+        {
+          "id": "t1",
+          "stratum": "A",
+          "estimated_cost": 5,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.25
+        },
+        {
+          "id": "t2",
+          "stratum": "A",
+          "estimated_cost": 1,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.26
+        },
+        {
+          "id": "t3",
+          "stratum": "A",
+          "estimated_cost": 8,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.75
+        },
+        {
+          "id": "t4",
+          "stratum": "A",
+          "estimated_cost": 2,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.76
+        },
+        {
+          "id": "t5",
+          "stratum": "A",
+          "estimated_cost": 3,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 1
+        },
+        {
+          "id": "t6",
+          "stratum": "B",
+          "estimated_cost": 2,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0
+        },
+        {
+          "id": "t7",
+          "stratum": "B",
+          "estimated_cost": 7,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.25
+        },
+        {
+          "id": "t8",
+          "stratum": "B",
+          "estimated_cost": 3,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.26
+        },
+        {
+          "id": "t9",
+          "stratum": "B",
+          "estimated_cost": 1,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.75
+        }
+      ],
+      "config": {
+        "seed": "19",
+        "local": {
+          "ratio": 0.4
+        },
+        "shared": {
+          "ratio": 0.2
+        },
+        "cross": {
+          "ratio": 0.4
+        },
+        "bridge": {
+          "ratio": 0.4
+        },
+        "bucket_weights": {
+          "shared": 0.25,
+          "local": 0.6,
+          "cross": 0.15
+        },
+        "shared_core_task_ids": [
+          "t6"
+        ],
+        "guard_task_ids": [
+          "t9"
+        ]
+      },
+      "family": {
+        "id": "A",
+        "task_ids": [
+          "t0",
+          "t1",
+          "t2",
+          "t3",
+          "t4"
+        ],
+        "successful_control_task_ids": [
+          "t5"
+        ],
+        "modification_paths": [
+          "src/a/deep"
+        ]
+      },
+      "successful_ids": [
+        "t6",
+        "t7"
+      ],
+      "epoch": 1,
+      "expected": {
+        "quantities": {
+          "local": {
+            "requested": 4,
+            "resolved": 4,
+            "reasons": []
+          },
+          "shared": {
+            "requested": 2,
+            "resolved": 2,
+            "reasons": []
+          },
+          "cross": {
+            "requested": 4,
+            "resolved": 4,
+            "reasons": []
+          },
+          "bridge": {
+            "requested": 4,
+            "resolved": 4,
+            "reasons": []
+          }
+        },
+        "representative": [
+          "t4",
+          "t9",
+          "t2",
+          "t6",
+          "t0",
+          "t5",
+          "t8",
+          "t7",
+          "t1",
+          "t3"
+        ],
+        "cross": {
+          "ids": [
+            "t5",
+            "t6",
+            "t7",
+            "t9",
+            "t8"
+          ],
+          "general_ids": [
+            "t5",
+            "t6",
+            "t7",
+            "t9",
+            "t8"
+          ]
+        },
+        "scope": {
+          "family_id": "A",
+          "epoch": 1,
+          "buckets": {
+            "shared": [
+              "t6",
+              "t7"
+            ],
+            "local": [
+              "t4",
+              "t3",
+              "t2",
+              "t5"
+            ],
+            "cross": [
+              "t9",
+              "t8"
+            ]
+          },
+          "task_ids": [
+            "t2",
+            "t3",
+            "t4",
+            "t5",
+            "t6",
+            "t7",
+            "t8",
+            "t9"
+          ],
+          "weights": {
+            "t2": 0.15,
+            "t3": 0.15,
+            "t4": 0.15,
+            "t5": 0.15,
+            "t6": 0.125,
+            "t7": 0.125,
+            "t8": 0.075,
+            "t9": 0.075
+          },
+          "sampling": {
+            "shared": {
+              "requested": 2,
+              "selected": 2,
+              "reasons": []
+            },
+            "local": {
+              "requested": 4,
+              "selected": 4,
+              "reasons": [
+                "successful-control-included"
+              ]
+            },
+            "cross": {
+              "requested": 4,
+              "selected": 2,
+              "reasons": [
+                "eligible-pool-exhausted-after-deduplication",
+                "general-seed-sampling-fallback"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "unknown-history-and-no-features",
+      "tasks": [
+        {
+          "id": "t0",
+          "stratum": "A",
+          "estimated_cost": 1
+        },
+        {
+          "id": "t1",
+          "stratum": "A",
+          "estimated_cost": 5
+        },
+        {
+          "id": "t2",
+          "stratum": "A",
+          "estimated_cost": 1
+        },
+        {
+          "id": "t3",
+          "stratum": "A",
+          "estimated_cost": 8
+        },
+        {
+          "id": "t4",
+          "stratum": "A",
+          "estimated_cost": 2
+        },
+        {
+          "id": "t5",
+          "stratum": "A",
+          "estimated_cost": 3
+        },
+        {
+          "id": "t6",
+          "stratum": "B",
+          "estimated_cost": 2
+        },
+        {
+          "id": "t7",
+          "stratum": "B",
+          "estimated_cost": 7
+        },
+        {
+          "id": "t8",
+          "stratum": "B",
+          "estimated_cost": 3
+        },
+        {
+          "id": "t9",
+          "stratum": "B",
+          "estimated_cost": 1
+        }
+      ],
+      "config": {
+        "seed": "19",
+        "local": {
+          "ratio": 0.4
+        },
+        "shared": {
+          "ratio": 0.2
+        },
+        "cross": {
+          "ratio": 0.3
+        },
+        "bridge": {
+          "ratio": 0.4
+        },
+        "bucket_weights": {
+          "shared": 0.25,
+          "local": 0.6,
+          "cross": 0.15
+        },
+        "shared_core_task_ids": [
+          "t6"
+        ],
+        "guard_task_ids": [
+          "t9"
+        ]
+      },
+      "family": {
+        "id": "A",
+        "task_ids": [
+          "t0",
+          "t1",
+          "t2",
+          "t3",
+          "t4"
+        ],
+        "successful_control_task_ids": [
+          "t5"
+        ],
+        "modification_paths": [
+          "src/a/deep"
+        ]
+      },
+      "successful_ids": [
+        "t6",
+        "t7"
+      ],
+      "epoch": 1,
+      "expected": {
+        "quantities": {
+          "local": {
+            "requested": 4,
+            "resolved": 4,
+            "reasons": []
+          },
+          "shared": {
+            "requested": 2,
+            "resolved": 2,
+            "reasons": []
+          },
+          "cross": {
+            "requested": 3,
+            "resolved": 3,
+            "reasons": []
+          },
+          "bridge": {
+            "requested": 4,
+            "resolved": 4,
+            "reasons": []
+          }
+        },
+        "representative": [
+          "t2",
+          "t9",
+          "t3",
+          "t7",
+          "t0",
+          "t6",
+          "t1",
+          "t8",
+          "t4",
+          "t5"
+        ],
+        "cross": {
+          "ids": [
+            "t9",
+            "t7",
+            "t6",
+            "t8",
+            "t5"
+          ],
+          "general_ids": [
+            "t5"
+          ]
+        },
+        "scope": {
+          "family_id": "A",
+          "epoch": 1,
+          "buckets": {
+            "shared": [
+              "t6",
+              "t7"
+            ],
+            "local": [
+              "t0",
+              "t3",
+              "t2",
+              "t5"
+            ],
+            "cross": [
+              "t9",
+              "t8"
+            ]
+          },
+          "task_ids": [
+            "t0",
+            "t2",
+            "t3",
+            "t5",
+            "t6",
+            "t7",
+            "t8",
+            "t9"
+          ],
+          "weights": {
+            "t0": 0.15,
+            "t2": 0.15,
+            "t3": 0.15,
+            "t5": 0.15,
+            "t6": 0.125,
+            "t7": 0.125,
+            "t8": 0.075,
+            "t9": 0.075
+          },
+          "sampling": {
+            "shared": {
+              "requested": 2,
+              "selected": 2,
+              "reasons": []
+            },
+            "local": {
+              "requested": 4,
+              "selected": 4,
+              "reasons": [
+                "successful-control-included"
+              ]
+            },
+            "cross": {
+              "requested": 3,
+              "selected": 2,
+              "reasons": [
+                "eligible-pool-exhausted-after-deduplication"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "disabled-buckets-and-zero-weight-guard",
+      "tasks": [
+        {
+          "id": "t0",
+          "stratum": "A",
+          "estimated_cost": 1,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0
+        },
+        {
+          "id": "t1",
+          "stratum": "A",
+          "estimated_cost": 5,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.25
+        },
+        {
+          "id": "t2",
+          "stratum": "A",
+          "estimated_cost": 1,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.26
+        },
+        {
+          "id": "t3",
+          "stratum": "A",
+          "estimated_cost": 8,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.75
+        },
+        {
+          "id": "t4",
+          "stratum": "A",
+          "estimated_cost": 2,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.76
+        },
+        {
+          "id": "t5",
+          "stratum": "A",
+          "estimated_cost": 3,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 1
+        },
+        {
+          "id": "t6",
+          "stratum": "B",
+          "estimated_cost": 2,
+          "family_ids": [
+            "B",
+            "C"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0
+        },
+        {
+          "id": "t7",
+          "stratum": "B",
+          "estimated_cost": 7,
+          "family_ids": [
+            "B"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.25
+        },
+        {
+          "id": "t8",
+          "stratum": "B",
+          "estimated_cost": 3,
+          "family_ids": [
+            "B"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.26
+        },
+        {
+          "id": "t9",
+          "stratum": "B",
+          "estimated_cost": 1,
+          "family_ids": [
+            "B"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.75
+        }
+      ],
+      "config": {
+        "seed": "19",
+        "local": {
+          "ratio": 0.2
+        },
+        "shared": {
+          "ratio": 0
+        },
+        "cross": {
+          "ratio": 0
+        },
+        "bridge": {
+          "ratio": 0
+        },
+        "bucket_weights": {
+          "shared": 0.25,
+          "local": 0.6,
+          "cross": 0.15
+        },
+        "shared_core_task_ids": [],
+        "guard_task_ids": [
+          "t9"
+        ]
+      },
+      "family": {
+        "id": "A",
+        "task_ids": [
+          "t0",
+          "t1",
+          "t2",
+          "t3",
+          "t4"
+        ],
+        "successful_control_task_ids": [
+          "t5"
+        ],
+        "modification_paths": [
+          "src/a/deep"
+        ]
+      },
+      "successful_ids": [
+        "t6",
+        "t7"
+      ],
+      "epoch": 1,
+      "expected": {
+        "quantities": {
+          "local": {
+            "requested": 2,
+            "resolved": 2,
+            "reasons": []
+          },
+          "shared": {
+            "requested": 0,
+            "resolved": 0,
+            "reasons": []
+          },
+          "cross": {
+            "requested": 0,
+            "resolved": 0,
+            "reasons": []
+          },
+          "bridge": {
+            "requested": 0,
+            "resolved": 0,
+            "reasons": []
+          }
+        },
+        "representative": [
+          "t4",
+          "t9",
+          "t2",
+          "t6",
+          "t0",
+          "t5",
+          "t8",
+          "t7",
+          "t1",
+          "t3"
+        ],
+        "cross": {
+          "ids": [
+            "t6",
+            "t7",
+            "t9",
+            "t8",
+            "t5"
+          ],
+          "general_ids": [
+            "t5"
+          ]
+        },
+        "scope": {
+          "family_id": "A",
+          "epoch": 1,
+          "buckets": {
+            "shared": [],
+            "local": [
+              "t4",
+              "t5"
+            ],
+            "cross": []
+          },
+          "task_ids": [
+            "t4",
+            "t5",
+            "t9"
+          ],
+          "weights": {
+            "t4": 0.5,
+            "t5": 0.5,
+            "t9": 0
+          },
+          "sampling": {
+            "shared": {
+              "requested": 0,
+              "selected": 0,
+              "reasons": []
+            },
+            "local": {
+              "requested": 2,
+              "selected": 2,
+              "reasons": [
+                "successful-control-included"
+              ]
+            },
+            "cross": {
+              "requested": 0,
+              "selected": 0,
+              "reasons": []
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "empty-failure-family",
+      "tasks": [
+        {
+          "id": "t0",
+          "stratum": "A",
+          "estimated_cost": 1,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0
+        },
+        {
+          "id": "t1",
+          "stratum": "A",
+          "estimated_cost": 5,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.25
+        },
+        {
+          "id": "t2",
+          "stratum": "A",
+          "estimated_cost": 1,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.26
+        },
+        {
+          "id": "t3",
+          "stratum": "A",
+          "estimated_cost": 8,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.75
+        },
+        {
+          "id": "t4",
+          "stratum": "A",
+          "estimated_cost": 2,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.76
+        },
+        {
+          "id": "t5",
+          "stratum": "A",
+          "estimated_cost": 3,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 1
+        },
+        {
+          "id": "t6",
+          "stratum": "B",
+          "estimated_cost": 2,
+          "family_ids": [
+            "B",
+            "C"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0
+        },
+        {
+          "id": "t7",
+          "stratum": "B",
+          "estimated_cost": 7,
+          "family_ids": [
+            "B"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.25
+        },
+        {
+          "id": "t8",
+          "stratum": "B",
+          "estimated_cost": 3,
+          "family_ids": [
+            "B"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.26
+        },
+        {
+          "id": "t9",
+          "stratum": "B",
+          "estimated_cost": 1,
+          "family_ids": [
+            "B"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.75
+        }
+      ],
+      "config": {
+        "seed": "19",
+        "local": {
+          "ratio": 0.4
+        },
+        "shared": {
+          "ratio": 0.2
+        },
+        "cross": {
+          "ratio": 0.3
+        },
+        "bridge": {
+          "ratio": 0.4
+        },
+        "bucket_weights": {
+          "shared": 0.25,
+          "local": 0.6,
+          "cross": 0.15
+        },
+        "shared_core_task_ids": [
+          "t6"
+        ],
+        "guard_task_ids": [
+          "t9"
+        ]
+      },
+      "family": {
+        "id": "A",
+        "task_ids": [],
+        "successful_control_task_ids": [
+          "t5"
+        ],
+        "modification_paths": [
+          "src/a/deep"
+        ]
+      },
+      "successful_ids": [
+        "t6",
+        "t7"
+      ],
+      "epoch": 1,
+      "expected": {
+        "quantities": {
+          "local": {
+            "requested": 4,
+            "resolved": 4,
+            "reasons": []
+          },
+          "shared": {
+            "requested": 2,
+            "resolved": 2,
+            "reasons": []
+          },
+          "cross": {
+            "requested": 3,
+            "resolved": 3,
+            "reasons": []
+          },
+          "bridge": {
+            "requested": 4,
+            "resolved": 4,
+            "reasons": []
+          }
+        },
+        "representative": [
+          "t4",
+          "t9",
+          "t2",
+          "t6",
+          "t0",
+          "t5",
+          "t8",
+          "t7",
+          "t1",
+          "t3"
+        ],
+        "cross": {
+          "ids": [
+            "t6",
+            "t7",
+            "t9",
+            "t8",
+            "t4",
+            "t5",
+            "t0",
+            "t2",
+            "t1",
+            "t3"
+          ],
+          "general_ids": [
+            "t4",
+            "t5",
+            "t0",
+            "t2",
+            "t1",
+            "t3"
+          ]
+        },
+        "scope": null
+      }
+    },
+    {
+      "name": "unicode-and-escaped-ordering",
+      "tasks": [
+        {
+          "id": "😀",
+          "stratum": "A",
+          "estimated_cost": 1,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0
+        },
+        {
+          "id": "",
+          "stratum": "A",
+          "estimated_cost": 5,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.25
+        },
+        {
+          "id": "汉字",
+          "stratum": "A",
+          "estimated_cost": 1,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.26
+        },
+        {
+          "id": "é",
+          "stratum": "A",
+          "estimated_cost": 8,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.75
+        },
+        {
+          "id": "é",
+          "stratum": "A",
+          "estimated_cost": 2,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.76
+        },
+        {
+          "id": "quote\"",
+          "stratum": "A",
+          "estimated_cost": 3,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 1
+        },
+        {
+          "id": "slash\\",
+          "stratum": "B",
+          "estimated_cost": 2,
+          "family_ids": [
+            "B",
+            "C"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0
+        },
+        {
+          "id": "🧪",
+          "stratum": "B",
+          "estimated_cost": 7,
+          "family_ids": [
+            "B"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.25
+        },
+        {
+          "id": "β",
+          "stratum": "B",
+          "estimated_cost": 3,
+          "family_ids": [
+            "B"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.26
+        },
+        {
+          "id": "终",
+          "stratum": "B",
+          "estimated_cost": 1,
+          "family_ids": [
+            "B"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.75
+        }
+      ],
+      "config": {
+        "seed": "19",
+        "local": {
+          "ratio": 0.4
+        },
+        "shared": {
+          "ratio": 0.2
+        },
+        "cross": {
+          "ratio": 0.3
+        },
+        "bridge": {
+          "ratio": 0.4
+        },
+        "bucket_weights": {
+          "shared": 0.25,
+          "local": 0.6,
+          "cross": 0.15
+        },
+        "shared_core_task_ids": [
+          "slash\\"
+        ],
+        "guard_task_ids": [
+          "终"
+        ]
+      },
+      "family": {
+        "id": "A",
+        "task_ids": [
+          "😀",
+          "",
+          "汉字",
+          "é",
+          "é"
+        ],
+        "successful_control_task_ids": [
+          "quote\""
+        ],
+        "modification_paths": [
+          "src/a/deep"
+        ]
+      },
+      "successful_ids": [
+        "slash\\",
+        "🧪"
+      ],
+      "epoch": 1,
+      "expected": {
+        "quantities": {
+          "local": {
+            "requested": 4,
+            "resolved": 4,
+            "reasons": []
+          },
+          "shared": {
+            "requested": 2,
+            "resolved": 2,
+            "reasons": []
+          },
+          "cross": {
+            "requested": 3,
+            "resolved": 3,
+            "reasons": []
+          },
+          "bridge": {
+            "requested": 4,
+            "resolved": 4,
+            "reasons": []
+          }
+        },
+        "representative": [
+          "é",
+          "终",
+          "汉字",
+          "slash\\",
+          "😀",
+          "quote\"",
+          "β",
+          "🧪",
+          "",
+          "é"
+        ],
+        "cross": {
+          "ids": [
+            "slash\\",
+            "🧪",
+            "终",
+            "β",
+            "quote\""
+          ],
+          "general_ids": [
+            "quote\""
+          ]
+        },
+        "scope": {
+          "family_id": "A",
+          "epoch": 1,
+          "buckets": {
+            "shared": [
+              "slash\\",
+              "🧪"
+            ],
+            "local": [
+              "é",
+              "é",
+              "汉字",
+              "quote\""
+            ],
+            "cross": [
+              "终",
+              "β"
+            ]
+          },
+          "task_ids": [
+            "é",
+            "quote\"",
+            "slash\\",
+            "é",
+            "β",
+            "汉字",
+            "终",
+            "🧪"
+          ],
+          "weights": {
+            "é": 0.15,
+            "quote\"": 0.15,
+            "slash\\": 0.125,
+            "é": 0.15,
+            "β": 0.075,
+            "汉字": 0.15,
+            "终": 0.075,
+            "🧪": 0.125
+          },
+          "sampling": {
+            "shared": {
+              "requested": 2,
+              "selected": 2,
+              "reasons": []
+            },
+            "local": {
+              "requested": 4,
+              "selected": 4,
+              "reasons": [
+                "successful-control-included"
+              ]
+            },
+            "cross": {
+              "requested": 3,
+              "selected": 2,
+              "reasons": [
+                "eligible-pool-exhausted-after-deduplication"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "one-task-rounded-overlap",
+      "tasks": [
+        {
+          "id": "t0",
+          "stratum": "A",
+          "estimated_cost": 1,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0
+        }
+      ],
+      "config": {
+        "seed": "19",
+        "local": {
+          "ratio": 0.08
+        },
+        "shared": {
+          "ratio": 0.04
+        },
+        "cross": {
+          "ratio": 0.03
+        },
+        "bridge": {
+          "ratio": 0.4
+        },
+        "bucket_weights": {
+          "shared": 0.25,
+          "local": 0.6,
+          "cross": 0.15
+        },
+        "shared_core_task_ids": [],
+        "guard_task_ids": []
+      },
+      "family": {
+        "id": "A",
+        "task_ids": [
+          "t0"
+        ],
+        "successful_control_task_ids": [],
+        "modification_paths": [
+          "src/a/deep"
+        ]
+      },
+      "successful_ids": [],
+      "epoch": 1,
+      "expected": {
+        "quantities": {
+          "local": {
+            "requested": 1,
+            "resolved": 1,
+            "reasons": []
+          },
+          "shared": {
+            "requested": 1,
+            "resolved": 1,
+            "reasons": []
+          },
+          "cross": {
+            "requested": 1,
+            "resolved": 1,
+            "reasons": []
+          },
+          "bridge": {
+            "requested": 1,
+            "resolved": 1,
+            "reasons": []
+          }
+        },
+        "representative": [
+          "t0"
+        ],
+        "cross": {
+          "ids": [],
+          "general_ids": []
+        },
+        "scope": {
+          "family_id": "A",
+          "epoch": 1,
+          "buckets": {
+            "shared": [],
+            "local": [
+              "t0"
+            ],
+            "cross": []
+          },
+          "task_ids": [
+            "t0"
+          ],
+          "weights": {
+            "t0": 1
+          },
+          "sampling": {
+            "shared": {
+              "requested": 1,
+              "selected": 0,
+              "reasons": [
+                "eligible-pool-exhausted-after-deduplication",
+                "rounded-targets-exceed-universe:shared-local-cross-priority"
+              ]
+            },
+            "local": {
+              "requested": 1,
+              "selected": 1,
+              "reasons": []
+            },
+            "cross": {
+              "requested": 1,
+              "selected": 0,
+              "reasons": [
+                "eligible-pool-exhausted-after-deduplication",
+                "rounded-targets-exceed-universe:shared-local-cross-priority"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "quota-capacity-and-minimum-clipping",
+      "tasks": [
+        {
+          "id": "t0",
+          "stratum": "A",
+          "estimated_cost": 1,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0
+        },
+        {
+          "id": "t1",
+          "stratum": "A",
+          "estimated_cost": 5,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.25
+        },
+        {
+          "id": "t2",
+          "stratum": "A",
+          "estimated_cost": 1,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.26
+        },
+        {
+          "id": "t3",
+          "stratum": "A",
+          "estimated_cost": 8,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.75
+        },
+        {
+          "id": "t4",
+          "stratum": "A",
+          "estimated_cost": 2,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.76
+        },
+        {
+          "id": "t5",
+          "stratum": "A",
+          "estimated_cost": 3,
+          "family_ids": [
+            "A"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 1
+        },
+        {
+          "id": "t6",
+          "stratum": "B",
+          "estimated_cost": 2,
+          "family_ids": [
+            "B",
+            "C"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0
+        },
+        {
+          "id": "t7",
+          "stratum": "B",
+          "estimated_cost": 7,
+          "family_ids": [
+            "B"
+          ],
+          "submodes": [
+            "mode-1"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.25
+        },
+        {
+          "id": "t8",
+          "stratum": "B",
+          "estimated_cost": 3,
+          "family_ids": [
+            "B"
+          ],
+          "submodes": [
+            "mode-2"
+          ],
+          "modification_paths": [
+            "src/b"
+          ],
+          "historical_difficulty": 0.26
+        },
+        {
+          "id": "t9",
+          "stratum": "B",
+          "estimated_cost": 1,
+          "family_ids": [
+            "B"
+          ],
+          "submodes": [
+            "mode-0"
+          ],
+          "modification_paths": [
+            "src/a"
+          ],
+          "historical_difficulty": 0.75
+        }
+      ],
+      "config": {
+        "seed": "19",
+        "local": {
+          "ratio": 0.4,
+          "max_tasks": 2
+        },
+        "shared": {
+          "ratio": 0.2
+        },
+        "cross": {
+          "ratio": 0.3
+        },
+        "bridge": {
+          "ratio": 0.4,
+          "min_tasks": 20
+        },
+        "bucket_weights": {
+          "shared": 0.25,
+          "local": 0.6,
+          "cross": 0.15
+        },
+        "shared_core_task_ids": [
+          "t6"
+        ],
+        "guard_task_ids": [
+          "t9"
+        ]
+      },
+      "family": {
+        "id": "A",
+        "task_ids": [
+          "t0",
+          "t1",
+          "t2",
+          "t3",
+          "t4"
+        ],
+        "successful_control_task_ids": [
+          "t5"
+        ],
+        "modification_paths": [
+          "src/a/deep"
+        ]
+      },
+      "successful_ids": [
+        "t6",
+        "t7"
+      ],
+      "epoch": 1,
+      "expected": {
+        "quantities": {
+          "local": {
+            "requested": 4,
+            "resolved": 2,
+            "reasons": [
+              "capacity-clipped"
+            ]
+          },
+          "shared": {
+            "requested": 2,
+            "resolved": 2,
+            "reasons": []
+          },
+          "cross": {
+            "requested": 3,
+            "resolved": 3,
+            "reasons": []
+          },
+          "bridge": {
+            "requested": 4,
+            "resolved": 10,
+            "reasons": [
+              "minimum-clipped-to-universe"
+            ]
+          }
+        },
+        "representative": [
+          "t4",
+          "t9",
+          "t2",
+          "t6",
+          "t0",
+          "t5",
+          "t8",
+          "t7",
+          "t1",
+          "t3"
+        ],
+        "cross": {
+          "ids": [
+            "t6",
+            "t7",
+            "t9",
+            "t8",
+            "t5"
+          ],
+          "general_ids": [
+            "t5"
+          ]
+        },
+        "scope": {
+          "family_id": "A",
+          "epoch": 1,
+          "buckets": {
+            "shared": [
+              "t6",
+              "t7"
+            ],
+            "local": [
+              "t4",
+              "t5"
+            ],
+            "cross": [
+              "t9",
+              "t8"
+            ]
+          },
+          "task_ids": [
+            "t4",
+            "t5",
+            "t6",
+            "t7",
+            "t8",
+            "t9"
+          ],
+          "weights": {
+            "t4": 0.3,
+            "t5": 0.3,
+            "t6": 0.125,
+            "t7": 0.125,
+            "t8": 0.075,
+            "t9": 0.075
+          },
+          "sampling": {
+            "shared": {
+              "requested": 2,
+              "selected": 2,
+              "reasons": []
+            },
+            "local": {
+              "requested": 2,
+              "selected": 2,
+              "reasons": [
+                "successful-control-included"
+              ]
+            },
+            "cross": {
+              "requested": 3,
+              "selected": 2,
+              "reasons": [
+                "eligible-pool-exhausted-after-deduplication"
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

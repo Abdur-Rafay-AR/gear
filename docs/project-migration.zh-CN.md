@@ -19,3 +19,5 @@
 本分支的项目 recipe 是明确版本化的新流程：全 seed 比较、失败题局部检查、最终 held-out gate。历史 GEPA 的多 scope archive、bridge、regression proposal、通用 objective 和自动 repair 仍由旧入口提供。它们尚未全部等价迁入 Python；不得把此分支标为设计规范 M3/M5 全部验收完成。旧 service 的 baseline 复用、证据投影、生成状态、评测修复和提交状态已拆为独立模块；Hitch 的 verifier/result/trajectory 解码和进程 transport 已独立，并全部纳入新的组件实现摘要。旧 capabilities 的经验查询与分页、轨迹投影缓存、参数校验和有界文本展示已拆成独立模块，旧 facade 保持鉴权与诊断流程；其余 orchestrator 和兼容实现仍保留，新的 domain/ports/runtime/adapters 边界由 CI 检查，后续迁移不能弱化原合同。
 
 发布检查脚本 `scripts/check-project-package.mjs` 从真正的 tgz/wheel 安装，验证三套模板、两个 Target、共享应用的 evaluate/refine/report/resume/export、CPU 导入和 SDK。离线 provider 证明调用与恢复合同；真实 Luna/Target 和 Docker/verifier 分别验收。设计规范中的五名新用户易用性测验需要实际参与者，不能用自动化结果替代。
+
+Python 已提供历史 shared/local/cross 采样的纯函数与可选 `ScopeSampler`：成功对照、难度/成本分层、模块覆盖、题族分配、guard-only 零权重、epoch 和容量解释由同一份 10 组固定 fixture 与旧 TypeScript 交叉验证。默认 recipe 未切换；适配器只替换选题，完整加权阶段和动态 scope 生命周期仍待迁移。新 API 不生产历史 digest、不复用旧 archive 或决策日志；不能据此宣称完整 GEPA 等价。发布包检查还从安装后的 wheel 执行 `GEPA(task_sampler=ScopeSampler())` 的 CPU toy round。

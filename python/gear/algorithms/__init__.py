@@ -11,6 +11,7 @@ from .contracts import (
     TaskSampler,
 )
 from .gepa import GEPA
+from .gepa.scopes import ScopeSampler
 
 __all__ = [
     "GEPA",
@@ -20,6 +21,7 @@ __all__ = [
     "Operation",
     "ParentPolicy",
     "ProposalPlanner",
+    "ScopeSampler",
     "SearchAlgorithm",
     "SearchView",
     "StopRule",
