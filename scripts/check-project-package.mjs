@@ -36,6 +36,11 @@ try {
       `missing published Hitch carrier asset: ${name}`,
     )
   const artifactGuard = join(temp, 'node_modules/rsi-gear/assets/harbor-runtime/gear_harbor_artifacts.py')
+  for (const name of ['launch.mjs', 'harbor_cli.py'])
+    assert.ok(
+      (await readFile(join(temp, 'node_modules/rsi-gear/assets/harbor-runtime', name))).byteLength > 0,
+      `missing published Harbor runtime asset: ${name}`,
+    )
   // Loading and using the metadata checker must not import Harbor or optional model packages.
   const artifactFixture = join(temp, 'artifact-fixture')
   await mkdir(artifactFixture)

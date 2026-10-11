@@ -119,7 +119,8 @@
     "assets/hitch-carrier/*.mjs",
     "assets/hitch-carrier/*.json",
     "assets/hitch-carrier/*.yaml",
-    "assets/harbor-runtime/*.py"
+    "assets/harbor-runtime/*.py",
+    "assets/harbor-runtime/*.mjs"
   ],
   "scripts": {
     "clean": "node -e \"require('node:fs').rmSync('lib',{recursive:true,force:true})\"",

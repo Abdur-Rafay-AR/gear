@@ -309,3 +309,19 @@ typecheck、Biome、222 模块边界、协议及独立 tgz/wheel 旅程通过。
 31 项 Harbor 导入与包清单回归通过；typecheck、Biome、222 模块边界、协议、14 项 CI/发布规则及新 Python 文件 Ruff 检查通过。tgz/wheel 安装旅程通过，并验证新检查器实际包含于 npm 包且无需 Harbor 依赖即可加载纯元数据检查。没有修改 Python 算法或训练实现，未重跑独立 Python 全量；CI 继续运行完整 Python/CPU 门禁。README 和原用户工作区未修改。
 
 剩余接线必须显式绑定插件版本/内容及实际加载证明、固定任务集合和执行条件，再向项目 provider 开放 Harbor 评分与恢复。当前默认 provider 未启用 `harborVerification`；本次修复不等于完整项目 Harbor 闭环或全部重构验收完成。
+
+## 封存的 Harbor 启动入口与 Hitch 发现合同
+
+`df8076a` 的 [产物边界 CI](https://github.com/rsi-gear/gear/actions/runs/38136845756) 已全部通过，包含 Quality、Python/CPU、Linux/macOS sandbox、Hitch 恢复及 6 项 Harbor 隔离测试。
+
+新增 `prepareHarborRuntime` 把入口、强制插件、Python 路径/二进制/版本、Harbor 0.21.0 源码摘要与平台封存到专属 Git 快照；正常 Git 文件仍使用原来的普通权限，只有入口显式记录可执行位，历史 Target 父子提交的两份固定值保持原样。资源修改、链接替换或快照漂移都会拒绝，恢复不会覆盖原内容。Python virtualenv 的 shim 路径保留；入口自身返回真实路径，与 Hitch 的 executable 解析一致。
+
+Node 入口使用 `execve` 直接成为 Python/Harbor 进程，实际 PID 和取消归属保持一致。Python 入口每次核对安装摘要，从封存文件加载插件，拒绝外部 plugin 参数，并使用空的私有字节码目录且禁止写入，不采用已有 `.pyc`。没有修改 Harbor 安装或 Hitch 实现，也没有复制其调度、解析或评分器。安装摘要目前覆盖 Harbor 包源码和 Python 二进制/版本，不作为所有宿主依赖及任务镜像条件的完整认证。
+
+初轮三个 TS 文件 31 项通过，涵盖新入口、DSH/Pi carrier 与 Target；补充 Git 历史值和最终入口复验的两个文件 13 项通过。Python 15 项通过，增加强制参数、源码身份变化、空字节码目录、版本漂移检查。真实评分先通过 6 项，加入字节码约束后完整重跑同样 6 项通过：正常 0 / 0.75 保持，两个软链接攻击由入口自动加载的插件在评分前拒绝，两组原生对照仍复现绕过；测试调用端不再手工追加 plugin 参数。
+
+新增固定 Hitch 的发现与 Python bridge 合同。首次检测到 macOS `/var` 与 `/private/var` 的路径差异，修正专用入口返回值后，该合同与入口单测共 12 项复验通过：实际 `hitch eval doctor` 选择封存入口，外部同名 Python 模块不能替换插件，Hitch 实际文件摘要等于 `executableDigest`，资源桥接器用原 virtualenv 读出 Target 1 CPU / 512 MiB 和 separate verifier 2 CPU / 768 MiB。该测试不启动 Target，也不声称已完成 daemon 上的真实任务执行。CI 的固定 Hitch 任务增加这一合同。
+
+最终完整性检查代码直接嵌入 Hitch 计算指纹的入口，避免先 import 旁边的启动模块再检查其摘要。单测将三个资源分别替换成会抛出特定错误的代码，确认它们在执行前因摘要不符而被拒绝；入口与 Hitch 合同 12 项复验通过。两种真实软链接攻击又通过最终入口定向复验：2 项通过、4 项未选中；这些未选中用例在前述完整 6 项回归中已通过，不能把这次定向运行单独记作全量通过。
+
+typecheck、Biome、223 模块边界、协议、Ruff 和 14 项 CI/发布规则检查通过；tgz/wheel 发布旅程通过，新入口的全部资源均有安装后存在性检查。未调用模型、修改 README 或改写历史身份。完整项目 profile/daemon 接线、评测 backend identity 及实际物理执行/镜像条件核对仍未完成，默认 Harbor 执行能力保持未启用。

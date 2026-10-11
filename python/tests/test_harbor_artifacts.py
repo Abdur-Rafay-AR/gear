@@ -14,6 +14,11 @@ ASSET = Path(__file__).resolve().parents[2] / "assets/harbor-runtime/gear_harbor
 SPEC = importlib.util.spec_from_file_location("gear_harbor_artifacts", ASSET)
 guard = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(guard)
+CLI_SPEC = importlib.util.spec_from_file_location(
+    "gear_harbor_cli", ASSET.with_name("harbor_cli.py")
+)
+cli = importlib.util.module_from_spec(CLI_SPEC)
+CLI_SPEC.loader.exec_module(cli)
 
 
 class HarborArtifactTest(unittest.TestCase):
@@ -142,6 +147,73 @@ class HarborArtifactTest(unittest.TestCase):
             self.assertRaisesRegex(ValueError, "Harbor 0.21.0"),
         ):
             asyncio.run(plugin.on_job_start(job))
+
+
+class HarborEntryTest(unittest.TestCase):
+    def test_installation_identity_tracks_source_and_ignores_only_bytecode(self):
+        with tempfile.TemporaryDirectory() as root:
+            package = Path(root)
+            source = package / "__init__.py"
+            source.write_text("VERSION = '0.21.0'\n")
+            with (
+                patch.dict(cli.sys.modules, {"harbor": SimpleNamespace(__file__=str(source))}),
+                patch.object(cli, "version", return_value="0.21.0"),
+                patch.object(cli.sys, "version_info", (3, 12, 0)),
+            ):
+                first = cli.installation()
+                (package / "__pycache__").mkdir()
+                (package / "__pycache__/ignored.pyc").write_bytes(b"not executable source")
+                self.assertEqual(cli.installation(), first)
+                source.write_text("VERSION = '0.21.0'; CHANGED = True\n")
+                self.assertNotEqual(cli.installation()["harborSource"], first["harborSource"])
+                (package / "linked.py").symlink_to(source)
+                with self.assertRaisesRegex(ValueError, "ordinary installed"):
+                    cli.installation()
+
+    def test_entry_uses_a_fresh_empty_bytecode_prefix(self):
+        previous = cli.sys.pycache_prefix
+        observed = []
+
+        def verify():
+            path = Path(cli.sys.pycache_prefix)
+            self.assertTrue(path.is_dir())
+            self.assertEqual(list(path.iterdir()), [])
+            self.assertTrue(cli.sys.dont_write_bytecode)
+            observed.append(path)
+
+        with patch.object(cli, "_main", side_effect=verify):
+            cli.main()
+        self.assertEqual(cli.sys.pycache_prefix, previous)
+        self.assertFalse(observed[0].exists())
+
+    def test_mandatory_plugin_preserves_all_hitch_arguments(self):
+        args = ["run", "--config", "some 'quoted' path/job.json", "--yes"]
+        self.assertEqual(
+            cli.guarded_arguments(args),
+            [*args, "--plugin", "gear_harbor_artifacts:ArtifactSafetyPlugin"],
+        )
+        self.assertEqual(cli.guarded_arguments(["--version"]), ["--version"])
+        self.assertNotIn("harbor", __import__("sys").modules)
+
+    def test_plugin_overrides_separators_and_other_entrypoints_fail_closed(self):
+        for args in (
+            [],
+            ["jobs", "start"],
+            ["run", "--plugin", "alternative:Plugin"],
+            ["run", "--plugin=alternative:Plugin"],
+            ["run", "--plugin-kwarg", "unsafe=true"],
+            ["run", "--", "--plugin=alternative:Plugin"],
+        ):
+            with self.subTest(args=args), self.assertRaises(ValueError):
+                cli.guarded_arguments(args)
+
+    def test_changed_runtime_installation_fails_before_loading_harbor(self):
+        with (
+            patch.object(cli.sys, "argv", ["entry", "--gear-runtime", "{}", "--", "run"]),
+            patch.object(cli, "installation", return_value={"harborSource": "changed"}),
+            self.assertRaisesRegex(ValueError, "installation-mismatch"),
+        ):
+            cli.main()
 
 
 if __name__ == "__main__":

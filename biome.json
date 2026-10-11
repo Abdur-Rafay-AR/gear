@@ -15,6 +15,7 @@
       "!src/domain/algorithm-protocol.ts",
       "assets/native-runtime/*.mjs",
       "assets/hitch-carrier/*.mjs",
+      "assets/harbor-runtime/*.mjs",
       "tests/integration/project*.spec.ts",
       "scripts/check-boundaries.mjs",
       "scripts/check-project-package.mjs",

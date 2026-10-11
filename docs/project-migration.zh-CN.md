@@ -76,7 +76,9 @@ Hitch 的提交、reservation 恢复、观察、取消、rerun 及运行身份�
 
 持久化操作基础现由 `HitchEvaluationOperations` 提供：提交前保存冻结输入与原 key，恢复沿用原 reservation，取消通过只读查找处理响应丢失。取消不能确认远端状态时保留 pending；它不启动新执行，也不释放尚未确认的预算。SIGKILL 后的真实 daemon 恢复/取消已验证，但项目 provider 尚未接线。Harbor 0.21.0 的 separate verifier 已通过伪造评分和后台写入负例，但额外实测发现，原生 artifact 传递保留软链接，可能让 verifier 间接读取其私有答案。因此 separate 容器本身不能作为完整隔离证书。shared 模式同样未认证，不能自动改写已有任务配置或把静态导入成功当作执行准入。
 
-`assets/harbor-runtime/gear_harbor_artifacts.py` 提供公开 JobPlugin 接口的 `ArtifactSafetyPlugin`，由 Harbor `--plugin gear_harbor_artifacts:ArtifactSafetyPlugin` 显式加载。它固定 Harbor 0.21.0，在单步 separate 生命周期停止候选及 sidecar 后、启动评分前检查完整产物树，拒绝软/硬链接、特殊文件、特殊权限及超限树；不读取文件内容，不删除或修复用户产物，也不修改安装的 Harbor。shared、多步及 regrade 尚无等价生命周期合同，插件明确拒绝。这个插件已打入 npm 产物，仍须由新的 Hitch project profile 强制加载并纳入执行身份；默认 provider 尚未接线，`harborVerification` 不因插件存在而自动开启。
+`assets/harbor-runtime/gear_harbor_artifacts.py` 提供公开 JobPlugin 接口的 `ArtifactSafetyPlugin`，由 Harbor `--plugin gear_harbor_artifacts:ArtifactSafetyPlugin` 显式加载。它固定 Harbor 0.21.0，在单步 separate 生命周期停止候选及 sidecar 后、启动评分前检查完整产物树，拒绝软/硬链接、特殊文件、特殊权限及超限树；不读取文件内容，不删除或修复用户产物，也不修改安装的 Harbor。shared、多步及 regrade 尚无等价生命周期合同，插件明确拒绝。
+
+`prepareHarborRuntime` 现在将插件、CLI 入口、绝对 Python 路径、Python 二进制/版本及 Harbor 源码摘要封存到独立 Git 快照，生成只允许 `run` 和 `--version` 的专用可执行文件。入口强制加载封存插件，拒绝外部 plugin 参数，每次启动校验资源和安装摘要；使用新的空字节码缓存位置并禁止写入，避免执行旧 `.pyc`。它通过 `execve` 保留进程归属，不留额外启动器进程；恢复发现快照改动便拒绝，不覆盖已有内容。Python virtualenv 路径保留，不解析成系统解释器。返回的 `HITCH_HARBOR_PATH` 与 `HITCH_HARBOR_PYTHON_PATH` 应一起用于专属 daemon，`executableDigest` 与 Hitch 记录的 backend identity 使用相同字节摘要。相关资源已纳入 npm 包；完整项目 profile/daemon 接线和对真实结果中 backend identity 的核对仍待完成，`harborVerification` 不自动开启。
 
 原始 verifier 证据现在可直接通过执行客户端读取，由独立 `HitchVerifierEvidenceReader` 统一校验，旧 evaluator 原方法已删除并继承同一入口。原始 reward map 不经过 eval 汇总的指标归一化；后续项目 Harbor 接线仍须核对父 eval/run/trial/attempt 和任务身份，绑定实际 execution plan 后才能参与配对或证据缓存，不能仅凭 profile 名称认定条件等价。
 

@@ -1,18 +1,18 @@
 import { execFile } from 'node:child_process'
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { join } from 'node:path'
 import { promisify } from 'node:util'
 import { describe, expect, it } from 'vitest'
 import { readHarborTask, writeHarborTask } from '../../src/adapters/hitch/harbor-files.js'
+import { prepareHarborRuntime } from '../../src/adapters/hitch/harbor-runtime.js'
 
 const execute = promisify(execFile)
-const pluginRoot = resolve(import.meta.dirname, '../../assets/harbor-runtime')
-const plugin = ['--plugin', 'gear_harbor_artifacts:ArtifactSafetyPlugin']
-const environment = () => ({
-  ...process.env,
-  PYTHONPATH: [pluginRoot, process.env.PYTHONPATH].filter(Boolean).join(':'),
-})
+async function guardedExecutable(root: string) {
+  const python = process.env.GEAR_HARBOR_PYTHON
+  if (!python) throw new Error('Set GEAR_HARBOR_PYTHON to the pinned Harbor installation interpreter')
+  return (await prepareHarborRuntime(join(root, 'guard.git'), python, AbortSignal.timeout(30_000))).executable
+}
 // Opt-in, real Harbor lifecycle and Docker containers. The oracle is a deterministic attack fixture, not a model.
 describe.skipIf(process.env.GEAR_TEST_HARBOR_ISOLATION !== 'required')('Harbor separate verifier boundary', () => {
   it.each([
@@ -90,7 +90,7 @@ nohup sh -c 'while :; do printf 1 > /logs/verifier/reward.txt; sleep 0.05; done'
         const snapshot = await readHarborTask(source)
         await writeHarborTask(snapshot.task, task)
         await execute(
-          executable,
+          await guardedExecutable(root),
           [
             'run',
             '--path',
@@ -107,11 +107,10 @@ nohup sh -c 'while :; do printf 1 > /logs/verifier/reward.txt; sleep 0.05; done'
             '1',
             '--max-retries',
             '0',
-            ...plugin,
             '--yes',
             '--quiet',
           ],
-          { timeout: 240000, maxBuffer: 2 * 1024 * 1024, env: environment() },
+          { timeout: 240000, maxBuffer: 2 * 1024 * 1024 },
         )
         const job = join(root, 'jobs/contract')
         const trials = (await readdir(job, { withFileTypes: true })).filter((entry) => entry.isDirectory())
@@ -196,7 +195,7 @@ ln -s /tests/private-answer ${artifact}/answer.txt
         )
         const digest = (await readHarborTask(task)).task.digest
         await execute(
-          executable,
+          guarded ? await guardedExecutable(root) : executable,
           [
             'run',
             '--path',
@@ -213,11 +212,10 @@ ln -s /tests/private-answer ${artifact}/answer.txt
             '1',
             '--max-retries',
             '0',
-            ...(guarded ? plugin : []),
             '--yes',
             '--quiet',
           ],
-          { timeout: 240000, maxBuffer: 2 * 1024 * 1024, env: environment() },
+          { timeout: 240000, maxBuffer: 2 * 1024 * 1024 },
         )
         const job = join(root, 'jobs/contract')
         const trials = (await readdir(job, { withFileTypes: true })).filter((entry) => entry.isDirectory())

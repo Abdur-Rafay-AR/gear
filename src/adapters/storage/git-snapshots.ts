@@ -37,13 +37,21 @@ export class GitSnapshots {
       child.stdin.end(input)
     })
   }
-  async publish(files: Record<string, string>, identity: string, parent?: string): Promise<string> {
+  async publish(
+    files: Record<string, string>,
+    identity: string,
+    parent?: string,
+    executablePaths: readonly string[] = [],
+  ): Promise<string> {
     if (
       !/^sha256:[a-f0-9]{64}$/u.test(identity) ||
       (parent !== undefined && !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u.test(parent))
     )
       throw new TypeError('invalid-git-snapshot-identity')
     const paths = new Set(Object.keys(files))
+    const executables = new Set(executablePaths)
+    if (executables.size !== executablePaths.length || executablePaths.some((path) => !paths.has(path)))
+      throw new TypeError('invalid-git-snapshot-executables')
     for (const [path, content] of Object.entries(files)) {
       if (typeof content !== 'string') throw new TypeError('invalid-git-snapshot-content')
       if (
@@ -67,7 +75,10 @@ export class GitSnapshots {
         const records: string[] = []
         for (const name of names) {
           const file = entries.find(([p]) => p === prefix + name)
-          if (file) records.push(`100644 blob ${await this.git(['hash-object', '-w', '--stdin'], file[1])}\t${name}\0`)
+          if (file)
+            records.push(
+              `${executables.has(file[0]) ? '100755' : '100644'} blob ${await this.git(['hash-object', '-w', '--stdin'], file[1])}\t${name}\0`,
+            )
           else records.push(`040000 tree ${await tree(`${prefix}${name}/`)}\t${name}\0`)
         }
         return this.git(['mktree', '-z'], records.join(''))
