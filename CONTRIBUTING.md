@@ -205,6 +205,16 @@ requests. `GEAR_TEST_PROJECT_SANDBOX=required` enables the actual OS isolation t
 without a model. It must deny access to private files outside the working directory
 and a live loopback listener, not merely fail to connect to an absent service.
 
+Hitch carrier integration uses the CI-pinned, built Hitch checkout. Set
+`HITCH_CONTRACT_ROOT=/absolute/hitch` and `GEAR_TEST_HITCH_CARRIER=required`, then run
+`npx vitest run tests/integration/project-hitch-carrier.spec.ts --maxWorkers=1`.
+It uses the actual Linux artifact builder for both Git recipes, checks cache reuse,
+and starts the artifact with networking disabled to verify its entrypoint. This
+build-only mode does not call a model. Additionally setting
+`GEAR_TEST_HITCH_CARRIER_MODEL=luna` and the existing credential environment reference
+executes both extensions through the built artifacts using `gpt-5.6-luna`.
+The carrier test does not certify a complete Harbor verifier or project provider.
+
 The generated template verifiers and frozen input mount contract run in a real
 Docker container with `GEAR_VERIFIER_TEST_IMAGE=python:3.12-slim npx vitest run
 tests/integration/project-verifier.spec.ts`. This gate does not use model credentials.

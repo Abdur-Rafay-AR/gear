@@ -115,7 +115,10 @@
     "assets/native-runtime/*.json",
     "assets/native-runtime/*.mjs",
     "docs/project-migration.zh-CN.md",
-    "assets/native-runtime/*.yaml"
+    "assets/native-runtime/*.yaml",
+    "assets/hitch-carrier/*.mjs",
+    "assets/hitch-carrier/*.json",
+    "assets/hitch-carrier/*.yaml"
   ],
   "scripts": {
     "clean": "node -e \"require('node:fs').rmSync('lib',{recursive:true,force:true})\"",

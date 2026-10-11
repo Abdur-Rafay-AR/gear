@@ -29,6 +29,12 @@ try {
     JSON.stringify({ name: 'external-project-consumer', private: true, type: 'module' }),
   )
   run('npm', ['install', '--ignore-scripts', '--omit=optional', join(temp, packed.filename)])
+  const carrierRoot = join(temp, 'node_modules/rsi-gear/assets/hitch-carrier')
+  for (const name of ['package.json', 'package-lock.json', 'pnpm-lock.yaml', 'build-carrier.mjs', 'hitch-entry.mjs'])
+    assert.ok(
+      (await readFile(join(carrierRoot, name))).byteLength > 0,
+      `missing published Hitch carrier asset: ${name}`,
+    )
   const cli = join(temp, 'node_modules/rsi-gear/lib/cli/project.js')
   for (const adapter of ['dsh', 'pi']) {
     for (const template of ['text', 'json', 'file']) {

@@ -244,3 +244,22 @@ Pi Meta 返回了相同文件，因此相同代码/题目/重复槽位使用同�
 定向 evaluator、执行合同、当前/历史身份与构建身份共 129 项最终通过：第一轮只有当前实现摘要预期变化失败，源码/构建一致性及新模块篡改识别通过后更新当前快照，单文件 7 项重跑通过。历史身份 fixtures 原样保留。真实 CLI/daemon 使用 CI 固定的 Hitch `90d4cc3a5d98df53b02e57b54762e16ac1c6d942` 临时构建，3 项 abort/lost-observer/late-submit 取消和资源释放检查通过；该测试只替换昂贵的 Harbor executor，不宣称真实 Target 执行。
 
 typecheck、Biome、217 个模块边界、协议生成一致性通过；独立外部搜索包及项目 tgz/wheel 通过，包含六组模板/Target、两个 Harbor 导入、诊断/workplan、CPU training 恢复及 SDK。没有调用模型或修改 Python 算法。尚待完成：新项目 Hitch provider 的 durable operation 绑定、DSH/Pi carrier 与原生配置、真实 Harbor 回合；完整阶段状态仍以目标跟踪表为准。
+
+
+## DSH/Pi 的 Hitch carrier 与共享 native runner
+
+`6eb1127` 的 [执行客户端 CI](https://github.com/rsi-gear/gear/actions/runs/38130890981) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。远端 dev 仍为 `9a1281dba7495ea454c637d1bbad4e1605f52db6`。
+
+新 `HitchCarrier` 将固定 Git 构建入口、native 依赖锁、共享 runner 与经路径/摘要检查的 Target 文件封存为独立工程。DSH/Pi 共用原有 native 依赖，不维护第二套锁。Git 对象写入由 `GitSnapshots` 复用；旧 Target writer 在 `6eb1127` 构建中产生的父子提交固定值分别为 `2a0ba335aa1e4167ba3090b959be513e6db2fe59`、`3a8a5be585166ac85f792db0a75308e799b5efc8`，拆分后保持一致。非法路径和文件/目录碰撞在写入前拒绝。
+
+真实接入首次发现 Hitch 的本地 Git resolution 要求工作树，裸仓库不能直接作为输入。现为已封存提交创建专属检出目录；按提交复用，发现修改或额外文件时拒绝，不覆盖目录内容。carrier 不加入任务、verifier、凭据或用户工作区。其提交不随存放目录或候选显示 ID 改变。
+
+`runNative` 保留原 Docker CLI，并供 Hitch wrapper 调用。Pi 使用原生 session 事件输出 JSON；DSH 使用 Hitch 可观察的 runtime home，明确绑定模型，保留两层参数分隔并转发取消信号。离线测试覆盖提示词原文、参数拒绝、stdin 上限、无需凭据的版本查询、原生子进程取消、Git 身份与检出目录冲突。
+
+真实测试使用 CI 固定的 Hitch `90d4cc3a5d98df53b02e57b54762e16ac1c6d942`，通过实际 Linux artifact builder 分别执行 DeepSeek/Pi 的 Git 配方，验证 artifact 完整性、第二次缓存命中和断网版本查询。首次完整测试因只读 controller runtime 的清理权限失败；修复专属测试目录清理后，两项重新完整通过，未改 Hitch 依赖源码。额外启用 Luna 后，同一批构建产物中的 DSH plugin / Pi extension 均真实写出 `GEAR_HITCH_NATIVE_OK`，Pi 还输出 `message_end` 原生事件。该模式明确调用模型，默认构建测试不调用模型。
+
+共享 runner 的 Docker 路径另有两项 Luna 行为与 inspect 恢复测试通过，新镜像为 `sha256:b7d33febdd06fa2935afdc029bb199805b9a65536d6b2528981f12910174b54f`。本轮共四个 Target 模型测试，模型均为 `gpt-5.6-luna`；没有新增 Meta 生成或诊断模型测试。
+
+离线项目全量 308 项通过；随后补充取消用例，carrier 单文件 17 项复验通过。typecheck、Biome、220 模块边界、协议生成一致性、真实 tgz/wheel 发布包旅程通过，发布检查新增全部 carrier 资源的存在性断言。Python 算法没有改动，未重跑独立 Python 全量；发布包的 Python/CPU 旅程已运行。README 与原用户工作区未修改。
+
+这一步完成构建载体与原生加载合同，尚未完成新项目 Harbor provider 的 durable operation / reservation 绑定、原生 profile、真实 verifier 的隔离负例及完整 evaluate/refine/resume 回合。没有据此开启 `harborVerification` 或改变项目默认执行后端。

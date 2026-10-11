@@ -19,6 +19,9 @@ it('seals deterministic native Git snapshots and preserves the manifest and pare
     const first = await store.seal(initial)
     expect((await store.seal(initial)).gitRef).toBe(first.gitRef)
     const next = await store.seal({ ...initial, id: 'next', files: { ...files, 'AGENTS.md': 'changed' } }, first)
+    // Frozen from the unmodified 6eb1127 writer before extracting GitSnapshots.
+    expect(first.gitRef).toBe('2a0ba335aa1e4167ba3090b959be513e6db2fe59')
+    expect(next.gitRef).toBe('3a8a5be585166ac85f792db0a75308e799b5efc8')
     const args = ['--git-dir', store.root]
     expect((await execute('git', [...args, 'rev-parse', `${next.gitRef}^`])).stdout.trim()).toBe(first.gitRef)
     expect(

@@ -14,6 +14,7 @@
       "tests/unit/target-adapters.spec.ts",
       "!src/domain/algorithm-protocol.ts",
       "assets/native-runtime/*.mjs",
+      "assets/hitch-carrier/*.mjs",
       "tests/integration/project*.spec.ts",
       "scripts/check-boundaries.mjs",
       "scripts/check-project-package.mjs",
