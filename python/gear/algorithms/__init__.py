@@ -12,6 +12,13 @@ from .contracts import (
 )
 from .gepa import GEPA
 from .gepa.archive import FrontierParentPolicy
+from .gepa.diagnosis import (
+    DiagnosisDossier,
+    DiagnosisFact,
+    DiagnosisTask,
+    FailureCluster,
+    failure_clusters,
+)
 from .gepa.epochs import EpochPolicy
 from .gepa.parent_plan import (
     ParentAllocation,
@@ -25,6 +32,18 @@ from .gepa.parent_plan import (
 )
 from .gepa.parent_policies import ChampionGepaPolicy, ScopedFrontierPolicy
 from .gepa.parent_random import RandomSource, Selection
+from .gepa.proposal import (
+    CandidateWorkPlan,
+    GenerationBudget,
+    HypothesisPlan,
+    ProposalDelivery,
+    WorkplanReceipt,
+    candidate_workplan,
+    consumption_receipt,
+    deliver_workplan,
+    plan_hypotheses,
+    validate_receipt,
+)
 from .gepa.scopes import ScopeSampler
 from .gepa.staged import StagedGEPA
 from .source import AlgorithmSource
@@ -34,10 +53,17 @@ __all__ = [
     "AlgorithmSource",
     "Candidate",
     "CandidateRanker",
+    "CandidateWorkPlan",
     "ChampionGepaPolicy",
     "Decision",
+    "DiagnosisDossier",
+    "DiagnosisFact",
+    "DiagnosisTask",
     "EpochPolicy",
+    "FailureCluster",
     "FrontierParentPolicy",
+    "GenerationBudget",
+    "HypothesisPlan",
     "Operation",
     "ParentAllocation",
     "ParentBatch",
@@ -47,6 +73,7 @@ __all__ = [
     "ParentPolicy",
     "ParentScope",
     "ParentSelectionPolicy",
+    "ProposalDelivery",
     "ProposalPlanner",
     "RandomSource",
     "ScopeSampler",
@@ -57,5 +84,12 @@ __all__ = [
     "StagedGEPA",
     "StopRule",
     "TaskSampler",
+    "WorkplanReceipt",
+    "candidate_workplan",
+    "consumption_receipt",
+    "deliver_workplan",
+    "failure_clusters",
     "parent_batches",
+    "plan_hypotheses",
+    "validate_receipt",
 ]

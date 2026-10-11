@@ -1,0 +1,3415 @@
+{
+  "source_commit": "c17efd29eb641c6551a4a4f0d95baee51c60e2ca",
+  "scope": "Unchanged legacy clusters, dossier excerpt and consumption receipt projections; legacy identity bytes are opaque inputs, new hashes are not compared.",
+  "cases": [
+    {
+      "name": "no-actionable-facts",
+      "protected": [],
+      "facts": [
+        {
+          "taskId": "task-0",
+          "evidenceRefs": [],
+          "status": "infrastructure-invalid"
+        },
+        {
+          "taskId": "task-1",
+          "evidenceRefs": [
+            "evidence-task-1"
+          ],
+          "status": "unresolved"
+        },
+        {
+          "taskId": "task-2",
+          "evidenceRefs": [
+            "evidence-task-2"
+          ],
+          "status": "successful-control"
+        }
+      ],
+      "input": {
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 2
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 3
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 4
+          },
+          {
+            "id": "task-4",
+            "stratum": "family-0",
+            "estimated_cost": 5
+          },
+          {
+            "id": "task-5",
+            "stratum": "family-1",
+            "estimated_cost": 6
+          },
+          {
+            "id": "task-6",
+            "stratum": "family-2",
+            "estimated_cost": 7
+          },
+          {
+            "id": "task-7",
+            "stratum": "family-3",
+            "estimated_cost": 8
+          }
+        ],
+        "cohort_identity": "sha256:985759cd14d908faa927d2795029e725398d39619e7b1d3ebbed21d6f8ffbaa8",
+        "protected_ids": [],
+        "family_order": [],
+        "dossier": {
+          "identity": "sha256:1423f03c195ce58e505b63c1c781c805f671acb6c8da582a939fa8be0fef06d1",
+          "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+          "cohort_identity": "sha256:985759cd14d908faa927d2795029e725398d39619e7b1d3ebbed21d6f8ffbaa8",
+          "task_ids": [
+            "task-0",
+            "task-1",
+            "task-2",
+            "task-3",
+            "task-4",
+            "task-5",
+            "task-6",
+            "task-7"
+          ],
+          "baseline_evidence": [
+            "sha256:df1912786a1008385da3992614e8d95a5a0a0e48fa3a10d933169148f9e158a3"
+          ],
+          "facts": [
+            {
+              "task_id": "task-0",
+              "evidence_refs": [],
+              "status": "infrastructure-invalid",
+              "family_id": null,
+              "hypothesis": null,
+              "modification_paths": [],
+              "mechanism": null,
+              "submode": null
+            },
+            {
+              "task_id": "task-1",
+              "evidence_refs": [
+                "evidence-task-1"
+              ],
+              "status": "unresolved",
+              "family_id": null,
+              "hypothesis": null,
+              "modification_paths": [],
+              "mechanism": null,
+              "submode": null
+            },
+            {
+              "task_id": "task-2",
+              "evidence_refs": [
+                "evidence-task-2"
+              ],
+              "status": "successful-control",
+              "family_id": null,
+              "hypothesis": null,
+              "modification_paths": [],
+              "mechanism": null,
+              "submode": null
+            }
+          ],
+          "classifier_identity": "sha256:d073c374b40c490ac05c4ad8d1cefe28085a06a5b82319f2025a80f8f0b81348",
+          "sanitization_identity": "sha256:ee87efb0e153c51ea73577036107d437934e7cf01b225e33655494d426f71030"
+        }
+      },
+      "expected": {
+        "clusters": [],
+        "deliveries": []
+      }
+    },
+    {
+      "name": "single-supported-family",
+      "protected": [],
+      "facts": [
+        {
+          "taskId": "task-0",
+          "evidenceRefs": [
+            "evidence-task-0"
+          ],
+          "status": "supported-hypothesis",
+          "familyId": "alpha",
+          "hypothesis": "Repair alpha",
+          "mechanism": "Supported verifier fixture finding",
+          "modificationPaths": [
+            "harness"
+          ]
+        }
+      ],
+      "input": {
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 2
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 3
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 4
+          },
+          {
+            "id": "task-4",
+            "stratum": "family-0",
+            "estimated_cost": 5
+          },
+          {
+            "id": "task-5",
+            "stratum": "family-1",
+            "estimated_cost": 6
+          },
+          {
+            "id": "task-6",
+            "stratum": "family-2",
+            "estimated_cost": 7
+          },
+          {
+            "id": "task-7",
+            "stratum": "family-3",
+            "estimated_cost": 8
+          }
+        ],
+        "cohort_identity": "sha256:985759cd14d908faa927d2795029e725398d39619e7b1d3ebbed21d6f8ffbaa8",
+        "protected_ids": [],
+        "family_order": [
+          "alpha"
+        ],
+        "dossier": {
+          "identity": "sha256:93c22381536302a8bd59e6b7d8fd05162b5d38aa4373a217287b685a1493d7a6",
+          "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+          "cohort_identity": "sha256:985759cd14d908faa927d2795029e725398d39619e7b1d3ebbed21d6f8ffbaa8",
+          "task_ids": [
+            "task-0",
+            "task-1",
+            "task-2",
+            "task-3",
+            "task-4",
+            "task-5",
+            "task-6",
+            "task-7"
+          ],
+          "baseline_evidence": [
+            "sha256:df1912786a1008385da3992614e8d95a5a0a0e48fa3a10d933169148f9e158a3"
+          ],
+          "facts": [
+            {
+              "task_id": "task-0",
+              "evidence_refs": [
+                "evidence-task-0"
+              ],
+              "status": "supported-hypothesis",
+              "family_id": "alpha",
+              "hypothesis": "Repair alpha",
+              "modification_paths": [
+                "harness"
+              ],
+              "mechanism": "Supported verifier fixture finding",
+              "submode": null
+            }
+          ],
+          "classifier_identity": "sha256:d073c374b40c490ac05c4ad8d1cefe28085a06a5b82319f2025a80f8f0b81348",
+          "sanitization_identity": "sha256:ee87efb0e153c51ea73577036107d437934e7cf01b225e33655494d426f71030"
+        }
+      },
+      "expected": {
+        "clusters": [
+          {
+            "family_id": "alpha",
+            "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+            "dossier_identity": "sha256:93c22381536302a8bd59e6b7d8fd05162b5d38aa4373a217287b685a1493d7a6",
+            "task_ids": [
+              "task-0"
+            ],
+            "evidence_refs": [
+              "evidence-task-0"
+            ],
+            "hypotheses": [
+              "Repair alpha"
+            ],
+            "modification_paths": [
+              "harness"
+            ],
+            "task_features": {
+              "task-0": {
+                "submodes": [],
+                "modification_paths": [
+                  "harness"
+                ]
+              }
+            },
+            "successful_control_task_ids": [],
+            "protected_failure": false,
+            "estimated_cost": 1
+          }
+        ],
+        "deliveries": [
+          {
+            "scope": {
+              "id": "sha256:744e3b245b133455d17f68b6dc7cad669f5214ac0f35b7d7ff7c7db54a54ef1b",
+              "family": "alpha",
+              "epoch": 1,
+              "task_ids": [
+                "task-0"
+              ],
+              "weights": {
+                "task-0": 1
+              },
+              "guard_identity": ""
+            },
+            "local_plan_id": "sha256:0fb0f1c5d88e9fd687e2535e123714cb98f359245e9f5dc46b37b245cfb4dc00",
+            "include_scope": false,
+            "expected": {
+              "target_task_ids": [
+                "task-0"
+              ],
+              "required_refs": [
+                "evidence-task-0"
+              ],
+              "required_seed_tasks": [
+                "task-0",
+                "task-1",
+                "task-2",
+                "task-3",
+                "task-4",
+                "task-5",
+                "task-6",
+                "task-7"
+              ],
+              "on_insufficient_scope": "retain-research-only",
+              "generation_budget": {
+                "deadline_ms": 1767225660000,
+                "max_tokens": 42,
+                "max_model_requests": 3
+              },
+              "facts": [
+                {
+                  "task_id": "task-0",
+                  "evidence_refs": [
+                    "evidence-task-0"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "alpha",
+                  "hypothesis": "Repair alpha",
+                  "modification_paths": [
+                    "harness"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": null
+                }
+              ],
+              "findings": [
+                {
+                  "candidate": "previous",
+                  "observation": "fixture"
+                }
+              ],
+              "candidate_id": "candidate-0",
+              "session_id": "session",
+              "accessed_refs": [
+                "evidence-task-0",
+                "extra-read"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "protected-before-larger-family",
+      "protected": [
+        "task-4"
+      ],
+      "facts": [
+        {
+          "taskId": "task-0",
+          "evidenceRefs": [
+            "evidence-task-0"
+          ],
+          "status": "supported-hypothesis",
+          "familyId": "large",
+          "hypothesis": "Repair large",
+          "mechanism": "Supported verifier fixture finding",
+          "modificationPaths": [
+            "harness"
+          ]
+        },
+        {
+          "taskId": "task-1",
+          "evidenceRefs": [
+            "evidence-task-1"
+          ],
+          "status": "supported-hypothesis",
+          "familyId": "large",
+          "hypothesis": "Repair large",
+          "mechanism": "Supported verifier fixture finding",
+          "modificationPaths": [
+            "harness"
+          ]
+        },
+        {
+          "taskId": "task-4",
+          "evidenceRefs": [
+            "evidence-task-4"
+          ],
+          "status": "supported-hypothesis",
+          "familyId": "protected",
+          "hypothesis": "Repair protected",
+          "mechanism": "Supported verifier fixture finding",
+          "modificationPaths": [
+            "harness"
+          ]
+        }
+      ],
+      "input": {
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 2
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 3
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 4
+          },
+          {
+            "id": "task-4",
+            "stratum": "family-0",
+            "estimated_cost": 5
+          },
+          {
+            "id": "task-5",
+            "stratum": "family-1",
+            "estimated_cost": 6
+          },
+          {
+            "id": "task-6",
+            "stratum": "family-2",
+            "estimated_cost": 7
+          },
+          {
+            "id": "task-7",
+            "stratum": "family-3",
+            "estimated_cost": 8
+          }
+        ],
+        "cohort_identity": "sha256:985759cd14d908faa927d2795029e725398d39619e7b1d3ebbed21d6f8ffbaa8",
+        "protected_ids": [
+          "task-4"
+        ],
+        "family_order": [
+          "large",
+          "protected"
+        ],
+        "dossier": {
+          "identity": "sha256:e97eb188665b734864ce43bd0effde2a1cf55972fadadceb4f5aa8acd83cc620",
+          "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+          "cohort_identity": "sha256:985759cd14d908faa927d2795029e725398d39619e7b1d3ebbed21d6f8ffbaa8",
+          "task_ids": [
+            "task-0",
+            "task-1",
+            "task-2",
+            "task-3",
+            "task-4",
+            "task-5",
+            "task-6",
+            "task-7"
+          ],
+          "baseline_evidence": [
+            "sha256:df1912786a1008385da3992614e8d95a5a0a0e48fa3a10d933169148f9e158a3"
+          ],
+          "facts": [
+            {
+              "task_id": "task-0",
+              "evidence_refs": [
+                "evidence-task-0"
+              ],
+              "status": "supported-hypothesis",
+              "family_id": "large",
+              "hypothesis": "Repair large",
+              "modification_paths": [
+                "harness"
+              ],
+              "mechanism": "Supported verifier fixture finding",
+              "submode": null
+            },
+            {
+              "task_id": "task-1",
+              "evidence_refs": [
+                "evidence-task-1"
+              ],
+              "status": "supported-hypothesis",
+              "family_id": "large",
+              "hypothesis": "Repair large",
+              "modification_paths": [
+                "harness"
+              ],
+              "mechanism": "Supported verifier fixture finding",
+              "submode": null
+            },
+            {
+              "task_id": "task-4",
+              "evidence_refs": [
+                "evidence-task-4"
+              ],
+              "status": "supported-hypothesis",
+              "family_id": "protected",
+              "hypothesis": "Repair protected",
+              "modification_paths": [
+                "harness"
+              ],
+              "mechanism": "Supported verifier fixture finding",
+              "submode": null
+            }
+          ],
+          "classifier_identity": "sha256:d073c374b40c490ac05c4ad8d1cefe28085a06a5b82319f2025a80f8f0b81348",
+          "sanitization_identity": "sha256:ee87efb0e153c51ea73577036107d437934e7cf01b225e33655494d426f71030"
+        }
+      },
+      "expected": {
+        "clusters": [
+          {
+            "family_id": "protected",
+            "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+            "dossier_identity": "sha256:e97eb188665b734864ce43bd0effde2a1cf55972fadadceb4f5aa8acd83cc620",
+            "task_ids": [
+              "task-4"
+            ],
+            "evidence_refs": [
+              "evidence-task-4"
+            ],
+            "hypotheses": [
+              "Repair protected"
+            ],
+            "modification_paths": [
+              "harness"
+            ],
+            "task_features": {
+              "task-4": {
+                "submodes": [],
+                "modification_paths": [
+                  "harness"
+                ]
+              }
+            },
+            "successful_control_task_ids": [],
+            "protected_failure": true,
+            "estimated_cost": 5
+          },
+          {
+            "family_id": "large",
+            "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+            "dossier_identity": "sha256:e97eb188665b734864ce43bd0effde2a1cf55972fadadceb4f5aa8acd83cc620",
+            "task_ids": [
+              "task-0",
+              "task-1"
+            ],
+            "evidence_refs": [
+              "evidence-task-0",
+              "evidence-task-1"
+            ],
+            "hypotheses": [
+              "Repair large"
+            ],
+            "modification_paths": [
+              "harness"
+            ],
+            "task_features": {
+              "task-0": {
+                "submodes": [],
+                "modification_paths": [
+                  "harness"
+                ]
+              },
+              "task-1": {
+                "submodes": [],
+                "modification_paths": [
+                  "harness"
+                ]
+              }
+            },
+            "successful_control_task_ids": [],
+            "protected_failure": false,
+            "estimated_cost": 3
+          }
+        ],
+        "deliveries": [
+          {
+            "scope": {
+              "id": "sha256:6d9da28140002ba625b4a8401f5611b261fcb01eec30c0b0166e08fa32842550",
+              "family": "protected",
+              "epoch": 1,
+              "task_ids": [
+                "task-4"
+              ],
+              "weights": {
+                "task-4": 1
+              },
+              "guard_identity": ""
+            },
+            "local_plan_id": "sha256:0fb0f1c5d88e9fd687e2535e123714cb98f359245e9f5dc46b37b245cfb4dc00",
+            "include_scope": false,
+            "expected": {
+              "target_task_ids": [
+                "task-4"
+              ],
+              "required_refs": [
+                "evidence-task-4"
+              ],
+              "required_seed_tasks": [
+                "task-0",
+                "task-1",
+                "task-2",
+                "task-3",
+                "task-4",
+                "task-5",
+                "task-6",
+                "task-7"
+              ],
+              "on_insufficient_scope": "retain-research-only",
+              "generation_budget": {
+                "deadline_ms": 1767225660000,
+                "max_tokens": 42,
+                "max_model_requests": 3
+              },
+              "facts": [
+                {
+                  "task_id": "task-4",
+                  "evidence_refs": [
+                    "evidence-task-4"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "protected",
+                  "hypothesis": "Repair protected",
+                  "modification_paths": [
+                    "harness"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": null
+                }
+              ],
+              "findings": [
+                {
+                  "candidate": "previous",
+                  "observation": "fixture"
+                }
+              ],
+              "candidate_id": "candidate-0",
+              "session_id": "session",
+              "accessed_refs": [
+                "evidence-task-4",
+                "extra-read"
+              ]
+            }
+          },
+          {
+            "scope": {
+              "id": "sha256:e573d5ccc76517e8c256a315e891466201c2a752c260eaaa4cd7541c3dcd166d",
+              "family": "large",
+              "epoch": 1,
+              "task_ids": [
+                "task-0",
+                "task-1"
+              ],
+              "weights": {
+                "task-0": 0.5,
+                "task-1": 0.5
+              },
+              "guard_identity": ""
+            },
+            "local_plan_id": "sha256:0fb0f1c5d88e9fd687e2535e123714cb98f359245e9f5dc46b37b245cfb4dc00",
+            "include_scope": false,
+            "expected": {
+              "target_task_ids": [
+                "task-0",
+                "task-1"
+              ],
+              "required_refs": [
+                "evidence-task-0",
+                "evidence-task-1"
+              ],
+              "required_seed_tasks": [
+                "task-0",
+                "task-1",
+                "task-2",
+                "task-3",
+                "task-4",
+                "task-5",
+                "task-6",
+                "task-7"
+              ],
+              "on_insufficient_scope": "retain-research-only",
+              "generation_budget": {
+                "deadline_ms": 1767225660000,
+                "max_tokens": 42,
+                "max_model_requests": 3
+              },
+              "facts": [
+                {
+                  "task_id": "task-0",
+                  "evidence_refs": [
+                    "evidence-task-0"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "large",
+                  "hypothesis": "Repair large",
+                  "modification_paths": [
+                    "harness"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": null
+                },
+                {
+                  "task_id": "task-1",
+                  "evidence_refs": [
+                    "evidence-task-1"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "large",
+                  "hypothesis": "Repair large",
+                  "modification_paths": [
+                    "harness"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": null
+                }
+              ],
+              "findings": [
+                {
+                  "candidate": "previous",
+                  "observation": "fixture"
+                }
+              ],
+              "candidate_id": "candidate-1",
+              "session_id": "session",
+              "accessed_refs": [
+                "evidence-task-0",
+                "evidence-task-1",
+                "extra-read"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "more-failures-before-family-name",
+      "protected": [],
+      "facts": [
+        {
+          "taskId": "task-0",
+          "evidenceRefs": [
+            "evidence-task-0"
+          ],
+          "status": "supported-hypothesis",
+          "familyId": "alpha",
+          "hypothesis": "Repair alpha",
+          "mechanism": "Supported verifier fixture finding",
+          "modificationPaths": [
+            "harness"
+          ]
+        },
+        {
+          "taskId": "task-1",
+          "evidenceRefs": [
+            "evidence-task-1"
+          ],
+          "status": "supported-hypothesis",
+          "familyId": "beta",
+          "hypothesis": "Repair beta",
+          "mechanism": "Supported verifier fixture finding",
+          "modificationPaths": [
+            "harness"
+          ]
+        },
+        {
+          "taskId": "task-2",
+          "evidenceRefs": [
+            "evidence-task-2"
+          ],
+          "status": "supported-hypothesis",
+          "familyId": "beta",
+          "hypothesis": "Repair beta",
+          "mechanism": "Supported verifier fixture finding",
+          "modificationPaths": [
+            "harness"
+          ]
+        }
+      ],
+      "input": {
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 2
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 3
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 4
+          },
+          {
+            "id": "task-4",
+            "stratum": "family-0",
+            "estimated_cost": 5
+          },
+          {
+            "id": "task-5",
+            "stratum": "family-1",
+            "estimated_cost": 6
+          },
+          {
+            "id": "task-6",
+            "stratum": "family-2",
+            "estimated_cost": 7
+          },
+          {
+            "id": "task-7",
+            "stratum": "family-3",
+            "estimated_cost": 8
+          }
+        ],
+        "cohort_identity": "sha256:985759cd14d908faa927d2795029e725398d39619e7b1d3ebbed21d6f8ffbaa8",
+        "protected_ids": [],
+        "family_order": [
+          "alpha",
+          "beta"
+        ],
+        "dossier": {
+          "identity": "sha256:7f5899399d38f42a10f6299ff90d6e76263d0aef048d24a2cf0addca73fa5866",
+          "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+          "cohort_identity": "sha256:985759cd14d908faa927d2795029e725398d39619e7b1d3ebbed21d6f8ffbaa8",
+          "task_ids": [
+            "task-0",
+            "task-1",
+            "task-2",
+            "task-3",
+            "task-4",
+            "task-5",
+            "task-6",
+            "task-7"
+          ],
+          "baseline_evidence": [
+            "sha256:df1912786a1008385da3992614e8d95a5a0a0e48fa3a10d933169148f9e158a3"
+          ],
+          "facts": [
+            {
+              "task_id": "task-0",
+              "evidence_refs": [
+                "evidence-task-0"
+              ],
+              "status": "supported-hypothesis",
+              "family_id": "alpha",
+              "hypothesis": "Repair alpha",
+              "modification_paths": [
+                "harness"
+              ],
+              "mechanism": "Supported verifier fixture finding",
+              "submode": null
+            },
+            {
+              "task_id": "task-1",
+              "evidence_refs": [
+                "evidence-task-1"
+              ],
+              "status": "supported-hypothesis",
+              "family_id": "beta",
+              "hypothesis": "Repair beta",
+              "modification_paths": [
+                "harness"
+              ],
+              "mechanism": "Supported verifier fixture finding",
+              "submode": null
+            },
+            {
+              "task_id": "task-2",
+              "evidence_refs": [
+                "evidence-task-2"
+              ],
+              "status": "supported-hypothesis",
+              "family_id": "beta",
+              "hypothesis": "Repair beta",
+              "modification_paths": [
+                "harness"
+              ],
+              "mechanism": "Supported verifier fixture finding",
+              "submode": null
+            }
+          ],
+          "classifier_identity": "sha256:d073c374b40c490ac05c4ad8d1cefe28085a06a5b82319f2025a80f8f0b81348",
+          "sanitization_identity": "sha256:ee87efb0e153c51ea73577036107d437934e7cf01b225e33655494d426f71030"
+        }
+      },
+      "expected": {
+        "clusters": [
+          {
+            "family_id": "beta",
+            "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+            "dossier_identity": "sha256:7f5899399d38f42a10f6299ff90d6e76263d0aef048d24a2cf0addca73fa5866",
+            "task_ids": [
+              "task-1",
+              "task-2"
+            ],
+            "evidence_refs": [
+              "evidence-task-1",
+              "evidence-task-2"
+            ],
+            "hypotheses": [
+              "Repair beta"
+            ],
+            "modification_paths": [
+              "harness"
+            ],
+            "task_features": {
+              "task-1": {
+                "submodes": [],
+                "modification_paths": [
+                  "harness"
+                ]
+              },
+              "task-2": {
+                "submodes": [],
+                "modification_paths": [
+                  "harness"
+                ]
+              }
+            },
+            "successful_control_task_ids": [],
+            "protected_failure": false,
+            "estimated_cost": 5
+          },
+          {
+            "family_id": "alpha",
+            "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+            "dossier_identity": "sha256:7f5899399d38f42a10f6299ff90d6e76263d0aef048d24a2cf0addca73fa5866",
+            "task_ids": [
+              "task-0"
+            ],
+            "evidence_refs": [
+              "evidence-task-0"
+            ],
+            "hypotheses": [
+              "Repair alpha"
+            ],
+            "modification_paths": [
+              "harness"
+            ],
+            "task_features": {
+              "task-0": {
+                "submodes": [],
+                "modification_paths": [
+                  "harness"
+                ]
+              }
+            },
+            "successful_control_task_ids": [],
+            "protected_failure": false,
+            "estimated_cost": 1
+          }
+        ],
+        "deliveries": [
+          {
+            "scope": {
+              "id": "sha256:2abaf0777cc5d2938b9023ce5bf586c37008b06c5d4f8a00079cf3e031379c56",
+              "family": "beta",
+              "epoch": 1,
+              "task_ids": [
+                "task-1",
+                "task-2"
+              ],
+              "weights": {
+                "task-1": 0.5,
+                "task-2": 0.5
+              },
+              "guard_identity": ""
+            },
+            "local_plan_id": "sha256:0fb0f1c5d88e9fd687e2535e123714cb98f359245e9f5dc46b37b245cfb4dc00",
+            "include_scope": false,
+            "expected": {
+              "target_task_ids": [
+                "task-1",
+                "task-2"
+              ],
+              "required_refs": [
+                "evidence-task-1",
+                "evidence-task-2"
+              ],
+              "required_seed_tasks": [
+                "task-0",
+                "task-1",
+                "task-2",
+                "task-3",
+                "task-4",
+                "task-5",
+                "task-6",
+                "task-7"
+              ],
+              "on_insufficient_scope": "retain-research-only",
+              "generation_budget": {
+                "deadline_ms": 1767225660000,
+                "max_tokens": 42,
+                "max_model_requests": 3
+              },
+              "facts": [
+                {
+                  "task_id": "task-1",
+                  "evidence_refs": [
+                    "evidence-task-1"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "beta",
+                  "hypothesis": "Repair beta",
+                  "modification_paths": [
+                    "harness"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": null
+                },
+                {
+                  "task_id": "task-2",
+                  "evidence_refs": [
+                    "evidence-task-2"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "beta",
+                  "hypothesis": "Repair beta",
+                  "modification_paths": [
+                    "harness"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": null
+                }
+              ],
+              "findings": [
+                {
+                  "candidate": "previous",
+                  "observation": "fixture"
+                }
+              ],
+              "candidate_id": "candidate-0",
+              "session_id": "session",
+              "accessed_refs": [
+                "evidence-task-1",
+                "evidence-task-2",
+                "extra-read"
+              ]
+            }
+          },
+          {
+            "scope": {
+              "id": "sha256:744e3b245b133455d17f68b6dc7cad669f5214ac0f35b7d7ff7c7db54a54ef1b",
+              "family": "alpha",
+              "epoch": 1,
+              "task_ids": [
+                "task-0"
+              ],
+              "weights": {
+                "task-0": 1
+              },
+              "guard_identity": ""
+            },
+            "local_plan_id": "sha256:0fb0f1c5d88e9fd687e2535e123714cb98f359245e9f5dc46b37b245cfb4dc00",
+            "include_scope": false,
+            "expected": {
+              "target_task_ids": [
+                "task-0"
+              ],
+              "required_refs": [
+                "evidence-task-0"
+              ],
+              "required_seed_tasks": [
+                "task-0",
+                "task-1",
+                "task-2",
+                "task-3",
+                "task-4",
+                "task-5",
+                "task-6",
+                "task-7"
+              ],
+              "on_insufficient_scope": "retain-research-only",
+              "generation_budget": {
+                "deadline_ms": 1767225660000,
+                "max_tokens": 42,
+                "max_model_requests": 3
+              },
+              "facts": [
+                {
+                  "task_id": "task-0",
+                  "evidence_refs": [
+                    "evidence-task-0"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "alpha",
+                  "hypothesis": "Repair alpha",
+                  "modification_paths": [
+                    "harness"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": null
+                }
+              ],
+              "findings": [
+                {
+                  "candidate": "previous",
+                  "observation": "fixture"
+                }
+              ],
+              "candidate_id": "candidate-1",
+              "session_id": "session",
+              "accessed_refs": [
+                "evidence-task-0",
+                "extra-read"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "hypothesis-path-feature-unions",
+      "protected": [],
+      "facts": [
+        {
+          "taskId": "task-0",
+          "evidenceRefs": [
+            "evidence-task-0"
+          ],
+          "status": "supported-hypothesis",
+          "familyId": "alpha",
+          "hypothesis": "B",
+          "mechanism": "Supported verifier fixture finding",
+          "modificationPaths": [
+            "harness",
+            "skills"
+          ],
+          "submode": "parser"
+        },
+        {
+          "taskId": "task-0",
+          "evidenceRefs": [
+            "evidence-task-0"
+          ],
+          "status": "supported-hypothesis",
+          "familyId": "alpha",
+          "hypothesis": "A",
+          "mechanism": "Supported verifier fixture finding",
+          "modificationPaths": [
+            "harness"
+          ],
+          "submode": "verifier"
+        },
+        {
+          "taskId": "task-1",
+          "evidenceRefs": [
+            "evidence-task-1"
+          ],
+          "status": "supported-hypothesis",
+          "familyId": "alpha",
+          "hypothesis": "A",
+          "mechanism": "Supported verifier fixture finding",
+          "modificationPaths": [
+            "harness"
+          ],
+          "submode": "parser"
+        }
+      ],
+      "input": {
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 2
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 3
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 4
+          },
+          {
+            "id": "task-4",
+            "stratum": "family-0",
+            "estimated_cost": 5
+          },
+          {
+            "id": "task-5",
+            "stratum": "family-1",
+            "estimated_cost": 6
+          },
+          {
+            "id": "task-6",
+            "stratum": "family-2",
+            "estimated_cost": 7
+          },
+          {
+            "id": "task-7",
+            "stratum": "family-3",
+            "estimated_cost": 8
+          }
+        ],
+        "cohort_identity": "sha256:985759cd14d908faa927d2795029e725398d39619e7b1d3ebbed21d6f8ffbaa8",
+        "protected_ids": [],
+        "family_order": [
+          "alpha"
+        ],
+        "dossier": {
+          "identity": "sha256:a77818dc52ae8716d24bec2caa628784a56dccc5ebb45af13507caf01c990a1b",
+          "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+          "cohort_identity": "sha256:985759cd14d908faa927d2795029e725398d39619e7b1d3ebbed21d6f8ffbaa8",
+          "task_ids": [
+            "task-0",
+            "task-1",
+            "task-2",
+            "task-3",
+            "task-4",
+            "task-5",
+            "task-6",
+            "task-7"
+          ],
+          "baseline_evidence": [
+            "sha256:df1912786a1008385da3992614e8d95a5a0a0e48fa3a10d933169148f9e158a3"
+          ],
+          "facts": [
+            {
+              "task_id": "task-0",
+              "evidence_refs": [
+                "evidence-task-0"
+              ],
+              "status": "supported-hypothesis",
+              "family_id": "alpha",
+              "hypothesis": "B",
+              "modification_paths": [
+                "harness",
+                "skills"
+              ],
+              "mechanism": "Supported verifier fixture finding",
+              "submode": "parser"
+            },
+            {
+              "task_id": "task-0",
+              "evidence_refs": [
+                "evidence-task-0"
+              ],
+              "status": "supported-hypothesis",
+              "family_id": "alpha",
+              "hypothesis": "A",
+              "modification_paths": [
+                "harness"
+              ],
+              "mechanism": "Supported verifier fixture finding",
+              "submode": "verifier"
+            },
+            {
+              "task_id": "task-1",
+              "evidence_refs": [
+                "evidence-task-1"
+              ],
+              "status": "supported-hypothesis",
+              "family_id": "alpha",
+              "hypothesis": "A",
+              "modification_paths": [
+                "harness"
+              ],
+              "mechanism": "Supported verifier fixture finding",
+              "submode": "parser"
+            }
+          ],
+          "classifier_identity": "sha256:d073c374b40c490ac05c4ad8d1cefe28085a06a5b82319f2025a80f8f0b81348",
+          "sanitization_identity": "sha256:ee87efb0e153c51ea73577036107d437934e7cf01b225e33655494d426f71030"
+        }
+      },
+      "expected": {
+        "clusters": [
+          {
+            "family_id": "alpha",
+            "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+            "dossier_identity": "sha256:a77818dc52ae8716d24bec2caa628784a56dccc5ebb45af13507caf01c990a1b",
+            "task_ids": [
+              "task-0",
+              "task-1"
+            ],
+            "evidence_refs": [
+              "evidence-task-0",
+              "evidence-task-1"
+            ],
+            "hypotheses": [
+              "A",
+              "B"
+            ],
+            "modification_paths": [
+              "harness",
+              "skills"
+            ],
+            "task_features": {
+              "task-0": {
+                "submodes": [
+                  "parser",
+                  "verifier"
+                ],
+                "modification_paths": [
+                  "harness",
+                  "skills"
+                ]
+              },
+              "task-1": {
+                "submodes": [
+                  "parser"
+                ],
+                "modification_paths": [
+                  "harness"
+                ]
+              }
+            },
+            "successful_control_task_ids": [],
+            "protected_failure": false,
+            "estimated_cost": 3
+          }
+        ],
+        "deliveries": [
+          {
+            "scope": {
+              "id": "sha256:aadc8b1e4038a1698e6b530ca9a586c87458fd0f2f07ad238c3f03d28cf0f632",
+              "family": "alpha",
+              "epoch": 1,
+              "task_ids": [
+                "task-0",
+                "task-1"
+              ],
+              "weights": {
+                "task-0": 0.5,
+                "task-1": 0.5
+              },
+              "guard_identity": ""
+            },
+            "local_plan_id": "sha256:0fb0f1c5d88e9fd687e2535e123714cb98f359245e9f5dc46b37b245cfb4dc00",
+            "include_scope": false,
+            "expected": {
+              "target_task_ids": [
+                "task-0",
+                "task-1"
+              ],
+              "required_refs": [
+                "evidence-task-0",
+                "evidence-task-1"
+              ],
+              "required_seed_tasks": [
+                "task-0",
+                "task-1",
+                "task-2",
+                "task-3",
+                "task-4",
+                "task-5",
+                "task-6",
+                "task-7"
+              ],
+              "on_insufficient_scope": "retain-research-only",
+              "generation_budget": {
+                "deadline_ms": 1767225660000,
+                "max_tokens": 42,
+                "max_model_requests": 3
+              },
+              "facts": [
+                {
+                  "task_id": "task-0",
+                  "evidence_refs": [
+                    "evidence-task-0"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "alpha",
+                  "hypothesis": "B",
+                  "modification_paths": [
+                    "harness",
+                    "skills"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": "parser"
+                },
+                {
+                  "task_id": "task-0",
+                  "evidence_refs": [
+                    "evidence-task-0"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "alpha",
+                  "hypothesis": "A",
+                  "modification_paths": [
+                    "harness"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": "verifier"
+                },
+                {
+                  "task_id": "task-1",
+                  "evidence_refs": [
+                    "evidence-task-1"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "alpha",
+                  "hypothesis": "A",
+                  "modification_paths": [
+                    "harness"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": "parser"
+                }
+              ],
+              "findings": [
+                {
+                  "candidate": "previous",
+                  "observation": "fixture"
+                }
+              ],
+              "candidate_id": "candidate-0",
+              "session_id": "session",
+              "accessed_refs": [
+                "evidence-task-0",
+                "evidence-task-1",
+                "extra-read"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "controls-by-family-stratum-and-path",
+      "protected": [],
+      "facts": [
+        {
+          "taskId": "task-0",
+          "evidenceRefs": [
+            "evidence-task-0"
+          ],
+          "status": "supported-hypothesis",
+          "familyId": "alpha",
+          "hypothesis": "Repair alpha",
+          "mechanism": "Supported verifier fixture finding",
+          "modificationPaths": [
+            "harness"
+          ]
+        },
+        {
+          "taskId": "task-1",
+          "evidenceRefs": [
+            "evidence-task-1"
+          ],
+          "status": "successful-control",
+          "familyId": "alpha",
+          "submode": "family-match"
+        },
+        {
+          "taskId": "task-4",
+          "evidenceRefs": [
+            "evidence-task-4"
+          ],
+          "status": "successful-control",
+          "submode": "stratum-match"
+        },
+        {
+          "taskId": "task-2",
+          "evidenceRefs": [
+            "evidence-task-2"
+          ],
+          "status": "successful-control",
+          "modificationPaths": [
+            "harness"
+          ],
+          "submode": "path-match"
+        },
+        {
+          "taskId": "task-3",
+          "evidenceRefs": [
+            "evidence-task-3"
+          ],
+          "status": "successful-control",
+          "modificationPaths": [
+            "unrelated"
+          ],
+          "submode": "unrelated"
+        }
+      ],
+      "input": {
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 2
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 3
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 4
+          },
+          {
+            "id": "task-4",
+            "stratum": "family-0",
+            "estimated_cost": 5
+          },
+          {
+            "id": "task-5",
+            "stratum": "family-1",
+            "estimated_cost": 6
+          },
+          {
+            "id": "task-6",
+            "stratum": "family-2",
+            "estimated_cost": 7
+          },
+          {
+            "id": "task-7",
+            "stratum": "family-3",
+            "estimated_cost": 8
+          }
+        ],
+        "cohort_identity": "sha256:985759cd14d908faa927d2795029e725398d39619e7b1d3ebbed21d6f8ffbaa8",
+        "protected_ids": [],
+        "family_order": [
+          "alpha"
+        ],
+        "dossier": {
+          "identity": "sha256:e2fb7fbd1ea18423f3092142dde3c705d0d00ecbfa6de9970b1dc51f9819f9b0",
+          "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+          "cohort_identity": "sha256:985759cd14d908faa927d2795029e725398d39619e7b1d3ebbed21d6f8ffbaa8",
+          "task_ids": [
+            "task-0",
+            "task-1",
+            "task-2",
+            "task-3",
+            "task-4",
+            "task-5",
+            "task-6",
+            "task-7"
+          ],
+          "baseline_evidence": [
+            "sha256:df1912786a1008385da3992614e8d95a5a0a0e48fa3a10d933169148f9e158a3"
+          ],
+          "facts": [
+            {
+              "task_id": "task-0",
+              "evidence_refs": [
+                "evidence-task-0"
+              ],
+              "status": "supported-hypothesis",
+              "family_id": "alpha",
+              "hypothesis": "Repair alpha",
+              "modification_paths": [
+                "harness"
+              ],
+              "mechanism": "Supported verifier fixture finding",
+              "submode": null
+            },
+            {
+              "task_id": "task-1",
+              "evidence_refs": [
+                "evidence-task-1"
+              ],
+              "status": "successful-control",
+              "family_id": "alpha",
+              "hypothesis": null,
+              "modification_paths": [],
+              "mechanism": null,
+              "submode": "family-match"
+            },
+            {
+              "task_id": "task-4",
+              "evidence_refs": [
+                "evidence-task-4"
+              ],
+              "status": "successful-control",
+              "family_id": null,
+              "hypothesis": null,
+              "modification_paths": [],
+              "mechanism": null,
+              "submode": "stratum-match"
+            },
+            {
+              "task_id": "task-2",
+              "evidence_refs": [
+                "evidence-task-2"
+              ],
+              "status": "successful-control",
+              "family_id": null,
+              "hypothesis": null,
+              "modification_paths": [
+                "harness"
+              ],
+              "mechanism": null,
+              "submode": "path-match"
+            },
+            {
+              "task_id": "task-3",
+              "evidence_refs": [
+                "evidence-task-3"
+              ],
+              "status": "successful-control",
+              "family_id": null,
+              "hypothesis": null,
+              "modification_paths": [
+                "unrelated"
+              ],
+              "mechanism": null,
+              "submode": "unrelated"
+            }
+          ],
+          "classifier_identity": "sha256:d073c374b40c490ac05c4ad8d1cefe28085a06a5b82319f2025a80f8f0b81348",
+          "sanitization_identity": "sha256:ee87efb0e153c51ea73577036107d437934e7cf01b225e33655494d426f71030"
+        }
+      },
+      "expected": {
+        "clusters": [
+          {
+            "family_id": "alpha",
+            "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+            "dossier_identity": "sha256:e2fb7fbd1ea18423f3092142dde3c705d0d00ecbfa6de9970b1dc51f9819f9b0",
+            "task_ids": [
+              "task-0"
+            ],
+            "evidence_refs": [
+              "evidence-task-0"
+            ],
+            "hypotheses": [
+              "Repair alpha"
+            ],
+            "modification_paths": [
+              "harness"
+            ],
+            "task_features": {
+              "task-0": {
+                "submodes": [],
+                "modification_paths": [
+                  "harness"
+                ]
+              },
+              "task-1": {
+                "submodes": [
+                  "family-match"
+                ],
+                "modification_paths": []
+              },
+              "task-2": {
+                "submodes": [
+                  "path-match"
+                ],
+                "modification_paths": [
+                  "harness"
+                ]
+              },
+              "task-4": {
+                "submodes": [
+                  "stratum-match"
+                ],
+                "modification_paths": []
+              }
+            },
+            "successful_control_task_ids": [
+              "task-1",
+              "task-2",
+              "task-4"
+            ],
+            "protected_failure": false,
+            "estimated_cost": 1
+          }
+        ],
+        "deliveries": [
+          {
+            "scope": {
+              "id": "sha256:744e3b245b133455d17f68b6dc7cad669f5214ac0f35b7d7ff7c7db54a54ef1b",
+              "family": "alpha",
+              "epoch": 1,
+              "task_ids": [
+                "task-0"
+              ],
+              "weights": {
+                "task-0": 1
+              },
+              "guard_identity": ""
+            },
+            "local_plan_id": "sha256:0fb0f1c5d88e9fd687e2535e123714cb98f359245e9f5dc46b37b245cfb4dc00",
+            "include_scope": false,
+            "expected": {
+              "target_task_ids": [
+                "task-0"
+              ],
+              "required_refs": [
+                "evidence-task-0"
+              ],
+              "required_seed_tasks": [
+                "task-0",
+                "task-1",
+                "task-2",
+                "task-3",
+                "task-4",
+                "task-5",
+                "task-6",
+                "task-7"
+              ],
+              "on_insufficient_scope": "retain-research-only",
+              "generation_budget": {
+                "deadline_ms": 1767225660000,
+                "max_tokens": 42,
+                "max_model_requests": 3
+              },
+              "facts": [
+                {
+                  "task_id": "task-0",
+                  "evidence_refs": [
+                    "evidence-task-0"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "alpha",
+                  "hypothesis": "Repair alpha",
+                  "modification_paths": [
+                    "harness"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": null
+                }
+              ],
+              "findings": [
+                {
+                  "candidate": "previous",
+                  "observation": "fixture"
+                }
+              ],
+              "candidate_id": "candidate-0",
+              "session_id": "session",
+              "accessed_refs": [
+                "evidence-task-0",
+                "extra-read"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "scope-excerpt-includes-controls-not-unrelated",
+      "protected": [],
+      "scopeTasks": [
+        "task-0",
+        "task-4"
+      ],
+      "facts": [
+        {
+          "taskId": "task-0",
+          "evidenceRefs": [
+            "evidence-task-0"
+          ],
+          "status": "supported-hypothesis",
+          "familyId": "alpha",
+          "hypothesis": "Repair alpha",
+          "mechanism": "Supported verifier fixture finding",
+          "modificationPaths": [
+            "harness"
+          ]
+        },
+        {
+          "taskId": "task-4",
+          "evidenceRefs": [
+            "evidence-task-4"
+          ],
+          "status": "successful-control",
+          "submode": "control"
+        },
+        {
+          "taskId": "task-2",
+          "evidenceRefs": [
+            "evidence-task-2"
+          ],
+          "status": "supported-hypothesis",
+          "familyId": "beta",
+          "hypothesis": "Repair beta",
+          "mechanism": "Supported verifier fixture finding",
+          "modificationPaths": [
+            "harness"
+          ]
+        },
+        {
+          "taskId": "task-7",
+          "evidenceRefs": [
+            "evidence-task-7"
+          ],
+          "status": "successful-control",
+          "submode": "private-to-other-scope"
+        }
+      ],
+      "input": {
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 2
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 3
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 4
+          },
+          {
+            "id": "task-4",
+            "stratum": "family-0",
+            "estimated_cost": 5
+          },
+          {
+            "id": "task-5",
+            "stratum": "family-1",
+            "estimated_cost": 6
+          },
+          {
+            "id": "task-6",
+            "stratum": "family-2",
+            "estimated_cost": 7
+          },
+          {
+            "id": "task-7",
+            "stratum": "family-3",
+            "estimated_cost": 8
+          }
+        ],
+        "cohort_identity": "sha256:985759cd14d908faa927d2795029e725398d39619e7b1d3ebbed21d6f8ffbaa8",
+        "protected_ids": [],
+        "family_order": [
+          "alpha",
+          "beta"
+        ],
+        "dossier": {
+          "identity": "sha256:970799aa5fcc28ab08c9ad7b9663a370f38cbe1f80eed1e7c0742663fad35034",
+          "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+          "cohort_identity": "sha256:985759cd14d908faa927d2795029e725398d39619e7b1d3ebbed21d6f8ffbaa8",
+          "task_ids": [
+            "task-0",
+            "task-1",
+            "task-2",
+            "task-3",
+            "task-4",
+            "task-5",
+            "task-6",
+            "task-7"
+          ],
+          "baseline_evidence": [
+            "sha256:df1912786a1008385da3992614e8d95a5a0a0e48fa3a10d933169148f9e158a3"
+          ],
+          "facts": [
+            {
+              "task_id": "task-0",
+              "evidence_refs": [
+                "evidence-task-0"
+              ],
+              "status": "supported-hypothesis",
+              "family_id": "alpha",
+              "hypothesis": "Repair alpha",
+              "modification_paths": [
+                "harness"
+              ],
+              "mechanism": "Supported verifier fixture finding",
+              "submode": null
+            },
+            {
+              "task_id": "task-4",
+              "evidence_refs": [
+                "evidence-task-4"
+              ],
+              "status": "successful-control",
+              "family_id": null,
+              "hypothesis": null,
+              "modification_paths": [],
+              "mechanism": null,
+              "submode": "control"
+            },
+            {
+              "task_id": "task-2",
+              "evidence_refs": [
+                "evidence-task-2"
+              ],
+              "status": "supported-hypothesis",
+              "family_id": "beta",
+              "hypothesis": "Repair beta",
+              "modification_paths": [
+                "harness"
+              ],
+              "mechanism": "Supported verifier fixture finding",
+              "submode": null
+            },
+            {
+              "task_id": "task-7",
+              "evidence_refs": [
+                "evidence-task-7"
+              ],
+              "status": "successful-control",
+              "family_id": null,
+              "hypothesis": null,
+              "modification_paths": [],
+              "mechanism": null,
+              "submode": "private-to-other-scope"
+            }
+          ],
+          "classifier_identity": "sha256:d073c374b40c490ac05c4ad8d1cefe28085a06a5b82319f2025a80f8f0b81348",
+          "sanitization_identity": "sha256:ee87efb0e153c51ea73577036107d437934e7cf01b225e33655494d426f71030"
+        }
+      },
+      "expected": {
+        "clusters": [
+          {
+            "family_id": "alpha",
+            "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+            "dossier_identity": "sha256:970799aa5fcc28ab08c9ad7b9663a370f38cbe1f80eed1e7c0742663fad35034",
+            "task_ids": [
+              "task-0"
+            ],
+            "evidence_refs": [
+              "evidence-task-0"
+            ],
+            "hypotheses": [
+              "Repair alpha"
+            ],
+            "modification_paths": [
+              "harness"
+            ],
+            "task_features": {
+              "task-0": {
+                "submodes": [],
+                "modification_paths": [
+                  "harness"
+                ]
+              },
+              "task-4": {
+                "submodes": [
+                  "control"
+                ],
+                "modification_paths": []
+              }
+            },
+            "successful_control_task_ids": [
+              "task-4"
+            ],
+            "protected_failure": false,
+            "estimated_cost": 1
+          },
+          {
+            "family_id": "beta",
+            "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+            "dossier_identity": "sha256:970799aa5fcc28ab08c9ad7b9663a370f38cbe1f80eed1e7c0742663fad35034",
+            "task_ids": [
+              "task-2"
+            ],
+            "evidence_refs": [
+              "evidence-task-2"
+            ],
+            "hypotheses": [
+              "Repair beta"
+            ],
+            "modification_paths": [
+              "harness"
+            ],
+            "task_features": {
+              "task-2": {
+                "submodes": [],
+                "modification_paths": [
+                  "harness"
+                ]
+              }
+            },
+            "successful_control_task_ids": [],
+            "protected_failure": false,
+            "estimated_cost": 3
+          }
+        ],
+        "deliveries": [
+          {
+            "scope": {
+              "id": "sha256:03bae0d829b7aa53ab585a36fd798e18d93e53538fbe1a465f8a9641362c0b59",
+              "family": "alpha",
+              "epoch": 1,
+              "task_ids": [
+                "task-0",
+                "task-4"
+              ],
+              "weights": {
+                "task-0": 0.5,
+                "task-4": 0.5
+              },
+              "guard_identity": ""
+            },
+            "local_plan_id": "sha256:0fb0f1c5d88e9fd687e2535e123714cb98f359245e9f5dc46b37b245cfb4dc00",
+            "include_scope": true,
+            "expected": {
+              "target_task_ids": [
+                "task-0"
+              ],
+              "required_refs": [
+                "evidence-task-0"
+              ],
+              "required_seed_tasks": [
+                "task-0",
+                "task-1",
+                "task-2",
+                "task-3",
+                "task-4",
+                "task-5",
+                "task-6",
+                "task-7"
+              ],
+              "on_insufficient_scope": "retain-research-only",
+              "generation_budget": {
+                "deadline_ms": 1767225660000,
+                "max_tokens": 42,
+                "max_model_requests": 3
+              },
+              "facts": [
+                {
+                  "task_id": "task-0",
+                  "evidence_refs": [
+                    "evidence-task-0"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "alpha",
+                  "hypothesis": "Repair alpha",
+                  "modification_paths": [
+                    "harness"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": null
+                },
+                {
+                  "task_id": "task-4",
+                  "evidence_refs": [
+                    "evidence-task-4"
+                  ],
+                  "status": "successful-control",
+                  "family_id": null,
+                  "hypothesis": null,
+                  "modification_paths": [],
+                  "mechanism": null,
+                  "submode": "control"
+                }
+              ],
+              "findings": [
+                {
+                  "candidate": "previous",
+                  "observation": "fixture"
+                }
+              ],
+              "candidate_id": "candidate-0",
+              "session_id": "session",
+              "accessed_refs": [
+                "evidence-task-0",
+                "extra-read"
+              ]
+            }
+          },
+          {
+            "scope": {
+              "id": "sha256:c59c4f1c9bb2047630b921641c0a6db22840f171f995aeb2dfb6c02fd4cd9d56",
+              "family": "beta",
+              "epoch": 1,
+              "task_ids": [
+                "task-0",
+                "task-4"
+              ],
+              "weights": {
+                "task-0": 0.5,
+                "task-4": 0.5
+              },
+              "guard_identity": ""
+            },
+            "local_plan_id": "sha256:0fb0f1c5d88e9fd687e2535e123714cb98f359245e9f5dc46b37b245cfb4dc00",
+            "include_scope": true,
+            "expected": {
+              "target_task_ids": [
+                "task-2"
+              ],
+              "required_refs": [
+                "evidence-task-2"
+              ],
+              "required_seed_tasks": [
+                "task-0",
+                "task-1",
+                "task-2",
+                "task-3",
+                "task-4",
+                "task-5",
+                "task-6",
+                "task-7"
+              ],
+              "on_insufficient_scope": "retain-research-only",
+              "generation_budget": {
+                "deadline_ms": 1767225660000,
+                "max_tokens": 42,
+                "max_model_requests": 3
+              },
+              "facts": [
+                {
+                  "task_id": "task-0",
+                  "evidence_refs": [
+                    "evidence-task-0"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "alpha",
+                  "hypothesis": "Repair alpha",
+                  "modification_paths": [
+                    "harness"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": null
+                },
+                {
+                  "task_id": "task-4",
+                  "evidence_refs": [
+                    "evidence-task-4"
+                  ],
+                  "status": "successful-control",
+                  "family_id": null,
+                  "hypothesis": null,
+                  "modification_paths": [],
+                  "mechanism": null,
+                  "submode": "control"
+                },
+                {
+                  "task_id": "task-2",
+                  "evidence_refs": [
+                    "evidence-task-2"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "beta",
+                  "hypothesis": "Repair beta",
+                  "modification_paths": [
+                    "harness"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": null
+                }
+              ],
+              "findings": [
+                {
+                  "candidate": "previous",
+                  "observation": "fixture"
+                }
+              ],
+              "candidate_id": "candidate-1",
+              "session_id": "session",
+              "accessed_refs": [
+                "evidence-task-2",
+                "extra-read"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "unicode-frozen-family-order",
+      "protected": [],
+      "facts": [
+        {
+          "taskId": "task-0",
+          "evidenceRefs": [
+            "evidence-task-0"
+          ],
+          "status": "supported-hypothesis",
+          "familyId": "中文",
+          "hypothesis": "修复",
+          "mechanism": "Supported verifier fixture finding",
+          "modificationPaths": [
+            "harness"
+          ]
+        },
+        {
+          "taskId": "task-1",
+          "evidenceRefs": [
+            "evidence-task-1"
+          ],
+          "status": "supported-hypothesis",
+          "familyId": "a",
+          "hypothesis": "Repair a",
+          "mechanism": "Supported verifier fixture finding",
+          "modificationPaths": [
+            "harness"
+          ]
+        },
+        {
+          "taskId": "task-2",
+          "evidenceRefs": [
+            "evidence-task-2"
+          ],
+          "status": "supported-hypothesis",
+          "familyId": "😀",
+          "hypothesis": "Repair 😀",
+          "mechanism": "Supported verifier fixture finding",
+          "modificationPaths": [
+            "harness"
+          ]
+        },
+        {
+          "taskId": "task-3",
+          "evidenceRefs": [
+            "evidence-task-3"
+          ],
+          "status": "supported-hypothesis",
+          "familyId": "é",
+          "hypothesis": "Repair é",
+          "mechanism": "Supported verifier fixture finding",
+          "modificationPaths": [
+            "harness"
+          ]
+        }
+      ],
+      "input": {
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 2
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 3
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 4
+          },
+          {
+            "id": "task-4",
+            "stratum": "family-0",
+            "estimated_cost": 5
+          },
+          {
+            "id": "task-5",
+            "stratum": "family-1",
+            "estimated_cost": 6
+          },
+          {
+            "id": "task-6",
+            "stratum": "family-2",
+            "estimated_cost": 7
+          },
+          {
+            "id": "task-7",
+            "stratum": "family-3",
+            "estimated_cost": 8
+          }
+        ],
+        "cohort_identity": "sha256:985759cd14d908faa927d2795029e725398d39619e7b1d3ebbed21d6f8ffbaa8",
+        "protected_ids": [],
+        "family_order": [
+          "😀",
+          "a",
+          "é",
+          "中文"
+        ],
+        "dossier": {
+          "identity": "sha256:7b102b9daa78324143db77b0601b76b87d08409d200fb79c4e38f3774bd74ec7",
+          "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+          "cohort_identity": "sha256:985759cd14d908faa927d2795029e725398d39619e7b1d3ebbed21d6f8ffbaa8",
+          "task_ids": [
+            "task-0",
+            "task-1",
+            "task-2",
+            "task-3",
+            "task-4",
+            "task-5",
+            "task-6",
+            "task-7"
+          ],
+          "baseline_evidence": [
+            "sha256:df1912786a1008385da3992614e8d95a5a0a0e48fa3a10d933169148f9e158a3"
+          ],
+          "facts": [
+            {
+              "task_id": "task-0",
+              "evidence_refs": [
+                "evidence-task-0"
+              ],
+              "status": "supported-hypothesis",
+              "family_id": "中文",
+              "hypothesis": "修复",
+              "modification_paths": [
+                "harness"
+              ],
+              "mechanism": "Supported verifier fixture finding",
+              "submode": null
+            },
+            {
+              "task_id": "task-1",
+              "evidence_refs": [
+                "evidence-task-1"
+              ],
+              "status": "supported-hypothesis",
+              "family_id": "a",
+              "hypothesis": "Repair a",
+              "modification_paths": [
+                "harness"
+              ],
+              "mechanism": "Supported verifier fixture finding",
+              "submode": null
+            },
+            {
+              "task_id": "task-2",
+              "evidence_refs": [
+                "evidence-task-2"
+              ],
+              "status": "supported-hypothesis",
+              "family_id": "😀",
+              "hypothesis": "Repair 😀",
+              "modification_paths": [
+                "harness"
+              ],
+              "mechanism": "Supported verifier fixture finding",
+              "submode": null
+            },
+            {
+              "task_id": "task-3",
+              "evidence_refs": [
+                "evidence-task-3"
+              ],
+              "status": "supported-hypothesis",
+              "family_id": "é",
+              "hypothesis": "Repair é",
+              "modification_paths": [
+                "harness"
+              ],
+              "mechanism": "Supported verifier fixture finding",
+              "submode": null
+            }
+          ],
+          "classifier_identity": "sha256:d073c374b40c490ac05c4ad8d1cefe28085a06a5b82319f2025a80f8f0b81348",
+          "sanitization_identity": "sha256:ee87efb0e153c51ea73577036107d437934e7cf01b225e33655494d426f71030"
+        }
+      },
+      "expected": {
+        "clusters": [
+          {
+            "family_id": "😀",
+            "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+            "dossier_identity": "sha256:7b102b9daa78324143db77b0601b76b87d08409d200fb79c4e38f3774bd74ec7",
+            "task_ids": [
+              "task-2"
+            ],
+            "evidence_refs": [
+              "evidence-task-2"
+            ],
+            "hypotheses": [
+              "Repair 😀"
+            ],
+            "modification_paths": [
+              "harness"
+            ],
+            "task_features": {
+              "task-2": {
+                "submodes": [],
+                "modification_paths": [
+                  "harness"
+                ]
+              }
+            },
+            "successful_control_task_ids": [],
+            "protected_failure": false,
+            "estimated_cost": 3
+          },
+          {
+            "family_id": "a",
+            "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+            "dossier_identity": "sha256:7b102b9daa78324143db77b0601b76b87d08409d200fb79c4e38f3774bd74ec7",
+            "task_ids": [
+              "task-1"
+            ],
+            "evidence_refs": [
+              "evidence-task-1"
+            ],
+            "hypotheses": [
+              "Repair a"
+            ],
+            "modification_paths": [
+              "harness"
+            ],
+            "task_features": {
+              "task-1": {
+                "submodes": [],
+                "modification_paths": [
+                  "harness"
+                ]
+              }
+            },
+            "successful_control_task_ids": [],
+            "protected_failure": false,
+            "estimated_cost": 2
+          },
+          {
+            "family_id": "é",
+            "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+            "dossier_identity": "sha256:7b102b9daa78324143db77b0601b76b87d08409d200fb79c4e38f3774bd74ec7",
+            "task_ids": [
+              "task-3"
+            ],
+            "evidence_refs": [
+              "evidence-task-3"
+            ],
+            "hypotheses": [
+              "Repair é"
+            ],
+            "modification_paths": [
+              "harness"
+            ],
+            "task_features": {
+              "task-3": {
+                "submodes": [],
+                "modification_paths": [
+                  "harness"
+                ]
+              }
+            },
+            "successful_control_task_ids": [],
+            "protected_failure": false,
+            "estimated_cost": 4
+          },
+          {
+            "family_id": "中文",
+            "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+            "dossier_identity": "sha256:7b102b9daa78324143db77b0601b76b87d08409d200fb79c4e38f3774bd74ec7",
+            "task_ids": [
+              "task-0"
+            ],
+            "evidence_refs": [
+              "evidence-task-0"
+            ],
+            "hypotheses": [
+              "修复"
+            ],
+            "modification_paths": [
+              "harness"
+            ],
+            "task_features": {
+              "task-0": {
+                "submodes": [],
+                "modification_paths": [
+                  "harness"
+                ]
+              }
+            },
+            "successful_control_task_ids": [],
+            "protected_failure": false,
+            "estimated_cost": 1
+          }
+        ],
+        "deliveries": [
+          {
+            "scope": {
+              "id": "sha256:1e196fbf03511ecae271867985f0849001cd24ace7e763d657b087a096945ea2",
+              "family": "😀",
+              "epoch": 1,
+              "task_ids": [
+                "task-2"
+              ],
+              "weights": {
+                "task-2": 1
+              },
+              "guard_identity": ""
+            },
+            "local_plan_id": "sha256:0fb0f1c5d88e9fd687e2535e123714cb98f359245e9f5dc46b37b245cfb4dc00",
+            "include_scope": false,
+            "expected": {
+              "target_task_ids": [
+                "task-2"
+              ],
+              "required_refs": [
+                "evidence-task-2"
+              ],
+              "required_seed_tasks": [
+                "task-0",
+                "task-1",
+                "task-2",
+                "task-3",
+                "task-4",
+                "task-5",
+                "task-6",
+                "task-7"
+              ],
+              "on_insufficient_scope": "retain-research-only",
+              "generation_budget": {
+                "deadline_ms": 1767225660000,
+                "max_tokens": 42,
+                "max_model_requests": 3
+              },
+              "facts": [
+                {
+                  "task_id": "task-2",
+                  "evidence_refs": [
+                    "evidence-task-2"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "😀",
+                  "hypothesis": "Repair 😀",
+                  "modification_paths": [
+                    "harness"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": null
+                }
+              ],
+              "findings": [
+                {
+                  "candidate": "previous",
+                  "observation": "fixture"
+                }
+              ],
+              "candidate_id": "candidate-0",
+              "session_id": "session",
+              "accessed_refs": [
+                "evidence-task-2",
+                "extra-read"
+              ]
+            }
+          },
+          {
+            "scope": {
+              "id": "sha256:bf77c2d4fea3f5a9a071336a5c9e52b89eae793a21e14274fa2023e470ec1f1b",
+              "family": "a",
+              "epoch": 1,
+              "task_ids": [
+                "task-1"
+              ],
+              "weights": {
+                "task-1": 1
+              },
+              "guard_identity": ""
+            },
+            "local_plan_id": "sha256:0fb0f1c5d88e9fd687e2535e123714cb98f359245e9f5dc46b37b245cfb4dc00",
+            "include_scope": false,
+            "expected": {
+              "target_task_ids": [
+                "task-1"
+              ],
+              "required_refs": [
+                "evidence-task-1"
+              ],
+              "required_seed_tasks": [
+                "task-0",
+                "task-1",
+                "task-2",
+                "task-3",
+                "task-4",
+                "task-5",
+                "task-6",
+                "task-7"
+              ],
+              "on_insufficient_scope": "retain-research-only",
+              "generation_budget": {
+                "deadline_ms": 1767225660000,
+                "max_tokens": 42,
+                "max_model_requests": 3
+              },
+              "facts": [
+                {
+                  "task_id": "task-1",
+                  "evidence_refs": [
+                    "evidence-task-1"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "a",
+                  "hypothesis": "Repair a",
+                  "modification_paths": [
+                    "harness"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": null
+                }
+              ],
+              "findings": [
+                {
+                  "candidate": "previous",
+                  "observation": "fixture"
+                }
+              ],
+              "candidate_id": "candidate-1",
+              "session_id": "session",
+              "accessed_refs": [
+                "evidence-task-1",
+                "extra-read"
+              ]
+            }
+          },
+          {
+            "scope": {
+              "id": "sha256:697173c3e47cf9a881fe5b0cd1148f0067d0286048f80d818a8e95cefd54f633",
+              "family": "é",
+              "epoch": 1,
+              "task_ids": [
+                "task-3"
+              ],
+              "weights": {
+                "task-3": 1
+              },
+              "guard_identity": ""
+            },
+            "local_plan_id": "sha256:0fb0f1c5d88e9fd687e2535e123714cb98f359245e9f5dc46b37b245cfb4dc00",
+            "include_scope": false,
+            "expected": {
+              "target_task_ids": [
+                "task-3"
+              ],
+              "required_refs": [
+                "evidence-task-3"
+              ],
+              "required_seed_tasks": [
+                "task-0",
+                "task-1",
+                "task-2",
+                "task-3",
+                "task-4",
+                "task-5",
+                "task-6",
+                "task-7"
+              ],
+              "on_insufficient_scope": "retain-research-only",
+              "generation_budget": {
+                "deadline_ms": 1767225660000,
+                "max_tokens": 42,
+                "max_model_requests": 3
+              },
+              "facts": [
+                {
+                  "task_id": "task-3",
+                  "evidence_refs": [
+                    "evidence-task-3"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "é",
+                  "hypothesis": "Repair é",
+                  "modification_paths": [
+                    "harness"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": null
+                }
+              ],
+              "findings": [
+                {
+                  "candidate": "previous",
+                  "observation": "fixture"
+                }
+              ],
+              "candidate_id": "candidate-2",
+              "session_id": "session",
+              "accessed_refs": [
+                "evidence-task-3",
+                "extra-read"
+              ]
+            }
+          },
+          {
+            "scope": {
+              "id": "sha256:0774359f7ea36330afbf8548a6a06560c0ce789490cd0f6168667bdffff41551",
+              "family": "中文",
+              "epoch": 1,
+              "task_ids": [
+                "task-0"
+              ],
+              "weights": {
+                "task-0": 1
+              },
+              "guard_identity": ""
+            },
+            "local_plan_id": "sha256:0fb0f1c5d88e9fd687e2535e123714cb98f359245e9f5dc46b37b245cfb4dc00",
+            "include_scope": false,
+            "expected": {
+              "target_task_ids": [
+                "task-0"
+              ],
+              "required_refs": [
+                "evidence-task-0"
+              ],
+              "required_seed_tasks": [
+                "task-0",
+                "task-1",
+                "task-2",
+                "task-3",
+                "task-4",
+                "task-5",
+                "task-6",
+                "task-7"
+              ],
+              "on_insufficient_scope": "retain-research-only",
+              "generation_budget": {
+                "deadline_ms": 1767225660000,
+                "max_tokens": 42,
+                "max_model_requests": 3
+              },
+              "facts": [
+                {
+                  "task_id": "task-0",
+                  "evidence_refs": [
+                    "evidence-task-0"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "中文",
+                  "hypothesis": "修复",
+                  "modification_paths": [
+                    "harness"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": null
+                }
+              ],
+              "findings": [
+                {
+                  "candidate": "previous",
+                  "observation": "fixture"
+                }
+              ],
+              "candidate_id": "candidate-3",
+              "session_id": "session",
+              "accessed_refs": [
+                "evidence-task-0",
+                "extra-read"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "same-task-in-multiple-families",
+      "protected": [
+        "task-0"
+      ],
+      "facts": [
+        {
+          "taskId": "task-0",
+          "evidenceRefs": [
+            "evidence-task-0"
+          ],
+          "status": "supported-hypothesis",
+          "familyId": "alpha",
+          "hypothesis": "Repair alpha",
+          "mechanism": "Supported verifier fixture finding",
+          "modificationPaths": [
+            "harness"
+          ]
+        },
+        {
+          "taskId": "task-0",
+          "evidenceRefs": [
+            "evidence-task-0"
+          ],
+          "status": "supported-hypothesis",
+          "familyId": "beta",
+          "hypothesis": "Repair beta",
+          "mechanism": "Supported verifier fixture finding",
+          "modificationPaths": [
+            "harness"
+          ]
+        },
+        {
+          "taskId": "task-4",
+          "evidenceRefs": [
+            "evidence-task-4"
+          ],
+          "status": "successful-control",
+          "submode": "control"
+        }
+      ],
+      "input": {
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 2
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 3
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 4
+          },
+          {
+            "id": "task-4",
+            "stratum": "family-0",
+            "estimated_cost": 5
+          },
+          {
+            "id": "task-5",
+            "stratum": "family-1",
+            "estimated_cost": 6
+          },
+          {
+            "id": "task-6",
+            "stratum": "family-2",
+            "estimated_cost": 7
+          },
+          {
+            "id": "task-7",
+            "stratum": "family-3",
+            "estimated_cost": 8
+          }
+        ],
+        "cohort_identity": "sha256:985759cd14d908faa927d2795029e725398d39619e7b1d3ebbed21d6f8ffbaa8",
+        "protected_ids": [
+          "task-0"
+        ],
+        "family_order": [
+          "alpha",
+          "beta"
+        ],
+        "dossier": {
+          "identity": "sha256:123056c1b1dc6b5f6a4d7187807a11e5ff7f9314646870fb4257300af0dfe81a",
+          "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+          "cohort_identity": "sha256:985759cd14d908faa927d2795029e725398d39619e7b1d3ebbed21d6f8ffbaa8",
+          "task_ids": [
+            "task-0",
+            "task-1",
+            "task-2",
+            "task-3",
+            "task-4",
+            "task-5",
+            "task-6",
+            "task-7"
+          ],
+          "baseline_evidence": [
+            "sha256:df1912786a1008385da3992614e8d95a5a0a0e48fa3a10d933169148f9e158a3"
+          ],
+          "facts": [
+            {
+              "task_id": "task-0",
+              "evidence_refs": [
+                "evidence-task-0"
+              ],
+              "status": "supported-hypothesis",
+              "family_id": "alpha",
+              "hypothesis": "Repair alpha",
+              "modification_paths": [
+                "harness"
+              ],
+              "mechanism": "Supported verifier fixture finding",
+              "submode": null
+            },
+            {
+              "task_id": "task-0",
+              "evidence_refs": [
+                "evidence-task-0"
+              ],
+              "status": "supported-hypothesis",
+              "family_id": "beta",
+              "hypothesis": "Repair beta",
+              "modification_paths": [
+                "harness"
+              ],
+              "mechanism": "Supported verifier fixture finding",
+              "submode": null
+            },
+            {
+              "task_id": "task-4",
+              "evidence_refs": [
+                "evidence-task-4"
+              ],
+              "status": "successful-control",
+              "family_id": null,
+              "hypothesis": null,
+              "modification_paths": [],
+              "mechanism": null,
+              "submode": "control"
+            }
+          ],
+          "classifier_identity": "sha256:d073c374b40c490ac05c4ad8d1cefe28085a06a5b82319f2025a80f8f0b81348",
+          "sanitization_identity": "sha256:ee87efb0e153c51ea73577036107d437934e7cf01b225e33655494d426f71030"
+        }
+      },
+      "expected": {
+        "clusters": [
+          {
+            "family_id": "alpha",
+            "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+            "dossier_identity": "sha256:123056c1b1dc6b5f6a4d7187807a11e5ff7f9314646870fb4257300af0dfe81a",
+            "task_ids": [
+              "task-0"
+            ],
+            "evidence_refs": [
+              "evidence-task-0"
+            ],
+            "hypotheses": [
+              "Repair alpha"
+            ],
+            "modification_paths": [
+              "harness"
+            ],
+            "task_features": {
+              "task-0": {
+                "submodes": [],
+                "modification_paths": [
+                  "harness"
+                ]
+              },
+              "task-4": {
+                "submodes": [
+                  "control"
+                ],
+                "modification_paths": []
+              }
+            },
+            "successful_control_task_ids": [
+              "task-4"
+            ],
+            "protected_failure": true,
+            "estimated_cost": 1
+          },
+          {
+            "family_id": "beta",
+            "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+            "dossier_identity": "sha256:123056c1b1dc6b5f6a4d7187807a11e5ff7f9314646870fb4257300af0dfe81a",
+            "task_ids": [
+              "task-0"
+            ],
+            "evidence_refs": [
+              "evidence-task-0"
+            ],
+            "hypotheses": [
+              "Repair beta"
+            ],
+            "modification_paths": [
+              "harness"
+            ],
+            "task_features": {
+              "task-0": {
+                "submodes": [],
+                "modification_paths": [
+                  "harness"
+                ]
+              },
+              "task-4": {
+                "submodes": [
+                  "control"
+                ],
+                "modification_paths": []
+              }
+            },
+            "successful_control_task_ids": [
+              "task-4"
+            ],
+            "protected_failure": true,
+            "estimated_cost": 1
+          }
+        ],
+        "deliveries": [
+          {
+            "scope": {
+              "id": "sha256:744e3b245b133455d17f68b6dc7cad669f5214ac0f35b7d7ff7c7db54a54ef1b",
+              "family": "alpha",
+              "epoch": 1,
+              "task_ids": [
+                "task-0"
+              ],
+              "weights": {
+                "task-0": 1
+              },
+              "guard_identity": ""
+            },
+            "local_plan_id": "sha256:0fb0f1c5d88e9fd687e2535e123714cb98f359245e9f5dc46b37b245cfb4dc00",
+            "include_scope": false,
+            "expected": {
+              "target_task_ids": [
+                "task-0"
+              ],
+              "required_refs": [
+                "evidence-task-0"
+              ],
+              "required_seed_tasks": [
+                "task-0",
+                "task-1",
+                "task-2",
+                "task-3",
+                "task-4",
+                "task-5",
+                "task-6",
+                "task-7"
+              ],
+              "on_insufficient_scope": "retain-research-only",
+              "generation_budget": {
+                "deadline_ms": 1767225660000,
+                "max_tokens": 42,
+                "max_model_requests": 3
+              },
+              "facts": [
+                {
+                  "task_id": "task-0",
+                  "evidence_refs": [
+                    "evidence-task-0"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "alpha",
+                  "hypothesis": "Repair alpha",
+                  "modification_paths": [
+                    "harness"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": null
+                },
+                {
+                  "task_id": "task-0",
+                  "evidence_refs": [
+                    "evidence-task-0"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "beta",
+                  "hypothesis": "Repair beta",
+                  "modification_paths": [
+                    "harness"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": null
+                }
+              ],
+              "findings": [
+                {
+                  "candidate": "previous",
+                  "observation": "fixture"
+                }
+              ],
+              "candidate_id": "candidate-0",
+              "session_id": "session",
+              "accessed_refs": [
+                "evidence-task-0",
+                "extra-read"
+              ]
+            }
+          },
+          {
+            "scope": {
+              "id": "sha256:ddd07726c89d92bd4d93b991f639929442ecd29266e1bdecadb8ed5f908c25a3",
+              "family": "beta",
+              "epoch": 1,
+              "task_ids": [
+                "task-0"
+              ],
+              "weights": {
+                "task-0": 1
+              },
+              "guard_identity": ""
+            },
+            "local_plan_id": "sha256:0fb0f1c5d88e9fd687e2535e123714cb98f359245e9f5dc46b37b245cfb4dc00",
+            "include_scope": false,
+            "expected": {
+              "target_task_ids": [
+                "task-0"
+              ],
+              "required_refs": [
+                "evidence-task-0"
+              ],
+              "required_seed_tasks": [
+                "task-0",
+                "task-1",
+                "task-2",
+                "task-3",
+                "task-4",
+                "task-5",
+                "task-6",
+                "task-7"
+              ],
+              "on_insufficient_scope": "retain-research-only",
+              "generation_budget": {
+                "deadline_ms": 1767225660000,
+                "max_tokens": 42,
+                "max_model_requests": 3
+              },
+              "facts": [
+                {
+                  "task_id": "task-0",
+                  "evidence_refs": [
+                    "evidence-task-0"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "alpha",
+                  "hypothesis": "Repair alpha",
+                  "modification_paths": [
+                    "harness"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": null
+                },
+                {
+                  "task_id": "task-0",
+                  "evidence_refs": [
+                    "evidence-task-0"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "beta",
+                  "hypothesis": "Repair beta",
+                  "modification_paths": [
+                    "harness"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": null
+                }
+              ],
+              "findings": [
+                {
+                  "candidate": "previous",
+                  "observation": "fixture"
+                }
+              ],
+              "candidate_id": "candidate-1",
+              "session_id": "session",
+              "accessed_refs": [
+                "evidence-task-0",
+                "extra-read"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "unresolved-not-upgraded-by-score-or-neighbor",
+      "protected": [],
+      "scopeTasks": [
+        "task-0",
+        "task-1"
+      ],
+      "facts": [
+        {
+          "taskId": "task-0",
+          "evidenceRefs": [
+            "evidence-task-0"
+          ],
+          "status": "supported-hypothesis",
+          "familyId": "alpha",
+          "hypothesis": "Repair alpha",
+          "mechanism": "Supported verifier fixture finding",
+          "modificationPaths": [
+            "harness"
+          ]
+        },
+        {
+          "taskId": "task-1",
+          "evidenceRefs": [
+            "evidence-task-1"
+          ],
+          "status": "unresolved",
+          "familyId": "alpha"
+        },
+        {
+          "taskId": "task-2",
+          "evidenceRefs": [
+            "evidence-task-2"
+          ],
+          "status": "successful-control"
+        }
+      ],
+      "input": {
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 2
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 3
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 4
+          },
+          {
+            "id": "task-4",
+            "stratum": "family-0",
+            "estimated_cost": 5
+          },
+          {
+            "id": "task-5",
+            "stratum": "family-1",
+            "estimated_cost": 6
+          },
+          {
+            "id": "task-6",
+            "stratum": "family-2",
+            "estimated_cost": 7
+          },
+          {
+            "id": "task-7",
+            "stratum": "family-3",
+            "estimated_cost": 8
+          }
+        ],
+        "cohort_identity": "sha256:985759cd14d908faa927d2795029e725398d39619e7b1d3ebbed21d6f8ffbaa8",
+        "protected_ids": [],
+        "family_order": [
+          "alpha"
+        ],
+        "dossier": {
+          "identity": "sha256:a1d23806f3bd0555831a5ecc6eb29d5e677d1bce77825e8589b0da134e507cbd",
+          "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+          "cohort_identity": "sha256:985759cd14d908faa927d2795029e725398d39619e7b1d3ebbed21d6f8ffbaa8",
+          "task_ids": [
+            "task-0",
+            "task-1",
+            "task-2",
+            "task-3",
+            "task-4",
+            "task-5",
+            "task-6",
+            "task-7"
+          ],
+          "baseline_evidence": [
+            "sha256:df1912786a1008385da3992614e8d95a5a0a0e48fa3a10d933169148f9e158a3"
+          ],
+          "facts": [
+            {
+              "task_id": "task-0",
+              "evidence_refs": [
+                "evidence-task-0"
+              ],
+              "status": "supported-hypothesis",
+              "family_id": "alpha",
+              "hypothesis": "Repair alpha",
+              "modification_paths": [
+                "harness"
+              ],
+              "mechanism": "Supported verifier fixture finding",
+              "submode": null
+            },
+            {
+              "task_id": "task-1",
+              "evidence_refs": [
+                "evidence-task-1"
+              ],
+              "status": "unresolved",
+              "family_id": "alpha",
+              "hypothesis": null,
+              "modification_paths": [],
+              "mechanism": null,
+              "submode": null
+            },
+            {
+              "task_id": "task-2",
+              "evidence_refs": [
+                "evidence-task-2"
+              ],
+              "status": "successful-control",
+              "family_id": null,
+              "hypothesis": null,
+              "modification_paths": [],
+              "mechanism": null,
+              "submode": null
+            }
+          ],
+          "classifier_identity": "sha256:d073c374b40c490ac05c4ad8d1cefe28085a06a5b82319f2025a80f8f0b81348",
+          "sanitization_identity": "sha256:ee87efb0e153c51ea73577036107d437934e7cf01b225e33655494d426f71030"
+        }
+      },
+      "expected": {
+        "clusters": [
+          {
+            "family_id": "alpha",
+            "parent_identity": "sha256:1c6de4705ea3d0318cd4da093a2ecc0b239c87edcb003df31fa8c1aefee35e96",
+            "dossier_identity": "sha256:a1d23806f3bd0555831a5ecc6eb29d5e677d1bce77825e8589b0da134e507cbd",
+            "task_ids": [
+              "task-0"
+            ],
+            "evidence_refs": [
+              "evidence-task-0"
+            ],
+            "hypotheses": [
+              "Repair alpha"
+            ],
+            "modification_paths": [
+              "harness"
+            ],
+            "task_features": {
+              "task-0": {
+                "submodes": [],
+                "modification_paths": [
+                  "harness"
+                ]
+              }
+            },
+            "successful_control_task_ids": [],
+            "protected_failure": false,
+            "estimated_cost": 1
+          }
+        ],
+        "deliveries": [
+          {
+            "scope": {
+              "id": "sha256:aadc8b1e4038a1698e6b530ca9a586c87458fd0f2f07ad238c3f03d28cf0f632",
+              "family": "alpha",
+              "epoch": 1,
+              "task_ids": [
+                "task-0",
+                "task-1"
+              ],
+              "weights": {
+                "task-0": 0.5,
+                "task-1": 0.5
+              },
+              "guard_identity": ""
+            },
+            "local_plan_id": "sha256:0fb0f1c5d88e9fd687e2535e123714cb98f359245e9f5dc46b37b245cfb4dc00",
+            "include_scope": true,
+            "expected": {
+              "target_task_ids": [
+                "task-0"
+              ],
+              "required_refs": [
+                "evidence-task-0"
+              ],
+              "required_seed_tasks": [
+                "task-0",
+                "task-1",
+                "task-2",
+                "task-3",
+                "task-4",
+                "task-5",
+                "task-6",
+                "task-7"
+              ],
+              "on_insufficient_scope": "retain-research-only",
+              "generation_budget": {
+                "deadline_ms": 1767225660000,
+                "max_tokens": 42,
+                "max_model_requests": 3
+              },
+              "facts": [
+                {
+                  "task_id": "task-0",
+                  "evidence_refs": [
+                    "evidence-task-0"
+                  ],
+                  "status": "supported-hypothesis",
+                  "family_id": "alpha",
+                  "hypothesis": "Repair alpha",
+                  "modification_paths": [
+                    "harness"
+                  ],
+                  "mechanism": "Supported verifier fixture finding",
+                  "submode": null
+                },
+                {
+                  "task_id": "task-1",
+                  "evidence_refs": [
+                    "evidence-task-1"
+                  ],
+                  "status": "unresolved",
+                  "family_id": "alpha",
+                  "hypothesis": null,
+                  "modification_paths": [],
+                  "mechanism": null,
+                  "submode": null
+                }
+              ],
+              "findings": [
+                {
+                  "candidate": "previous",
+                  "observation": "fixture"
+                }
+              ],
+              "candidate_id": "candidate-0",
+              "session_id": "session",
+              "accessed_refs": [
+                "evidence-task-0",
+                "extra-read"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

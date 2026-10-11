@@ -77,6 +77,19 @@ class PublicGearTests(unittest.TestCase):
         self.assertEqual(response["input_digest"], request["input_digest"])
         self.assertEqual(response["decision"]["operations"][0]["kind"], "diagnose_seed")
 
+        # Negotiate before importing user code, so an older peer cannot silently
+        # discard the exact diagnosis binding and generate from another receipt.
+        request["capabilities"] = dict(request["capabilities"])
+        del request["capabilities"]["generation_diagnosis_binding"]
+        rejected = subprocess.run(
+            [sys.executable, "-m", "gear._protocol.worker", "nonexistent_plugin:Algorithm"],
+            input=json.dumps(request) + "\n", text=True, capture_output=True,
+        )
+        self.assertNotEqual(rejected.returncode, 0)
+        self.assertEqual(rejected.stdout, "")
+        self.assertIn("protocol-capability-mismatch", rejected.stderr)
+        self.assertNotIn("ModuleNotFoundError", rejected.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

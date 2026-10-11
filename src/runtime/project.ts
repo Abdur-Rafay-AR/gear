@@ -44,6 +44,7 @@ interface PendingOperation {
   kind: 'evaluation' | 'generation'
   candidate: string
   parent?: string
+  diagnosisId?: string
   taskId?: string
   status: 'reserved' | 'complete'
 }
@@ -125,6 +126,11 @@ function validateDecision(decision: AlgorithmDecision, view: SearchView): void {
       candidates.push(op.candidate)
     } else if (!['stop'].includes(op.kind) && !candidates.includes(op.candidate))
       throw new TypeError('unknown-candidate')
+    if (op.diagnosis_id != null) {
+      const source = typeof op.diagnosis_id === 'string' ? view.completed[op.diagnosis_id] : undefined
+      if (op.kind !== 'generate' || source?.kind !== 'diagnose_seed' || source.candidate !== op.parent)
+        throw new TypeError('invalid-generation-diagnosis-binding')
+    }
     if ((op.kind === 'stop' || op.kind === 'nominate') && index !== decision.operations.length - 1)
       throw new TypeError('terminal-operation-must-be-last')
     if (op.kind === 'evaluate_seed' && !op.tasks.length) throw new TypeError('empty-seed-evaluation')
@@ -224,11 +230,13 @@ export class ProjectRuntime {
           let saved = run.decisions.find((d) => !d.done)
           if (!saved) {
             const view = this.view(run)
-            const decision = await this.algorithm.step(
-              view,
-              run.algorithmState,
-              { runId: id, stepId: run.decisions.length },
-              signal,
+            const decision = structuredClone(
+              await this.algorithm.step(
+                structuredClone(view),
+                structuredClone(run.algorithmState),
+                { runId: id, stepId: run.decisions.length },
+                signal,
+              ),
             )
             validateDecision(decision, view)
             saved = { step: run.decisions.length, inputDigest: canonicalDigest(view), decision, done: false }
@@ -425,7 +433,19 @@ export class ProjectRuntime {
         } else {
           if (run.operations.filter((o) => o.kind === 'generation').length >= run.plan.maxCandidates)
             fault('budget-exhausted', 'Candidate generation attempt budget exhausted', run.id)
-          pending = { id, kind: 'generation', candidate: op.candidate, parent: op.parent, status: 'reserved' }
+          const diagnosisId =
+            op.diagnosis_id ??
+            Object.entries(run.completed).findLast(
+              ([, result]) => result.kind === 'diagnose_seed' && result.candidate === op.parent,
+            )?.[0]
+          pending = {
+            id,
+            kind: 'generation',
+            candidate: op.candidate,
+            parent: op.parent,
+            status: 'reserved',
+            ...(diagnosisId ? { diagnosisId } : {}),
+          }
           run.operations.push(pending)
           await this.store.write(run.id, run)
           files = await this.provider.generate(
@@ -433,10 +453,8 @@ export class ProjectRuntime {
               operationId: id,
               parent: run.candidates.find((c) => c.id === op.parent)!,
               ...(() => {
-                const diagnosis = Object.values(run.completed!).findLast(
-                  (result) => result.kind === 'diagnose_seed' && result.candidate === op.parent,
-                )
-                return diagnosis ? { diagnosis } : {}
+                const diagnosisId = pending!.diagnosisId
+                return diagnosisId ? { diagnosisId, diagnosis: run.completed![diagnosisId]! } : {}
               })(),
               seed: run.plan.benchmark.tasks
                 .filter((t) => t.split === 'seed')
@@ -457,6 +475,7 @@ export class ProjectRuntime {
           kind: 'generate',
           candidate: op.candidate,
           status: 'invalid-candidate',
+          ...(pending?.diagnosisId ? { diagnosis_id: pending.diagnosisId } : {}),
           ...(error instanceof GenerationFailed ? { reason: error.reason } : {}),
         }
         await this.store.write(run.id, run)
@@ -477,6 +496,7 @@ export class ProjectRuntime {
         candidate: op.candidate,
         status: 'complete',
         digest: snapshot.digest,
+        ...(pending!.diagnosisId ? { diagnosis_id: pending!.diagnosisId } : {}),
       }
       await this.store.write(run.id, run)
     } else if (op.kind === 'evaluate_seed') {

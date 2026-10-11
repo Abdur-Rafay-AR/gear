@@ -21,6 +21,7 @@ export interface AlgorithmOperation {
   candidate: string
   tasks: string[]
   parent: string
+  diagnosis_id?: string | null
 }
 export interface AlgorithmDecision {
   state: Record<string, unknown>

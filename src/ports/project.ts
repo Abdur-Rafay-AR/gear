@@ -23,6 +23,7 @@ export interface GenerationInput {
   parent: TargetSnapshot
   seed: Array<{ id: string; instruction: string; score: number | null }>
   diagnosis?: Record<string, unknown>
+  diagnosisId?: string
 }
 export interface ProjectProvider {
   readonly identity: string

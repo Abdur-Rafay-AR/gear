@@ -65,6 +65,11 @@ function fixture(interruptBridge = false, entrypoint = 'gear.algorithms:StagedGE
       return results.get(id)
     },
     async generate(input) {
+      if (input.diagnosis) {
+        expect(input.diagnosisId).toMatch(/^sha256:/)
+        expect(saved.completed![input.diagnosisId!]).toEqual(input.diagnosis)
+        expect(input.diagnosis.candidate).toBe(input.parent.id)
+      }
       const files = { 'AGENTS.md': input.operationId }
       generations.set(input.operationId, files)
       return files
@@ -272,4 +277,21 @@ it('recovers every parent allocation and generates from distinct parents after p
   const calls = [...f.calls]
   expect(await f.runtime().resume(run.id, new AbortController().signal)).toEqual(run)
   expect(f.calls).toEqual(calls)
+})
+
+it('binds the exact committed diagnosis in the default Python recipe', async () => {
+  const f = fixture(false, 'gear.algorithms:GEPA')
+  const run = await f.runtime().start(f.plan, new AbortController().signal)
+  expect(run.status).toBe('complete')
+  expect(run.gate?.accepted).toBe(true)
+  const generated = run.decisions.flatMap((d) => d.decision.operations.filter((op) => op.kind === 'generate'))
+  expect(generated.length).toBeGreaterThan(0)
+  for (const op of generated) {
+    expect(op.diagnosis_id).toMatch(/^sha256:/)
+    expect(run.completed![op.diagnosis_id!]!.candidate).toBe(op.parent)
+    expect(run.completed![op.diagnosis_id!]!.kind).toBe('diagnose_seed')
+  }
+  const before = [...f.calls]
+  expect(await f.runtime().resume(run.id, new AbortController().signal)).toEqual(run)
+  expect(f.calls).toEqual(before)
 })

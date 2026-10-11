@@ -441,6 +441,7 @@ describe('durable project runtime', () => {
           candidate: 'next',
           status: 'invalid-candidate',
           reason: 'missing-proposal',
+          diagnosis_id: Object.keys(view.completed).find((id) => view.completed[id]!.kind === 'diagnose_seed'),
         })
         return { state, reason: 'retain initial', operations: [{ kind: 'stop', candidate: '', parent: '', tasks: [] }] }
       }
@@ -448,6 +449,7 @@ describe('durable project runtime', () => {
         state: { done: true },
         reason: 'try once',
         operations: [
+          { kind: 'diagnose_seed', candidate: 'initial', parent: '', tasks: ['seed'] },
           { kind: 'generate', candidate: 'next', parent: 'initial', tasks: [] },
           { kind: 'evaluate_seed', candidate: 'next', parent: '', tasks: ['seed'] },
         ],
@@ -499,4 +501,76 @@ it('projects opaque seed provenance and separates cache aliases from independent
   expect(JSON.stringify(shared)).not.toContain('correct')
   expect(shared.evidence_condition).toMatch(/^sha256:/)
   expect(shared.candidates.every((c) => Object.keys(c.score_evidence ?? {}).every((t) => t === 'seed'))).toBe(true)
+})
+
+it('freezes an explicit earlier diagnosis through generation and recovery', async () => {
+  const f = fixture()
+  let selected = ''
+  f.algorithm.step = async (view, state) => {
+    const step = Number(state.step ?? 0)
+    if (step < 2)
+      return {
+        state: { step: step + 1 },
+        reason: 'Record distinct diagnosis receipts',
+        operations: [{ kind: 'diagnose_seed', candidate: 'initial', parent: '', tasks: ['seed'] }],
+      }
+    if (step === 2) {
+      const refs = Object.keys(view.completed)
+      expect(refs).toHaveLength(2)
+      selected = refs[0]!
+      return {
+        state: { step: 3 },
+        reason: 'Bind the earlier receipt',
+        operations: [{ kind: 'generate', candidate: 'next', parent: 'initial', tasks: [], diagnosis_id: selected }],
+      }
+    }
+    return {
+      state: { step: 4 },
+      reason: 'Finish fixture',
+      operations: [{ kind: 'stop', candidate: '', parent: '', tasks: [] }],
+    }
+  }
+  const generate = f.provider.generate.bind(f.provider)
+  let calls = 0
+  f.provider.generate = async (input, signal) => {
+    calls++
+    expect(input.diagnosisId).toBe(selected)
+    expect(input.diagnosis).toEqual(f.store.run.completed![selected])
+    expect(f.store.run.operations.find((o) => o.kind === 'generation')!.diagnosisId).toBe(selected)
+    await generate(input, signal)
+    throw new Error('lost-generation-response')
+  }
+  await expect(f.runtime.start(f.plan, signal())).rejects.toThrow('lost-generation-response')
+  const pending = structuredClone(f.store.run.decisions.find((d) => !d.done)!)
+  const run = await new ProjectRuntime(f.store, f.provider, f.algorithm, async () => {}).resume(
+    f.store.run.id,
+    signal(),
+  )
+  expect(run.status).toBe('complete')
+  expect(run.decisions[pending.step]!.decision).toEqual(pending.decision)
+  expect(Object.values(run.completed!).find((r) => r.kind === 'generate')!.diagnosis_id).toBe(selected)
+  expect(calls).toBe(1)
+})
+
+it('rejects forged diagnosis references even when an in-process algorithm mutates its view', async () => {
+  const f = fixture()
+  let calls = 0
+  f.provider.generate = async () => {
+    calls++
+    return { 'AGENTS.md': 'wrong' }
+  }
+  f.algorithm.step = async (view, state) => {
+    view.completed.forged = { kind: 'diagnose_seed', candidate: 'initial' }
+    state.uncommitted = true
+    return {
+      state,
+      reason: 'Forge a diagnosis',
+      operations: [{ kind: 'generate', candidate: 'next', parent: 'initial', tasks: [], diagnosis_id: 'forged' }],
+    }
+  }
+  await expect(f.runtime.start(f.plan, signal())).rejects.toThrow('invalid-generation-diagnosis-binding')
+  expect(calls).toBe(0)
+  expect(f.store.run.completed?.forged).toBeUndefined()
+  expect(f.store.run.algorithmState).toEqual({})
+  expect(f.store.run.decisions).toEqual([])
 })

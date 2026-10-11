@@ -43,3 +43,7 @@ Python 已提供历史 shared/local/cross 采样的纯函数与可选 `ScopeSamp
 `StagedGEPA` 的最新状态为 `staged-gepa-v3`。新增 `parent_selection_policy(ParentInput, RandomSource) -> ParentPlan`，完整分配列表经校验后展开为有来源 scope、父代、额度和随机索引的批次；默认仍为一个分配，原单父代覆盖保持兼容，但两种覆盖不能同时配置。v1/v2 状态需匹配原冻结 runtime，不原地转写。55 份旧 TS 完整批次输出与 Python 对照通过。
 
 周期准备保留从同一旧 scope 抽出的全部父代；局部计划按每个批次的额度执行，重复父代/题族去重，重叠父代 baseline 按槽位并集报价。各批次只有冻结 archive 元数据和自己的探测证据，完整分配、排除原因与输入摘要进入原 decision。父代冻结、catalog、epoch 编排和局部计划已拆分，移除原单父代规划实现。真实 Python worker 的多父代回合及准备阶段恢复已有离线证据；完整模型诊断、regression、objective 与跨运行 archive 仍待后续迁移。
+
+诊断/提案纯策略现迁入 Python：已认证 dossier 的失败族、成功对照、假设配额与去重、候选 workplan、限定摘录和消费回执，分别对照 10 组未修改旧 TS 输出。新摘要仅用于新合同；旧 dossier 等身份作为不透明输入原样保留。该阶段尚未接入模型诊断、原始证据认证、实际消费审计及修改边界执行；`GenerationBudget` 仅声明限制，不能视为已有模型计量。
+
+`Operation` 末尾新增可选 `diagnosis_id`，保留旧 Python 位置参数和未绑定生成调用。默认 GEPA 显式引用已提交诊断；未绑定的批次操作在 runtime 预留时冻结所选诊断。断线后的 inspect 和完成回执沿用该引用，成功与无效生成均保留来源。协议增加 `generation_diagnosis_binding: receipt-v1` 能力，TS/Python 必须匹配，不让旧 worker 静默忽略新语义。协议 envelope 仍为 v1；这不等于完整 wire payload schema 已生成。历史 run 使用原冻结 runtime，不迁写其日志或身份。进程内算法改为独立输入副本，runtime 以原视图校验返回决策。

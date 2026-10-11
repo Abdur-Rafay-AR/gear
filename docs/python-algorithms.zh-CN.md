@@ -10,6 +10,8 @@
 | 选局部题目 | `GEPA(task_sampler=fn)` | `gear/algorithms/gepa/sampling.py` |
 | shared/local/cross 选题 | `GEPA(task_sampler=ScopeSampler(...))` | `gear/algorithms/gepa/scopes.py` |
 | 提案计划 | `GEPA(proposal_planner=fn)` | `gear/algorithms/gepa/proposal.py` |
+| 已认证诊断的失败族 | `failure_clusters`、`DiagnosisDossier` | `gear/algorithms/gepa/diagnosis.py` |
+| 假设配额、交付与消费回执 | `plan_hypotheses`、`candidate_workplan`、`deliver_workplan`、`validate_receipt` | `gear/algorithms/gepa/proposal.py` |
 | 排名/提名 | `GEPA(candidate_ranker=fn)` | `gear/algorithms/gepa/ranking.py` |
 | 何时停止 | `GEPA(stop_rule=fn)` | `gear/algorithms/gepa/stopping.py` |
 | 整个流程 | `SearchAlgorithm.step(view, state)` | `gear/algorithms/gepa/algorithm.py` |
@@ -140,6 +142,14 @@ python -m gear algorithm test archive_policy:build_algorithm --source ./examples
 `select_bridge` 接收已经冻结题族顺序的 nominees，并返回共同计划和 quota/capacity/budget 排除记录；预算回调只报价，不发起执行。`test-contracts/gepa-stages-v1.json` 固定了旧实现的 10 组 frontier 和 10 组 bridge 输出，包含重复 Target、量化平局、缺失 process、guard、轮换、缓存与额度不足。旧 JavaScript 的 locale 排序由 fixture 显式冻结；新 recipe 采用跨平台固定的 UTF-16 ID 顺序，不读取宿主 locale。此 recipe 是新版本流程，默认 `algorithm: gepa` 未切换；跨 run archive 与证据修订、process/objective 执行、完整诊断和 regression proposal 尚待完整迁移。
 
 整套算法也只需实现公开 `SearchAlgorithm` 协议，返回 `Decision(state, operations, reason)`。`Operation` 支持 `diagnose_seed`、`generate`、`evaluate_seed`、`nominate`、`stop`；`nominate` 是提名，不能自行写 champion。最终 `paired-pass-rate-v1` gate 先要求完整 seed 改善，再要求 held-out 不退步；自定义算法也不能绕过，seed 未改善时不消耗 held-out 预算。`SearchView` 只含 seed ID、已观察评分及不含原始内容的证据引用、候选、预算、题族和固定随机种子。不得把任意路径塞进操作；runtime 校验任务范围、候选数量、同组完整证据和预算。
+
+`generate` 可用 `Operation(..., diagnosis_id=receipt_id)` 绑定 `view.completed` 中同一父代的已提交诊断。默认 GEPA 已显式绑定；未指定时，runtime 在生成预留写入前选定最新匹配回执，并将引用一同保存。成功和无效候选的完成记录保留该引用；恢复只核对原生成，不重新选择诊断。协议能力增加 `generation_diagnosis_binding: receipt-v1`，不匹配的 worker 在导入用户算法之前拒绝请求。进程内 TypeScript 算法也只收到 view/state 的独立副本，返回 decision 再复制后才校验、持久化，不能通过修改输入伪造已提交证据。
+
+诊断策略核有独立的公开合同：`failure_clusters` 接收已经认证的 `DiagnosisDossier`，只将有证据引用、机制、假设和修改路径的 `supported-hypothesis` 合并成失败族，不从失败分数推断根因。成功对照按同题族、同原始分层或修改路径交集关联；优先级为受保护失败、失败任务数、明确的冻结顺序。`FailureCluster.sampling_diagnosis()` 可将标签交给既有采样器。旧 locale 次序需显式提供；默认新顺序为 UTF-16。
+
+`plan_hypotheses` 按额度选择并以父代/题族/假设去重；`candidate_workplan` 固定候选、批次、dossier、scope、局部计划、完整 seed 和修改范围。`deliver_workplan` 只交付目标任务与分配 scope 的诊断事实；`consumption_receipt` / `validate_receipt` 校验候选、会话、workplan、dossier、交付摘要和必需引用。`GenerationBudget` 声明 UTC epoch 毫秒截止点及可选 token/request 上限，不执行模型调用或计量。
+
+以上丰富 workplan 尚未接入 StagedGEPA 与真实 Meta 执行。原始证据认证、独立模型诊断及硬预算、实际阅读审计和修改边界执行仍需 runtime/provider 集成；声明已读引用本身不是模型实际消费证据的证明。`gepa-diagnosis-v1.json` 的 10 组旧 TS 固定样例验证纯策略、摘录与回执合同，不证明完整历史 GEPA 等价，也不重写历史身份。
 
 当前 recipe 使用完整 seed baseline、确定性父代选择、失败题局部评测、完整 seed 扩展和一次最终 gate。诊断是已观察 seed 评分投影，不产生隐式额外 LLM 调用；它以稳定操作 ID 持久化，经 `view.completed` 提供给后续策略，并传入 Meta 的生成输入。生成与 seed 评测也记录完成结果。无效候选或已终止但缺少有效输出的 Meta 操作消耗一次生成额度，算法可以据此结束或继续；runtime 不重发同一次生成。同批依赖失败的操作记为 `prerequisite-failed`，不会提交无效 Target。存储或环境故障保持待恢复状态，与候选格式错误分开处理。一个 decision 可包含最多 64 个顺序执行的操作，最终提名或停止只能在末尾。随机策略应只从 `view.random_seed` 推导。`toy_round` 用固定假执行器验证接口，不能代替真实 Target 集成或证明收益。
 

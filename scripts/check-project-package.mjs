@@ -93,6 +93,24 @@ try {
   assert.equal(toy.nominee, 'candidate-1')
   run(installed, [
     '-c',
+    `from gear.algorithms import (DiagnosisTask, DiagnosisFact, DiagnosisDossier, GenerationBudget,
+    failure_clusters, plan_hypotheses, candidate_workplan,
+    deliver_workplan, consumption_receipt, validate_receipt)
+from gear.algorithms.gepa.research import ArchiveScope
+fact = DiagnosisFact('seed', ('evidence',), 'supported-hypothesis', 'family', 'Hypothesis', ('AGENTS.md',), 'mechanism')
+dossier = DiagnosisDossier('dossier', 'parent', 'cohort', ('seed',), ('baseline',), (fact,), 'classifier', 'sanitization')
+families = failure_clusters(dossier, (DiagnosisTask('seed', 'family'),), 'cohort')
+proposal = plan_hypotheses(families, 1)[0]
+scope = ArchiveScope('scope', 'family', 0, ('seed',), {'seed': 1.0})
+workplan = candidate_workplan('child', 'batch', proposal, scope, 'local', ('seed',), GenerationBudget(1767225660000, 42, 3))
+delivery = deliver_workplan(workplan, dossier, scope=scope)
+receipt = consumption_receipt(delivery, 'session', ('evidence',))
+validate_receipt(receipt, delivery, 'session')
+assert receipt.workplan_identity == workplan.identity
+`,
+  ])
+  run(installed, [
+    '-c',
     "from gear.algorithms import GEPA, ScopeSampler; from gear.testing import toy_round; assert toy_round(GEPA(task_sampler=ScopeSampler()))['nominee'] == 'candidate-1'",
   ])
   run(installed, [

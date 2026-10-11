@@ -62,6 +62,14 @@ class _CheckedAlgorithm:
                 coverage[operation.candidate] = set()
             elif operation.kind != "stop" and operation.candidate not in candidates:
                 raise ValueError("algorithm-unknown-candidate")
+            if operation.diagnosis_id is not None:
+                source = view.completed.get(operation.diagnosis_id, {})
+                if (
+                    operation.kind != "generate"
+                    or source.get("kind") != "diagnose_seed"
+                    or source.get("candidate") != operation.parent
+                ):
+                    raise ValueError("algorithm-invalid-diagnosis-binding")
             if operation.kind in {"nominate", "stop"} and index != len(first.operations) - 1:
                 raise ValueError("algorithm-terminal-operation-must-be-last")
             if operation.kind == "evaluate_seed" and not operation.tasks:

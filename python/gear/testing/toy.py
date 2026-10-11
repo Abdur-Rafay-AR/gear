@@ -3,6 +3,7 @@
 from dataclasses import replace
 from typing import Any
 
+from .._protocol.canonical import digest
 from ..algorithms import Candidate, Decision, SearchAlgorithm, SearchView
 
 
@@ -24,10 +25,39 @@ def toy_round(algorithm: SearchAlgorithm, *, max_steps: int = 100) -> dict[str, 
             raise ValueError("Decisions need a reason and at least one operation")
         decisions.append(decision)
         state = dict(decision.state)
-        for operation in decision.operations:
+        for index, operation in enumerate(decision.operations):
             if not set(operation.tasks) <= set(view.seed_tasks):
                 raise ValueError("Algorithm requested tasks outside seed")
-            if operation.kind == "generate":
+            if operation.kind == "diagnose_seed":
+                candidate = next(c for c in view.candidates if c.id == operation.candidate)
+                receipt = digest(["toy", len(decisions), index, operation.kind])
+                view = replace(
+                    view,
+                    completed={
+                        **view.completed,
+                        receipt: {
+                            "kind": "diagnose_seed",
+                            "candidate": candidate.id,
+                            "method": "seed-score-projection-v1",
+                            "tasks": [
+                                {
+                                    "id": t,
+                                    "family": view.task_families.get(t, "seed"),
+                                    "score": candidate.scores.get(t),
+                                }
+                                for t in operation.tasks or view.seed_tasks
+                            ],
+                        },
+                    },
+                )
+            elif operation.kind == "generate":
+                if operation.diagnosis_id is not None:
+                    source = view.completed.get(operation.diagnosis_id, {})
+                    if (
+                        source.get("kind") != "diagnose_seed"
+                        or source.get("candidate") != operation.parent
+                    ):
+                        raise ValueError("Invalid toy generation diagnosis binding")
                 if operation.parent not in {c.id for c in view.candidates}:
                     raise ValueError("Unknown parent")
                 view = replace(

@@ -60,6 +60,7 @@
       "stop"
     ],
     "max_message_bytes": 1048576,
-    "canonical_version": "gear-canonical-v1"
+    "canonical_version": "gear-canonical-v1",
+    "generation_diagnosis_binding": "receipt-v1"
   }
 }

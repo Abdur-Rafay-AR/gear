@@ -9,8 +9,8 @@
 | 检查 | 结果与边界 |
 | --- | --- |
 | TypeScript 全量回归 | `697a63d` 的远端 CI：104 个测试文件通过、7 个按环境跳过；无模型环境项单独验证 |
-| 项目定向回归 | 多父代阶段接入后：13 个文件、141 项通过，含固定 fixture、真实 worker 闭环、采样截止点、多父代/epoch/bridge 恢复与 CLI 作者流程 |
-| Python 全量回归 | 多父代阶段接入后本地 354 项：350 项通过，4 项按环境跳过 |
+| 项目定向回归 | 诊断/提案策略及引用绑定接入后：14 个文件、155 项通过，含固定 fixture、真实 worker 闭环、采样截止点、多父代/epoch/bridge 恢复与 CLI 作者流程；随后无效生成来源记录的运行时 37 项复验通过 |
+| Python 全量回归 | 诊断/提案策略接入后本地 359 项：355 项通过，4 项按环境跳过 |
 | Python 公共 API | Ruff lint/format、Mypy strict 通过 |
 | TS 质量 | typecheck、Biome、协议生成一致性、205 个模块依赖/循环检查通过 |
 | CI/发布规则 | 14 项规则测试通过；dev 代码变更启用完整回归 |
@@ -31,6 +31,20 @@
 `420c6f2` 的 [epoch 生命周期 CI](https://github.com/rsi-gear/gear/actions/runs/38120986517) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。以下历史采样投影有独立的本地验证，不把旧 CI 视为新增代码的验证。
 
 `a306123` 的 [历史采样 CI](https://github.com/rsi-gear/gear/actions/runs/38122255845) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。多父代阶段的验证另记如下。
+
+`c17efd2` 的 [多父代阶段 CI](https://github.com/rsi-gear/gear/actions/runs/38123146789) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。下述诊断与提案策略有独立本地记录，不将该 CI 算作新提交验证。
+
+## 诊断、提案策略与固定生成引用
+
+`test-contracts/gepa-diagnosis-v1.json` 固定了源提交 `c17efd2` 的 10 组旧 TS 诊断/交付结果，覆盖未解析事实不升级为根因、受保护失败与任务数排序、多假设/路径/子模式合并、同族/同分层/同路径成功对照、scope 摘录、Unicode 顺序及同题多族。旧诊断实现没有修改；双语言分别比较冻结输出，历史身份作为不透明引用保留。新的 Python 策略实现已认证 dossier 聚合、配额去重、workplan、摘录与回执校验；新身份在独立 canonical 域产生。
+
+默认 GEPA 的 generate 显式绑定 `diagnosis_id`。运行时在预留写入时冻结未显式指定的引用，Meta 接收相同 ID 和内容；成功及无效生成均保留引用。回归构造同一父代的两份诊断，指定较早一份，在生成响应丢失后恢复，验证原引用、原 decision 和一次生成保持不变。另验证进程内算法伪造 view.completed 和修改状态不能绕过校验，失败不污染持久化输入。真实 Python 默认 GEPA 闭环及 StagedGEPA 批次验证同一引用传递和终态恢复。
+
+协议能力增加 `generation_diagnosis_binding: receipt-v1`，生成后的双语言常量一致；缺少能力时在导入用户插件之前拒绝。Python 新增 5 项诊断策略测试，项目新增 10 个固定样例、对应 Python 合同、两项运行时恢复/隔离和一项真实 worker 闭环。项目 155 项通过；Python 全量 359 项中 355 通过、4 跳过；无效生成引用补充后的运行时 37 项通过。Ruff lint/format（41 文件）、Mypy strict（36 公共文件）、typecheck、Biome、205 模块依赖与协议生成检查通过。macOS 实际 worker sandbox 两项通过。
+
+独立 tgz/wheel 验证通过，新增安装后用公开 API 完成 dossier → cluster → hypothesis → workplan → delivery → receipt；首次新探针因错误地从根入口导入 ArchiveScope 失败，改用其已有公共模块后重跑通过。六组模板/Target、双算法 CLI、SDK、源码封存、CPU training 与恢复继续通过。未新增 Luna 调用，所有 README、原用户工作区及历史身份未修改。
+
+边界：丰富 workplan 尚未接入 StagedGEPA/真实 Meta；模型诊断端口、请求/token 硬计量、原始证据认证、实际阅读审计和修改边界执行仍待完成。GenerationBudget 是声明合同，消费回执当前是纯验证规则，不能据此声称真实模型已读取证据或完整历史 GEPA 等价。
 
 ## 推送后修复
 

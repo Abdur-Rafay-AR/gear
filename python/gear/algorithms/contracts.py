@@ -35,6 +35,7 @@ class Operation:
     candidate: str = ""
     tasks: tuple[str, ...] = ()
     parent: str = ""
+    diagnosis_id: str | None = None
 
 
 @dataclass(frozen=True)

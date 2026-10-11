@@ -21,7 +21,7 @@ from ..contracts import (
     TaskSampler,
 )
 from .parents import select_parent
-from .proposal import plan_proposal
+from .proposal import diagnosis_reference, plan_proposal
 from .ranking import rank_candidates
 from .sampling import sample_tasks
 from .stopping import should_stop
@@ -57,7 +57,14 @@ class GEPA:
         if stage == "generate":
             return Decision(
                 {**base, "stage": "local", "parent": parent},
-                (Operation("generate", candidate=candidate, parent=parent),),
+                (
+                    Operation(
+                        "generate",
+                        candidate=candidate,
+                        parent=parent,
+                        diagnosis_id=diagnosis_reference(view, parent),
+                    ),
+                ),
                 "Generate one candidate from the tracked diagnosis",
             )
         if stage == "local" and any(
