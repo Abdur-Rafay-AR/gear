@@ -146,11 +146,16 @@ export function profile(universe: TaskUniverse, plan: StageEvaluationPlan, snaps
 /** Reuse completion evidence across operation labels without rerunning an already valid slot. */
 export async function reusableCells(store: SearchJournal, provider: SearchProvider, identities: CellIdentity[], current: EvidenceCell[]): Promise<EvidenceCell[]> {
   const reusable: EvidenceCell[] = [], checked: CellVerification[] = []
+  const currentByKey = new Map<string, EvidenceCell>()
+  for (const cell of current) {
+    const key = cellKey(cell.identity)
+    if (!currentByKey.has(key)) currentByKey.set(key, cell)
+  }
   for (const identity of identities) {
-    const old = current.find(c => cellKey(c.identity) === cellKey(identity))
+    const key = cellKey(identity), old = currentByKey.get(key)
     // Complete legacy channels do not imply complete raw metrics. Older views
     // may omit a declared metric (or its entire record), so inspect the cache.
-    const pointer = await store.read<{ ref: string }>(`cells/${cellKey(identity).slice(7)}`)
+    const pointer = await store.read<{ ref: string }>(`cells/${key.slice(7)}`)
     if (!pointer) continue
     const cell = await store.object<EvidenceCell>(pointer.ref)
     if (!validOutcome(cell)) continue

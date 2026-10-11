@@ -34,8 +34,11 @@ export function missingEvaluationSlots(universe: TaskUniverse, plan: StageEvalua
   const requiredRaw = new Set([...universe.objective?.terms.filter(t => t.weight !== 0).map(t => t.metric) ?? [],
     ...universe.objective?.constraints.map(c => c.metric) ?? []])
   const missing: MissingEvaluationSlot[] = []
+  // profile() above has already rejected duplicate/unplanned cells. Index once
+  // per call; repeatedly hashing every cell for each slot is quadratic work.
+  const cells = new Map(result.cells.map(cell => [cellKey(cell.identity), cell]))
   for (const identity of plannedCells(universe, plan, snapshot)) {
-    const cell = result.cells.find(c => cellKey(c.identity) === cellKey(identity))
+    const cell = cells.get(cellKey(identity))
     if (!cell || !validOutcome(cell)) {
       missing.push({ identity, channel: 'outcome', status: !cell || cell.status === 'missing' || cell.outcome.status === 'missing' ? 'missing' : 'invalid',
         repair: 'execution', reason: cell?.outcome && 'reason' in cell.outcome ? cell.outcome.reason : 'missing or uncertified execution slot' })

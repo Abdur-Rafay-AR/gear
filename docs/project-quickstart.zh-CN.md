@@ -39,7 +39,7 @@ gear report
 
 text/file 默认去除首尾空白后比较；json 检查预期字段及其类型，允许额外字段。Target 将结果写到 `/app/answer.txt` 或指定文件，答案只在评分端读取。`benchmark check` 展示每题输入、评分规则和一正一反例；检查格式、分区泄漏和静态 Target 结构，不发起模型调用。`benchmark compile` 导出 Harbor 格式到 `.gear/benchmarks/`；项目的 Docker provider 直接运行同一任务合同并使用等价评分器。
 
-`gear.yaml` 的默认配置只有 8 行。`gear config explain` 展示解析后的配置。预算 `max_evaluations` 是所有候选与最终 gate 的物理 task 尝试上限；generation 由 rounds 上限控制。单题 evaluate 是 smoke；refine 仅复用身份与重复槽位完全相同的已完成证据（包括有效零分），并补齐其余 seed baseline。held-out 只用于最终 gate，不进入 Meta 或 Python 算法视图。若确实只有一份任务集，显式设置 `validation: {mode: research}`；报告会标注未做独立验证。
+`gear.yaml` 的默认配置只有 8 行。`gear config explain` 展示解析后的配置。预算 `max_evaluations` 是所有候选与最终 gate 的物理 task 尝试上限；generation 由 rounds 上限控制。单题 evaluate 是 smoke；refine 仅复用身份与重复槽位完全相同的已完成证据（包括有效零分），并补齐其余 seed baseline。晋级先要求完整 seed 改善，再要求 held-out 不退步；seed gate 未通过时不执行 held-out，对应评分保持不可用，未安排的题目不计为缺失。held-out 只用于最终 gate，不进入 Meta 或 Python 算法视图。若确实只有一份任务集，显式设置 `validation: {mode: research}`；报告会标注未做独立验证。
 
 ## 运行环境与凭据
 

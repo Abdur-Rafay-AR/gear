@@ -18,7 +18,7 @@
 | DSH 固定 carrier | rc.2 的有效 Skill 与完整 Harness 两组原生加载、prompt assembly、Skill 读取检查通过 |
 | DSH/Pi 原生行为 | 发布用 runner 在真实 Docker 中各完成一次 Luna 调用；插件/extension 指定输出，经可信评分器得 1；运行后 inspect 一致 |
 
-完整回归之后的终态生成失败处理由最终定向回归和发布包测试覆盖。Linux/macOS CI 已配置真实 worker 隔离门禁；`c811b1f` 的 [远端 CI](https://github.com/rsi-gear/gear/actions/runs/38109997985) 中两个平台的隔离、CPU 训练和 Hitch 合同检查已经通过，Quality 全量作业仍在运行。平台模型测试是显式启用项，不把跳过记为通过。未运行 GPU 训练，也未用自动化代替人工易用性测试。
+完整回归之后的终态生成失败处理由最终定向回归和发布包测试覆盖。Linux/macOS CI 已配置真实 worker 隔离门禁；`c811b1f` 的 [远端 CI](https://github.com/rsi-gear/gear/actions/runs/38109997985) 中两个平台的隔离、CPU 训练和 Hitch 合同检查已经通过。Quality 首次全量为 1317 项通过、36 项跳过，唯一失败是 1000 题旧 GEPA 测试超出 90 秒；相关性能修复已进入后续验证。平台模型测试是显式启用项，不把跳过记为通过。未运行 GPU 训练，也未用自动化代替人工易用性测试。
 
 ## 推送后修复
 
@@ -28,6 +28,8 @@
 - 报告现在按实际已提交的评测范围计算缺失数：seed gate 拒绝后，未安排的 held-out 不标为缺失；中断的部分 baseline 不显示完整 pass rate。
 - 修正后的 gate 已完成两种 Target 的真实 Luna 复测：Pi 和 DSH 的 smoke 均 1/1，seed 都是 1 → 1，均以 `seed-not-improved` 保留原 champion，未运行 held-out。refine 新增物理评测分别为 0 和 1，两者终态 resume 一致。随后的 seed 预算预检和报告调整由上述定向回归覆盖。
 - 下表保留首批实现的真实运行证据，使用当时冻结的 gate，与这次修复后的记录分开。
+
+旧 GEPA 的槽位复用、返回值匹配和缺口核验现改为单次调用内的 Map/Set 索引，避免重复嵌套计算 SHA。保留全部摘要核验、来源验证和 1700 个候选 seed 槽位断言，未放宽原 90 秒上限。本地大规模测试通过，单次耗时由约 70 秒降至约 46 秒；这属于诊断测量，不是稳定性能基准。新的源码身份由现有机制生成，旧 run 仍使用其冻结 runtime。
 
 ## Luna 项目闭环
 

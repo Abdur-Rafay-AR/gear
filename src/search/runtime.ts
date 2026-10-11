@@ -144,7 +144,8 @@ export class SearchExecutionRuntime {
       else repairCells++
     }
     invariant(await verifyCells(this.provider, checked), 'provider cannot verify reusable cell provenance')
-    const missing = identities.filter(i => !cached.some(c => cellKey(c.identity) === cellKey(i)))
+    const cachedKeys = new Set(cached.map(cell => cellKey(cell.identity)))
+    const missing = identities.filter(identity => !cachedKeys.has(cellKey(identity)))
     const name = `evaluation-${digestJson([plan.digest, snapshot.digest]).slice(7)}`
     // Freeze the cache split before execution: a crash may occur between writing
     // individual cell pointers and sealing the stage result.
@@ -173,11 +174,12 @@ export class SearchExecutionRuntime {
           })
           output = recovered.value
           const seen = new Set<string>()
+          const requested = new Map(request.cells.map(identity => [cellKey(identity), identity]))
           const verification = output.cells.map(cell => {
-            const identity = request.cells.find(i => cellKey(i) === cellKey(cell.identity))
-            invariant(identity && !seen.has(cellKey(identity)), 'provider returned duplicate/unrequested cells')
+            const key = cellKey(cell.identity), identity = requested.get(key)
+            invariant(identity && !seen.has(key), 'provider returned duplicate/unrequested cells')
             assertCell(cell, identity)
-            seen.add(cellKey(identity))
+            seen.add(key)
             return { cell, identity }
           })
           invariant(await verifyCells(this.provider, verification), 'provider rejected cell provenance')
