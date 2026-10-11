@@ -10,6 +10,8 @@
 | `gear-refine` evolution | `gear` project | 独立状态版本，不能原地切换 |
 | TS `failure-cluster-gepa-v2` | Python project recipe v1 | 不宣称跨算法等价，不复用决策日志 |
 
+项目 gate 现显式冻结 `paired-pass-rate-v1`：完整 seed 必须改善，随后独立 held-out 不得退步；seed 未改善时不提交 held-out，报告中对应评分为 `null`。这修正了首批实现仅要求 held-out 涨分的偏差，并以旧 GEPA 的 16 组二元评分组合交叉验证。研究模式只使用 seed，并保持研究标识。已有 run 继续使用其冻结 runtime；不重写旧 plan 或 gate。
+
 新项目状态在 `.gear/`，包含原子 run 记录、provider operation receipts、不可变 Git Target 快照和导出物。decision、算法状态和 operation 预留写在一个原子记录中；provider 外部操作状态单独核对。历史 `.gear-refine`、manifest v1 和旧 digest 均不重写。新 canonical digest 有独立 `gear-canonical-v1` 域。
 
 训练模块迁移会改变新运行的模块名与源码身份。旧 import 转发通过，不代表新版本可以恢复活跃旧任务。活跃旧 run 必须继续使用启动时锁定的 npm/wheel、解释器和后端；旧 checkpoint 来源与预算记录保留原样。无需迁移状态即可读取原报告。回退时先终止或核对新 run 的外部操作，再选择原入口和匹配版本；旧 runtime 不读取新项目状态。

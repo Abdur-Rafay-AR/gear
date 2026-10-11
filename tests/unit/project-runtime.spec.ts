@@ -7,6 +7,8 @@ import { MutationValidationError } from '../../src/domain/harness.js'
 import type { ProjectProvider, TrialResult } from '../../src/ports/project.js'
 import type { RunStore } from '../../src/ports/run-store.js'
 import { type ProjectRun, ProjectRuntime, type RunPlan } from '../../src/runtime/project.js'
+import { decideFinal } from '../../src/search/promotion.js'
+import { evaluatedFixture, scopeFixture, settings, snapshot, universe } from '../../src/search/testing.js'
 
 class MemoryStore implements RunStore {
   values = new Map<string, ProjectRun>()
@@ -114,6 +116,57 @@ function fixture() {
 const signal = () => new AbortController().signal
 
 describe('durable project runtime', () => {
+  it.each(
+    [0, 1].flatMap((seedBefore) =>
+      [0, 1].flatMap((seedAfter) =>
+        [0, 1].flatMap((heldBefore) => [0, 1].map((heldAfter) => ({ seedBefore, seedAfter, heldBefore, heldAfter }))),
+      ),
+    ),
+  )('matches historical pass-rate gates for %j', async ({ seedBefore, seedAfter, heldBefore, heldAfter }) => {
+    const anchor = snapshot('initial'),
+      candidate = snapshot('next')
+    const pair = (partition: 'seed' | 'held-out', before: number, after: number) => {
+      const u = universe(1, partition),
+        scope = scopeFixture(u, ['task-0'])
+      const options = {
+        stage: partition === 'seed' ? ('global-seed' as const) : ('held-out' as const),
+        participants: ['initial', 'next'],
+      }
+      const baseline = evaluatedFixture(u, scope, anchor, () => ({ outcome: before }), options)
+      const result = evaluatedFixture(u, scope, candidate, () => ({ outcome: after }), options)
+      return { universe: u, plan: baseline.plan, anchor, candidate, baseline: baseline.result, result: result.result }
+    }
+    const historical = decideFinal(
+      pair('seed', seedBefore, seedAfter),
+      pair('held-out', heldBefore, heldAfter),
+      settings().promotion,
+    )
+    const f = fixture()
+    const evaluate = f.provider.evaluate.bind(f.provider)
+    f.provider.evaluate = async (input, signal) => {
+      const result = await evaluate(input, signal)
+      const score =
+        input.task.id === 'seed'
+          ? input.target.id === 'initial'
+            ? seedBefore
+            : seedAfter
+          : input.target.id === 'initial'
+            ? heldBefore
+            : heldAfter
+      result.output = score ? 'correct' : 'wrong'
+      return result
+    }
+    const run = await f.runtime.start(f.plan, signal())
+    expect(run.plan.promotion).toBe('paired-pass-rate-v1')
+    expect(run.gate?.accepted).toBe(historical.outcome === 'accepted')
+    expect(run.champion).toBe(historical.outcome === 'accepted' ? 'next' : 'initial')
+    expect(run.gate?.seed).toEqual({ before: seedBefore, after: seedAfter })
+    expect(f.submissions).toHaveLength(seedAfter > seedBefore ? 4 : 2)
+    if (seedAfter <= seedBefore)
+      expect(run.gate).toMatchObject({ reason: 'seed-not-improved', heldOut: null, before: null, after: null })
+    expect((await f.runtime.resume(run.id, signal())).gate).toEqual(run.gate)
+    expect(JSON.stringify(projectReport(run, 'meta').gate)).not.toContain('heldOut')
+  })
   it('runs a common-scope final gate, accounts physical trials and isolates held-out from algorithms/Meta', async () => {
     const f = fixture(),
       run = await f.runtime.start(f.plan, signal())

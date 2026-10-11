@@ -20,6 +20,11 @@
 
 完整回归之后的终态生成失败处理由最终定向回归和发布包测试覆盖。Linux/macOS CI 已配置真实 worker 隔离门禁；本机实测为 macOS，远端 CI 尚未触发。平台模型测试是显式启用项，不把跳过记为通过。未运行 GPU 训练，也未用自动化代替人工易用性测试。
 
+## 推送后修复
+
+- `paired-pass-rate-v1` 修正最终 gate：先检查 seed 改善，再检查 held-out 不退步；拒绝的 seed 不触发 held-out 试验。32 项运行时测试通过，其中 16 组评分组合与历史 GEPA `decideFinal` 交叉比较，覆盖持平、退步、改善、预算和终态恢复。typecheck 通过。
+- 以下 Luna 记录为首批实现的真实运行证据，使用当时冻结的 gate；不能据此声称修正后的门禁已完成模型验收。
+
 ## Luna 项目闭环
 
 使用 `gpt-5.6-luna`，固定 DSH `0.1.1-rc.2`、Pi `0.68.0`；同一份任务表（一题 seed 加法、一题 held-out 大写转换），相同 Python recipe。真实路径为 init → check → 单题 evaluate → refine → report → resume。模型由本机已有 DSH 凭据存储授权；凭据不保存到此记录、候选或项目配置。

@@ -4,12 +4,14 @@ import type { BenchmarkSpec, BenchmarkTask, Split } from '../domain/benchmark.js
 import { canonicalDigest } from '../domain/canonical.js'
 import { GearError, GenerationFailed } from '../domain/errors.js'
 import { MutationValidationError } from '../domain/harness.js'
+import { type ProjectGate, passRateGate, passRatePromotion } from '../domain/promotion.js'
 import { scoreOutput } from '../domain/scoring.js'
 import type { EvidenceCache } from '../ports/evidence-cache.js'
 import type { ProjectProvider, TargetSnapshot, TrialResult } from '../ports/project.js'
 import type { RunStore } from '../ports/run-store.js'
 
 export interface RunPlan {
+  promotion?: typeof passRatePromotion
   runtimeIdentity?: string
   kind: 'evaluate' | 'refine'
   binding?: {
@@ -58,7 +60,7 @@ export interface ProjectRun {
   trials: Trial[]
   champion: string
   nominee?: string
-  gate?: { mode: 'independent-held-out' | 'shared-set-research'; accepted: boolean; before: number; after: number }
+  gate?: ProjectGate
 }
 
 function fault(code: string, message: string, runId: string, operationId?: string): never {
@@ -141,6 +143,7 @@ export class ProjectRuntime {
   ) {}
 
   async start(plan: RunPlan, signal: AbortSignal): Promise<ProjectRun> {
+    plan = { ...plan, promotion: passRatePromotion }
     if (this.identity) plan = { ...plan, runtimeIdentity: this.identity }
     const capabilities = this.provider.capabilities
     if (
@@ -203,6 +206,8 @@ export class ProjectRuntime {
       )
         fault('identity-mismatch', 'Frozen configuration, provider or algorithm changed', id)
       if (run.status !== 'running') return run
+      if (run.plan.promotion !== passRatePromotion)
+        fault('identity-mismatch', 'Promotion policy changed; use the original runtime', id)
       if (run.plan.kind === 'evaluate') {
         for (const task of run.plan.benchmark.tasks.filter(
           (t) => run.plan.taskIds.includes(t.id) && t.split === run.plan.split,
@@ -512,11 +517,24 @@ export class ProjectRuntime {
     } else if (op.kind === 'nominate') {
       if (run.gate) return
       const seed = run.plan.benchmark.tasks.filter((t) => t.split === 'seed')
-      this.completeScores(run, op.candidate, seed)
+      const seedPair = {
+        before: this.completeScores(run, run.champion, seed),
+        after: this.completeScores(run, op.candidate, seed),
+      }
       if (run.nominee && run.nominee !== op.candidate)
         fault('nomination-frozen', 'The final nominee cannot change', run.id)
       run.nominee = op.candidate
       await this.store.write(run.id, run)
+      const mode = run.plan.validation === 'holdout' ? 'independent-held-out' : 'shared-set-research'
+      // Reject on seed before requesting any held-out evidence, including when
+      // a custom algorithm nominates a worse candidate or the unchanged anchor.
+      if (seedPair.after <= seedPair.before || mode === 'shared-set-research') {
+        await this.checkCancellation(run, signal)
+        run.gate = passRateGate(seedPair, mode)
+        if (run.gate.accepted) run.champion = op.candidate
+        await this.store.write(run.id, run)
+        return
+      }
       const tasks =
         run.plan.validation === 'holdout' ? run.plan.benchmark.tasks.filter((t) => t.split === 'held_out') : seed
       await this.ensureBudget(run, [run.champion, op.candidate], tasks)
@@ -525,12 +543,7 @@ export class ProjectRuntime {
       await this.checkCancellation(run, signal)
       const before = this.completeScores(run, run.champion, tasks),
         after = this.completeScores(run, op.candidate, tasks)
-      run.gate = {
-        mode: run.plan.validation === 'holdout' ? 'independent-held-out' : 'shared-set-research',
-        accepted: after > before,
-        before,
-        after,
-      }
+      run.gate = passRateGate(seedPair, mode, { before, after })
       if (run.gate.accepted) run.champion = op.candidate
       await this.store.write(run.id, run)
     }

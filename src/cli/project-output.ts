@@ -9,6 +9,12 @@ export function renderProjectResult(value: unknown): string {
   if (typeof result.run_id === 'string' && Array.isArray(result.candidates)) {
     lines.push(`Run ${result.run_id}: ${result.status}`, `Retained Target: ${result.champion}`)
     if (result.notice) lines.push(String(result.notice))
+    if (result.gate && typeof result.gate === 'object') {
+      const gate = result.gate as { mode: string; accepted: boolean; reason?: string }
+      lines.push(
+        `Gate (${gate.mode}): ${gate.accepted ? 'accepted' : 'retained'}${gate.reason ? `; ${gate.reason}` : ''}`,
+      )
+    }
     for (const candidate of result.candidates as Array<{
       id: string
       partitions: Array<{
