@@ -172,6 +172,10 @@ describe('component identity across formal builds', () => {
   })
 
   it.each([
+    ['verifier evidence reader', 'src/adapters/hitch/verifier-reader.ts', (source: string) => source.replace(
+      'verifier evidence parent.attempt must be positive',
+      'verifier evidence parent.attempt must be strictly positive',
+    )],
     ['evaluate', 'src/adapters/hitch/evaluation-client.ts', (source: string) => source.replace(
       'Hitch daemon evaluation requires a durable reservation',
       'Hitch daemon evaluation requires a durable owned reservation',

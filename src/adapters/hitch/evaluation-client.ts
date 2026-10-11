@@ -16,6 +16,7 @@ import type {
   EvaluationSubmissionIntent,
   HitchCapabilities,
   HitchEvaluationEvidence,
+  HitchVerifierEvidence,
   RoundEvaluationAttempt,
 } from '../../types.js'
 import type { HitchExecutionContext } from './contracts.js'
@@ -23,6 +24,7 @@ import { HitchEvaluationError, type HitchEvaluationIdentity, type JsonRecord, ty
 import { HitchExecutionContract } from './execution-contract.js'
 import { parseResult } from './result-wire.js'
 import { runHitch } from './transport.js'
+import { HitchVerifierEvidenceReader } from './verifier-reader.js'
 import {
   digest,
   excerpt,
@@ -135,6 +137,14 @@ export class HitchEvaluationClient {
     await this.checkVersion()
     if (this.execution.daemonMode) await this.checkDaemon()
     await this.inspectCapabilities(new AbortController().signal)
+  }
+
+  inspectVerifierEvidence(runId: string, signal: AbortSignal): Promise<HitchVerifierEvidence> {
+    return new HitchVerifierEvidenceReader(
+      this.options,
+      this.repositoryPath,
+      this.run.bind(this),
+    ).inspectVerifierEvidence(runId, signal)
   }
 
   private async checkVersion(signal?: AbortSignal): Promise<string> {

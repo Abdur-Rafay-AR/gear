@@ -279,3 +279,11 @@ CI 新增固定 Harbor 0.21.0 的独立隔离测试任务，Hitch 合同任务�
 最后一次本地定向回归 23 个文件、463 项全部通过，覆盖项目、Target、Hitch、wrapper 和当前实现身份。当前执行实现摘要随代码更新，历史身份 fixtures 未修改。typecheck、Biome、221 模块边界、协议生成和 14 项 CI/发布规则检查通过，独立 tgz/wheel 旅程通过。本轮没有模型调用或 Python 算法修改，未重跑独立 Python 全量；发布包的 Python/CPU 旅程已运行。README 和原用户工作区未修改。
 
 未完成：将执行凭据接入实际项目 Harbor provider、原生 profile、可信原始 verifier metrics 与实际执行条件认证，以及完整 evaluate/refine/resume 回合；完整 GEPA 与收尾事项仍见阶段状态表。
+
+## 可复用原始 verifier 证据读取
+
+`HitchVerifierEvidenceReader` 现在负责只读 verifier 结果、诊断元数据、来源身份及结构化反馈的校验，`HitchEvaluationClient.inspectVerifierEvidence` 复用同一 transport 调用它。旧 `HitchCliEvaluator` 删除原方法并继承新入口，仍保留轨迹缓存与有界诊断分页，没有第二套结果解析。相对 `7a48a2b` 的旧方法，对转译后 AST 做逐节点比较（仅忽略括号与排版），方法体完全一致。
+
+旧兼容入口和新执行客户端分别通过相同证据测试：保留有效零分、自定义 `custom_metric=0.75`、`audit_count=17`、父评测/attempt 身份及诊断；每次只发出一条 `verifier inspect` 命令，不提交、watch 或 rerun。新 reader 纳入当前实现身份闭包；额外的源码篡改测试证明 reader 改动会改变 Hitch 身份。只读诊断分页的既有排除规则与历史摘要规则未改。
+
+定向四文件 131 项中，首次 130 项通过，唯一失败为预期变化的当前实现摘要。源码/正式构建一致性、reader 篡改识别及历史身份通过后更新当前快照；最后 evaluator 与身份两个文件 119 项全部通过，包含补充的原始多 metric 和只读命令断言。typecheck、Biome、222 模块边界、协议一致性通过；项目 tgz/wheel 旅程和独立搜索包消费/恢复通过。没有模型调用，没有改变评分、预算或历史数据；实际项目 Harbor provider 的接线与条件认证仍未完成。

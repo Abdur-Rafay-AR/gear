@@ -330,7 +330,7 @@ else if (args[0] === 'capabilities') {
     parent: { eval_id: 'eval_' + '1'.repeat(32), trial_id: 'trial-1', attempt: 1 },
     observation: { status: 'valid', reward: 0, verifier_result_ref: 'verifier/result.json' },
     verifier: {
-      status: 'complete', result: { rewards: { reward: 0 } }, result_sha256: 'sha256:' + '8'.repeat(64),
+      status: 'complete', result: { rewards: { reward: 0, custom_metric: 0.75, audit_count: 17 } }, result_sha256: 'sha256:' + '8'.repeat(64),
       diagnostics: { stdout: [{
         name: 'test-stdout.txt', media_type: 'text/plain', bytes: 16,
         sha256: 'sha256:' + '9'.repeat(64), truncated: false, text: 'assertion failed',
@@ -1363,8 +1363,9 @@ process.stdout.write(${JSON.stringify(JSON.stringify(payload) + '\n')})
       .rejects.toMatchObject({ code: 'invalid_hitch_result' })
   })
 
-  it('reads and validates run-centered Hitch verifier evidence', async () => {
-    const { evaluator } = await setup()
+  it.each([HitchCliEvaluator, HitchEvaluationClient])('reads validated verifier evidence through %s', async (Client) => {
+    const fixture = await setup()
+    const evaluator = new Client(fixture.evaluator.options)
     const runId = `run_${'5'.repeat(32)}`
     await expect(evaluator.inspectVerifierEvidence(runId, new AbortController().signal)).resolves.toEqual({
       runId,
@@ -1372,7 +1373,7 @@ process.stdout.write(${JSON.stringify(JSON.stringify(payload) + '\n')})
       observation: { status: 'valid', reward: 0, verifierResultRef: 'verifier/result.json' },
       verifier: {
         status: 'complete',
-        result: { rewards: { reward: 0 } },
+        result: { rewards: { reward: 0, custom_metric: 0.75, audit_count: 17 } },
         resultSha256: `sha256:${'8'.repeat(64)}`,
         diagnostics: { stdout: [{
           name: 'test-stdout.txt', media_type: 'text/plain', bytes: 16,
@@ -1381,6 +1382,8 @@ process.stdout.write(${JSON.stringify(JSON.stringify(payload) + '\n')})
       },
       redactions: [{ ruleId: 'absolute-path-v1', count: 2 }],
     })
+    const commands = (await readFile(fixture.invocationLog, 'utf8')).trim().split('\n').map(line => JSON.parse(line))
+    expect(commands).toEqual([['verifier', 'inspect', runId, '--json']])
   })
 
   it('reads a maximally escaped bounded verifier diagnostic page', async () => {

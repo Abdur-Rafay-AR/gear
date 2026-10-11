@@ -252,6 +252,7 @@ function currentArtifacts(kind: 'hitch-cli' | 'llm-verifier'): Artifact[] {
     { logicalName: 'adapters/hitch/result-wire', path: currentFile('../adapters/hitch/result-wire.js'), format: 'module' },
     { logicalName: 'adapters/hitch/execution-contract', path: currentFile('../adapters/hitch/execution-contract.js'), format: 'module' },
     { logicalName: 'adapters/hitch/evaluation-client', path: currentFile('../adapters/hitch/evaluation-client.js'), format: 'module' },
+    { logicalName: 'adapters/hitch/verifier-reader', path: currentFile('../adapters/hitch/verifier-reader.js'), format: 'module' },
     { logicalName: 'adapters/hitch/transport', path: currentFile('../adapters/hitch/transport.js'), format: 'module' },
     { logicalName: 'evaluator/cleanup', path: currentFile('../evaluator/cleanup.js'), format: 'module' },
     { logicalName: 'state/digest', path: currentFile('../state/digest.js'), format: 'module' },
