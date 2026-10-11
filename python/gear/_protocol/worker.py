@@ -8,7 +8,7 @@ from dataclasses import asdict
 
 from ..algorithms import GEPA, Candidate, SearchView
 from .canonical import digest
-from .generated import PROTOCOL
+from .generated import PROTOCOL, validate_algorithm_request, validate_algorithm_response
 
 PROTOCOL_VERSION = PROTOCOL["protocolVersion"]
 MAX_BYTES = PROTOCOL["maxBytes"]
@@ -18,19 +18,13 @@ def main():
     raw = sys.stdin.buffer.readline(MAX_BYTES + 1)
     if len(raw) > MAX_BYTES or not raw.endswith(b"\n"):
         raise ValueError("protocol-message-size")
-    request = json.loads(raw)
+    request = json.loads(raw.decode("utf-8", errors="strict"))
     required = set(PROTOCOL["requestFields"])
     if set(request) != required or request["protocol_version"] != PROTOCOL_VERSION:
         raise ValueError("protocol-version-or-fields")
     if request["capabilities"] != PROTOCOL["capabilities"]:
         raise ValueError("protocol-capability-mismatch")
-    if (
-        not isinstance(request["request_id"], str)
-        or not isinstance(request["run_id"], str)
-        or type(request["step_id"]) is not int
-        or request["step_id"] < 0
-    ):
-        raise ValueError("protocol-envelope-fields")
+    validate_algorithm_request(request)
     payload = request["input"]
     if digest(payload) != request["input_digest"]:
         raise ValueError("protocol-input-digest")
@@ -49,8 +43,8 @@ def main():
         tuple(view["seed_tasks"]),
         candidates,
         view["champion"],
-        view["max_candidates"],
-        view["remaining_evaluations"],
+        int(view["max_candidates"]),
+        int(view["remaining_evaluations"]),
         view["random_seed"],
         view["completed"],
         view.get("task_families", {}),
@@ -64,8 +58,9 @@ def main():
         decision = algorithm.step(projection, payload["state"])
     response = {key: value for key, value in request.items() if key != "input"}
     response["decision"] = asdict(decision)
+    validate_algorithm_response(response)
     encoded = json.dumps(response, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
-    if len(encoded.encode("utf-8")) > MAX_BYTES:
+    if len(encoded.encode("utf-8")) + 1 > MAX_BYTES:
         raise ValueError("protocol-message-size")
     print(encoded)
 

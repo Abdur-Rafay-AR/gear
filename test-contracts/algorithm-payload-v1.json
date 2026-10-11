@@ -1,0 +1,1507 @@
+{
+  "version": 1,
+  "purpose": "Declared valid and invalid JSON wire payloads; structural admission only, independent of runtime semantics.",
+  "cases": [
+    {
+      "name": "candidate",
+      "type": "CandidateView",
+      "value": {
+        "id": "initial",
+        "scores": {
+          "种子😀": 0.0
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "view",
+      "type": "SearchView",
+      "value": {
+        "seed_tasks": [
+          "种子😀"
+        ],
+        "candidates": [
+          {
+            "id": "initial",
+            "scores": {
+              "种子😀": 0.0
+            }
+          }
+        ],
+        "champion": "initial",
+        "max_candidates": 1,
+        "remaining_evaluations": 20,
+        "random_seed": "seed",
+        "completed": {}
+      },
+      "valid": true
+    },
+    {
+      "name": "operation",
+      "type": "AlgorithmOperation",
+      "value": {
+        "kind": "stop",
+        "candidate": "",
+        "parent": "",
+        "tasks": []
+      },
+      "valid": true
+    },
+    {
+      "name": "decision",
+      "type": "AlgorithmDecision",
+      "value": {
+        "state": {
+          "version": "fixture-v1",
+          "历史": [
+            true,
+            null,
+            {
+              "a": 0.25
+            }
+          ]
+        },
+        "operations": [
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          }
+        ],
+        "reason": "Done"
+      },
+      "valid": true
+    },
+    {
+      "name": "request",
+      "type": "AlgorithmRequest",
+      "value": {
+        "protocol_version": 1,
+        "request_id": "request",
+        "run_id": "run",
+        "step_id": 0,
+        "input_digest": "opaque",
+        "capabilities": {
+          "operations": [
+            "diagnose_seed",
+            "generate",
+            "evaluate_seed",
+            "nominate",
+            "stop"
+          ],
+          "max_message_bytes": 1048576,
+          "canonical_version": "gear-canonical-v1",
+          "generation_diagnosis_binding": "receipt-v1",
+          "payload_schema": "algorithm-payload-v1",
+          "max_json_depth": 64
+        },
+        "input": {
+          "view": {
+            "seed_tasks": [
+              "种子😀"
+            ],
+            "candidates": [
+              {
+                "id": "initial",
+                "scores": {
+                  "种子😀": 0.0
+                }
+              }
+            ],
+            "champion": "initial",
+            "max_candidates": 1,
+            "remaining_evaluations": 20,
+            "random_seed": "seed",
+            "completed": {}
+          },
+          "state": {}
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "response",
+      "type": "AlgorithmResponse",
+      "value": {
+        "protocol_version": 1,
+        "request_id": "request",
+        "run_id": "run",
+        "step_id": 0,
+        "input_digest": "opaque",
+        "capabilities": {
+          "operations": [
+            "diagnose_seed",
+            "generate",
+            "evaluate_seed",
+            "nominate",
+            "stop"
+          ],
+          "max_message_bytes": 1048576,
+          "canonical_version": "gear-canonical-v1",
+          "generation_diagnosis_binding": "receipt-v1",
+          "payload_schema": "algorithm-payload-v1",
+          "max_json_depth": 64
+        },
+        "decision": {
+          "state": {
+            "version": "fixture-v1",
+            "历史": [
+              true,
+              null,
+              {
+                "a": 0.25
+              }
+            ]
+          },
+          "operations": [
+            {
+              "kind": "stop",
+              "candidate": "",
+              "parent": "",
+              "tasks": []
+            }
+          ],
+          "reason": "Done"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "nullable identities",
+      "type": "CandidateView",
+      "value": {
+        "id": "initial",
+        "scores": {
+          "种子😀": 0.0
+        },
+        "content_digest": null,
+        "execution_digest": null,
+        "score_evidence": {
+          "种子😀": "ref"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "optional view metadata",
+      "type": "SearchView",
+      "value": {
+        "seed_tasks": [
+          "种子😀"
+        ],
+        "candidates": [
+          {
+            "id": "initial",
+            "scores": {
+              "种子😀": 0.0
+            }
+          }
+        ],
+        "champion": "initial",
+        "max_candidates": 1,
+        "remaining_evaluations": 20,
+        "random_seed": "seed",
+        "completed": {},
+        "task_families": {
+          "种子😀": "math"
+        },
+        "evidence_condition": null
+      },
+      "valid": true
+    },
+    {
+      "name": "explicit null diagnosis",
+      "type": "AlgorithmOperation",
+      "value": {
+        "kind": "stop",
+        "candidate": "",
+        "parent": "",
+        "tasks": [],
+        "diagnosis_id": null
+      },
+      "valid": true
+    },
+    {
+      "name": "bound diagnosis",
+      "type": "AlgorithmOperation",
+      "value": {
+        "kind": "generate",
+        "candidate": "next",
+        "parent": "initial",
+        "tasks": [],
+        "diagnosis_id": "ref"
+      },
+      "valid": true
+    },
+    {
+      "name": "integral float budget",
+      "type": "SearchView",
+      "value": {
+        "seed_tasks": [
+          "种子😀"
+        ],
+        "candidates": [
+          {
+            "id": "initial",
+            "scores": {
+              "种子😀": 0.0
+            }
+          }
+        ],
+        "champion": "initial",
+        "max_candidates": 1.0,
+        "remaining_evaluations": 20,
+        "random_seed": "seed",
+        "completed": {}
+      },
+      "valid": true
+    },
+    {
+      "name": "view missing budget",
+      "type": "SearchView",
+      "value": {
+        "seed_tasks": [
+          "种子😀"
+        ],
+        "candidates": [
+          {
+            "id": "initial",
+            "scores": {
+              "种子😀": 0.0
+            }
+          }
+        ],
+        "champion": "initial",
+        "remaining_evaluations": 20,
+        "random_seed": "seed",
+        "completed": {}
+      },
+      "valid": false
+    },
+    {
+      "name": "candidate missing scores",
+      "type": "CandidateView",
+      "value": {
+        "id": "initial"
+      },
+      "valid": false
+    },
+    {
+      "name": "operation missing tasks",
+      "type": "AlgorithmOperation",
+      "value": {
+        "kind": "stop",
+        "candidate": "",
+        "parent": ""
+      },
+      "valid": false
+    },
+    {
+      "name": "decision missing state",
+      "type": "AlgorithmDecision",
+      "value": {
+        "operations": [
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          }
+        ],
+        "reason": "Done"
+      },
+      "valid": false
+    },
+    {
+      "name": "request missing input",
+      "type": "AlgorithmRequest",
+      "value": {
+        "protocol_version": 1,
+        "request_id": "request",
+        "run_id": "run",
+        "step_id": 0,
+        "input_digest": "opaque",
+        "capabilities": {
+          "operations": [
+            "diagnose_seed",
+            "generate",
+            "evaluate_seed",
+            "nominate",
+            "stop"
+          ],
+          "max_message_bytes": 1048576,
+          "canonical_version": "gear-canonical-v1",
+          "generation_diagnosis_binding": "receipt-v1",
+          "payload_schema": "algorithm-payload-v1",
+          "max_json_depth": 64
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "response missing decision",
+      "type": "AlgorithmResponse",
+      "value": {
+        "protocol_version": 1,
+        "request_id": "request",
+        "run_id": "run",
+        "step_id": 0,
+        "input_digest": "opaque",
+        "capabilities": {
+          "operations": [
+            "diagnose_seed",
+            "generate",
+            "evaluate_seed",
+            "nominate",
+            "stop"
+          ],
+          "max_message_bytes": 1048576,
+          "canonical_version": "gear-canonical-v1",
+          "generation_diagnosis_binding": "receipt-v1",
+          "payload_schema": "algorithm-payload-v1",
+          "max_json_depth": 64
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "extra view field",
+      "type": "SearchView",
+      "value": {
+        "seed_tasks": [
+          "种子😀"
+        ],
+        "candidates": [
+          {
+            "id": "initial",
+            "scores": {
+              "种子😀": 0.0
+            }
+          }
+        ],
+        "champion": "initial",
+        "max_candidates": 1,
+        "remaining_evaluations": 20,
+        "random_seed": "seed",
+        "completed": {},
+        "held_out": [
+          "secret"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "extra candidate field",
+      "type": "CandidateView",
+      "value": {
+        "id": "initial",
+        "scores": {
+          "种子😀": 0.0
+        },
+        "files": {
+          "raw": "text"
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "extra operation field",
+      "type": "AlgorithmOperation",
+      "value": {
+        "kind": "stop",
+        "candidate": "",
+        "parent": "",
+        "tasks": [],
+        "path": "/host"
+      },
+      "valid": false
+    },
+    {
+      "name": "extra decision field",
+      "type": "AlgorithmDecision",
+      "value": {
+        "state": {
+          "version": "fixture-v1",
+          "历史": [
+            true,
+            null,
+            {
+              "a": 0.25
+            }
+          ]
+        },
+        "operations": [
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          }
+        ],
+        "reason": "Done",
+        "champion": "forged"
+      },
+      "valid": false
+    },
+    {
+      "name": "extra request field",
+      "type": "AlgorithmRequest",
+      "value": {
+        "protocol_version": 1,
+        "request_id": "request",
+        "run_id": "run",
+        "step_id": 0,
+        "input_digest": "opaque",
+        "capabilities": {
+          "operations": [
+            "diagnose_seed",
+            "generate",
+            "evaluate_seed",
+            "nominate",
+            "stop"
+          ],
+          "max_message_bytes": 1048576,
+          "canonical_version": "gear-canonical-v1",
+          "generation_diagnosis_binding": "receipt-v1",
+          "payload_schema": "algorithm-payload-v1",
+          "max_json_depth": 64
+        },
+        "input": {
+          "view": {
+            "seed_tasks": [
+              "种子😀"
+            ],
+            "candidates": [
+              {
+                "id": "initial",
+                "scores": {
+                  "种子😀": 0.0
+                }
+              }
+            ],
+            "champion": "initial",
+            "max_candidates": 1,
+            "remaining_evaluations": 20,
+            "random_seed": "seed",
+            "completed": {}
+          },
+          "state": {}
+        },
+        "unused": true
+      },
+      "valid": false
+    },
+    {
+      "name": "extra response field",
+      "type": "AlgorithmResponse",
+      "value": {
+        "protocol_version": 1,
+        "request_id": "request",
+        "run_id": "run",
+        "step_id": 0,
+        "input_digest": "opaque",
+        "capabilities": {
+          "operations": [
+            "diagnose_seed",
+            "generate",
+            "evaluate_seed",
+            "nominate",
+            "stop"
+          ],
+          "max_message_bytes": 1048576,
+          "canonical_version": "gear-canonical-v1",
+          "generation_diagnosis_binding": "receipt-v1",
+          "payload_schema": "algorithm-payload-v1",
+          "max_json_depth": 64
+        },
+        "decision": {
+          "state": {
+            "version": "fixture-v1",
+            "历史": [
+              true,
+              null,
+              {
+                "a": 0.25
+              }
+            ]
+          },
+          "operations": [
+            {
+              "kind": "stop",
+              "candidate": "",
+              "parent": "",
+              "tasks": []
+            }
+          ],
+          "reason": "Done"
+        },
+        "unused": true
+      },
+      "valid": false
+    },
+    {
+      "name": "boolean budget",
+      "type": "SearchView",
+      "value": {
+        "seed_tasks": [
+          "种子😀"
+        ],
+        "candidates": [
+          {
+            "id": "initial",
+            "scores": {
+              "种子😀": 0.0
+            }
+          }
+        ],
+        "champion": "initial",
+        "max_candidates": true,
+        "remaining_evaluations": 20,
+        "random_seed": "seed",
+        "completed": {}
+      },
+      "valid": false
+    },
+    {
+      "name": "negative budget",
+      "type": "SearchView",
+      "value": {
+        "seed_tasks": [
+          "种子😀"
+        ],
+        "candidates": [
+          {
+            "id": "initial",
+            "scores": {
+              "种子😀": 0.0
+            }
+          }
+        ],
+        "champion": "initial",
+        "max_candidates": 1,
+        "remaining_evaluations": -1,
+        "random_seed": "seed",
+        "completed": {}
+      },
+      "valid": false
+    },
+    {
+      "name": "fractional budget",
+      "type": "SearchView",
+      "value": {
+        "seed_tasks": [
+          "种子😀"
+        ],
+        "candidates": [
+          {
+            "id": "initial",
+            "scores": {
+              "种子😀": 0.0
+            }
+          }
+        ],
+        "champion": "initial",
+        "max_candidates": 1,
+        "remaining_evaluations": 0.1,
+        "random_seed": "seed",
+        "completed": {}
+      },
+      "valid": false
+    },
+    {
+      "name": "duplicate seed tasks",
+      "type": "SearchView",
+      "value": {
+        "seed_tasks": [
+          "same",
+          "same"
+        ],
+        "candidates": [
+          {
+            "id": "initial",
+            "scores": {
+              "种子😀": 0.0
+            }
+          }
+        ],
+        "champion": "initial",
+        "max_candidates": 1,
+        "remaining_evaluations": 20,
+        "random_seed": "seed",
+        "completed": {}
+      },
+      "valid": false
+    },
+    {
+      "name": "numeric task",
+      "type": "SearchView",
+      "value": {
+        "seed_tasks": [
+          1
+        ],
+        "candidates": [
+          {
+            "id": "initial",
+            "scores": {
+              "种子😀": 0.0
+            }
+          }
+        ],
+        "champion": "initial",
+        "max_candidates": 1,
+        "remaining_evaluations": 20,
+        "random_seed": "seed",
+        "completed": {}
+      },
+      "valid": false
+    },
+    {
+      "name": "null completed",
+      "type": "SearchView",
+      "value": {
+        "seed_tasks": [
+          "种子😀"
+        ],
+        "candidates": [
+          {
+            "id": "initial",
+            "scores": {
+              "种子😀": 0.0
+            }
+          }
+        ],
+        "champion": "initial",
+        "max_candidates": 1,
+        "remaining_evaluations": 20,
+        "random_seed": "seed",
+        "completed": null
+      },
+      "valid": false
+    },
+    {
+      "name": "null receipt",
+      "type": "SearchView",
+      "value": {
+        "seed_tasks": [
+          "种子😀"
+        ],
+        "candidates": [
+          {
+            "id": "initial",
+            "scores": {
+              "种子😀": 0.0
+            }
+          }
+        ],
+        "champion": "initial",
+        "max_candidates": 1,
+        "remaining_evaluations": 20,
+        "random_seed": "seed",
+        "completed": {
+          "receipt": null
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "array state",
+      "type": "AlgorithmDecision",
+      "value": {
+        "state": [],
+        "operations": [
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          }
+        ],
+        "reason": "Done"
+      },
+      "valid": false
+    },
+    {
+      "name": "null state",
+      "type": "AlgorithmDecision",
+      "value": {
+        "state": null,
+        "operations": [
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          }
+        ],
+        "reason": "Done"
+      },
+      "valid": false
+    },
+    {
+      "name": "empty operations",
+      "type": "AlgorithmDecision",
+      "value": {
+        "state": {
+          "version": "fixture-v1",
+          "历史": [
+            true,
+            null,
+            {
+              "a": 0.25
+            }
+          ]
+        },
+        "operations": [],
+        "reason": "Done"
+      },
+      "valid": false
+    },
+    {
+      "name": "too many operations",
+      "type": "AlgorithmDecision",
+      "value": {
+        "state": {
+          "version": "fixture-v1",
+          "历史": [
+            true,
+            null,
+            {
+              "a": 0.25
+            }
+          ]
+        },
+        "operations": [
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          },
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          }
+        ],
+        "reason": "Done"
+      },
+      "valid": false
+    },
+    {
+      "name": "empty reason",
+      "type": "AlgorithmDecision",
+      "value": {
+        "state": {
+          "version": "fixture-v1",
+          "历史": [
+            true,
+            null,
+            {
+              "a": 0.25
+            }
+          ]
+        },
+        "operations": [
+          {
+            "kind": "stop",
+            "candidate": "",
+            "parent": "",
+            "tasks": []
+          }
+        ],
+        "reason": ""
+      },
+      "valid": false
+    },
+    {
+      "name": "unknown operation",
+      "type": "AlgorithmOperation",
+      "value": {
+        "kind": "execute",
+        "candidate": "",
+        "parent": "",
+        "tasks": []
+      },
+      "valid": false
+    },
+    {
+      "name": "nonstring diagnosis",
+      "type": "AlgorithmOperation",
+      "value": {
+        "kind": "stop",
+        "candidate": "",
+        "parent": "",
+        "tasks": [],
+        "diagnosis_id": {}
+      },
+      "valid": false
+    },
+    {
+      "name": "duplicate op tasks",
+      "type": "AlgorithmOperation",
+      "value": {
+        "kind": "stop",
+        "candidate": "",
+        "parent": "",
+        "tasks": [
+          "a",
+          "a"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "null scores",
+      "type": "CandidateView",
+      "value": {
+        "id": "initial",
+        "scores": null
+      },
+      "valid": false
+    },
+    {
+      "name": "boolean score",
+      "type": "CandidateView",
+      "value": {
+        "id": "initial",
+        "scores": {
+          "a": false
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "null score evidence",
+      "type": "CandidateView",
+      "value": {
+        "id": "initial",
+        "scores": {
+          "种子😀": 0.0
+        },
+        "score_evidence": null
+      },
+      "valid": false
+    },
+    {
+      "name": "numeric family",
+      "type": "SearchView",
+      "value": {
+        "seed_tasks": [
+          "种子😀"
+        ],
+        "candidates": [
+          {
+            "id": "initial",
+            "scores": {
+              "种子😀": 0.0
+            }
+          }
+        ],
+        "champion": "initial",
+        "max_candidates": 1,
+        "remaining_evaluations": 20,
+        "random_seed": "seed",
+        "completed": {},
+        "task_families": {
+          "a": 1
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "boolean protocol version",
+      "type": "AlgorithmRequest",
+      "value": {
+        "protocol_version": true,
+        "request_id": "request",
+        "run_id": "run",
+        "step_id": 0,
+        "input_digest": "opaque",
+        "capabilities": {
+          "operations": [
+            "diagnose_seed",
+            "generate",
+            "evaluate_seed",
+            "nominate",
+            "stop"
+          ],
+          "max_message_bytes": 1048576,
+          "canonical_version": "gear-canonical-v1",
+          "generation_diagnosis_binding": "receipt-v1",
+          "payload_schema": "algorithm-payload-v1",
+          "max_json_depth": 64
+        },
+        "input": {
+          "view": {
+            "seed_tasks": [
+              "种子😀"
+            ],
+            "candidates": [
+              {
+                "id": "initial",
+                "scores": {
+                  "种子😀": 0.0
+                }
+              }
+            ],
+            "champion": "initial",
+            "max_candidates": 1,
+            "remaining_evaluations": 20,
+            "random_seed": "seed",
+            "completed": {}
+          },
+          "state": {}
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "unsafe step",
+      "type": "AlgorithmRequest",
+      "value": {
+        "protocol_version": 1,
+        "request_id": "request",
+        "run_id": "run",
+        "step_id": 9007199254740992,
+        "input_digest": "opaque",
+        "capabilities": {
+          "operations": [
+            "diagnose_seed",
+            "generate",
+            "evaluate_seed",
+            "nominate",
+            "stop"
+          ],
+          "max_message_bytes": 1048576,
+          "canonical_version": "gear-canonical-v1",
+          "generation_diagnosis_binding": "receipt-v1",
+          "payload_schema": "algorithm-payload-v1",
+          "max_json_depth": 64
+        },
+        "input": {
+          "view": {
+            "seed_tasks": [
+              "种子😀"
+            ],
+            "candidates": [
+              {
+                "id": "initial",
+                "scores": {
+                  "种子😀": 0.0
+                }
+              }
+            ],
+            "champion": "initial",
+            "max_candidates": 1,
+            "remaining_evaluations": 20,
+            "random_seed": "seed",
+            "completed": {}
+          },
+          "state": {}
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "negative step",
+      "type": "AlgorithmResponse",
+      "value": {
+        "protocol_version": 1,
+        "request_id": "request",
+        "run_id": "run",
+        "step_id": -1,
+        "input_digest": "opaque",
+        "capabilities": {
+          "operations": [
+            "diagnose_seed",
+            "generate",
+            "evaluate_seed",
+            "nominate",
+            "stop"
+          ],
+          "max_message_bytes": 1048576,
+          "canonical_version": "gear-canonical-v1",
+          "generation_diagnosis_binding": "receipt-v1",
+          "payload_schema": "algorithm-payload-v1",
+          "max_json_depth": 64
+        },
+        "decision": {
+          "state": {
+            "version": "fixture-v1",
+            "历史": [
+              true,
+              null,
+              {
+                "a": 0.25
+              }
+            ]
+          },
+          "operations": [
+            {
+              "kind": "stop",
+              "candidate": "",
+              "parent": "",
+              "tasks": []
+            }
+          ],
+          "reason": "Done"
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "null input",
+      "type": "AlgorithmRequest",
+      "value": {
+        "protocol_version": 1,
+        "request_id": "request",
+        "run_id": "run",
+        "step_id": 0,
+        "input_digest": "opaque",
+        "capabilities": {
+          "operations": [
+            "diagnose_seed",
+            "generate",
+            "evaluate_seed",
+            "nominate",
+            "stop"
+          ],
+          "max_message_bytes": 1048576,
+          "canonical_version": "gear-canonical-v1",
+          "generation_diagnosis_binding": "receipt-v1",
+          "payload_schema": "algorithm-payload-v1",
+          "max_json_depth": 64
+        },
+        "input": null
+      },
+      "valid": false
+    },
+    {
+      "name": "nested invalid output",
+      "type": "AlgorithmResponse",
+      "value": {
+        "protocol_version": 1,
+        "request_id": "request",
+        "run_id": "run",
+        "step_id": 0,
+        "input_digest": "opaque",
+        "capabilities": {
+          "operations": [
+            "diagnose_seed",
+            "generate",
+            "evaluate_seed",
+            "nominate",
+            "stop"
+          ],
+          "max_message_bytes": 1048576,
+          "canonical_version": "gear-canonical-v1",
+          "generation_diagnosis_binding": "receipt-v1",
+          "payload_schema": "algorithm-payload-v1",
+          "max_json_depth": 64
+        },
+        "decision": {
+          "state": {
+            "version": "fixture-v1",
+            "历史": [
+              true,
+              null,
+              {
+                "a": 0.25
+              }
+            ]
+          },
+          "operations": [
+            {
+              "kind": "stop",
+              "candidate": "",
+              "parent": null,
+              "tasks": []
+            }
+          ],
+          "reason": "Done"
+        }
+      },
+      "valid": false
+    }
+  ]
+}

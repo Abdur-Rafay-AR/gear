@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { SandboxManager } from '@anthropic-ai/sandbox-runtime'
 import type { AlgorithmDecision, AlgorithmWorker, SearchView } from '../../domain/algorithm.js'
-import { type AlgorithmRequest, algorithmProtocol } from '../../domain/algorithm-protocol.js'
+import { type AlgorithmRequest, algorithmProtocol, validateAlgorithmRequest } from '../../domain/algorithm-protocol.js'
 import { canonicalDigest } from '../../domain/canonical.js'
 import {
   acquireAirGappedSandbox,
@@ -14,6 +14,7 @@ import {
   createAirGappedSandboxConfig,
   sandboxSystemReadPaths,
 } from '../../sandbox.js'
+import { decodeAlgorithmResponse } from './messages.js'
 import { protocolProcess } from './process.js'
 
 const quote = (value: string): string => `'${value.replaceAll("'", "'\\''")}'`
@@ -92,6 +93,7 @@ export async function createPythonWorker(
           input_digest: canonicalDigest(payload),
           input: payload,
         }
+        validateAlgorithmRequest(request)
         const policy = await createAirGappedSandboxConfig({
           allowRead: [
             ...sandboxSystemReadPaths(),
@@ -127,19 +129,7 @@ export async function createPythonWorker(
           signal,
           algorithmProtocol.maxBytes,
         )
-        const response = JSON.parse(raw) as Record<string, unknown>
-        if (
-          !response ||
-          Array.isArray(response) ||
-          Object.keys(response).sort().join() !== [...algorithmProtocol.responseFields].sort().join()
-        )
-          throw new Error('protocol-response-fields')
-        for (const key of ['protocol_version', 'request_id', 'run_id', 'step_id', 'input_digest'] as const) {
-          if (response[key] !== request[key]) throw new Error(`stale-or-invalid-worker-response: ${key}`)
-        }
-        if (canonicalDigest(response.capabilities) !== canonicalDigest(algorithmProtocol.capabilities))
-          throw new Error('protocol-capability-mismatch')
-        return response.decision as AlgorithmDecision
+        return decodeAlgorithmResponse(raw, request)
       } finally {
         SandboxManager.cleanupAfterCommand()
         await lease?.release()

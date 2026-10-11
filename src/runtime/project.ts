@@ -1,5 +1,5 @@
 import type { AlgorithmDecision, AlgorithmOperation, AlgorithmWorker, SearchView } from '../domain/algorithm.js'
-import { algorithmProtocol } from '../domain/algorithm-protocol.js'
+import { validateAlgorithmDecision } from '../domain/algorithm-protocol.js'
 import type { BenchmarkSpec, BenchmarkTask, Split } from '../domain/benchmark.js'
 import { canonicalDigest } from '../domain/canonical.js'
 import { GearError, GenerationFailed } from '../domain/errors.js'
@@ -90,31 +90,10 @@ function validTrial(result: TrialResult): void {
     throw new TypeError('invalid-provider-result')
 }
 function validateDecision(decision: AlgorithmDecision, view: SearchView): void {
-  canonicalDigest(decision)
-  if (
-    !decision ||
-    typeof decision.reason !== 'string' ||
-    !decision.reason ||
-    !decision.state ||
-    typeof decision.state !== 'object' ||
-    Array.isArray(decision.state) ||
-    !Array.isArray(decision.operations) ||
-    decision.operations.length < 1 ||
-    decision.operations.length > 64
-  )
-    throw new TypeError('invalid-algorithm-decision')
+  validateAlgorithmDecision(decision)
   const candidates = view.candidates.map((c) => c.id)
   for (const [index, op] of decision.operations.entries()) {
-    if (
-      !op ||
-      !algorithmProtocol.operations.includes(op.kind) ||
-      typeof op.candidate !== 'string' ||
-      typeof op.parent !== 'string' ||
-      !Array.isArray(op.tasks) ||
-      new Set(op.tasks).size !== op.tasks.length ||
-      op.tasks.some((id) => !view.seed_tasks.includes(id))
-    )
-      throw new TypeError('invalid-algorithm-operation')
+    if (op.tasks.some((id) => !view.seed_tasks.includes(id))) throw new TypeError('invalid-algorithm-operation')
     if (op.kind === 'generate') {
       if (
         !/^[a-zA-Z0-9_-]+$/u.test(op.candidate) ||

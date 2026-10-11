@@ -9,7 +9,7 @@
 | M0 基线 | dev 提交、历史身份 fixtures、协议/预算/恢复测试、Target 能力矩阵、依赖检查 | 补齐完整历史 GEPA 决策序列及匹配旧 runtime 的 continuation/rollback 演练 |
 | M1 新手闭环 | CSV/JSONL、输入附件、三种模板、check/compile、项目配置、发布包闭环、Luna 实测 | 已有 Harbor 导入；无 split 时可审阅的按 family 分组方案；setup 认证探测；完整解析计划与提交前预算展示；进阶 scorer/metric 合同 |
 | M1b 多 Target | DSH/Pi 原生布局、统一 mutation policy、扩展加载与 Luna 行为评分、相同任务闭环 | 最终默认算法切换后重跑发布产物上的两种 Target 旅程 |
-| M2 Python 作者 | 公开策略、完整算法协议、toy/离线 CLI、源码封存、同步/异步 SDK、受限 worker；基础 wheel/CPU training | 完整身份/取消错误码和线协议生成仍需收尾；独立 OneShot 的完整回合及安装后 toy 已补证 |
+| M2 Python 作者 | 公开策略、完整算法协议、toy/离线 CLI、源码封存、同步/异步 SDK、受限 worker；基础 wheel/CPU training；完整 payload 类型生成和双语言结构校验、响应关联及拒绝合同 | 完整身份/取消错误码与最终发布旅程仍需审计；独立 OneShot 的完整回合及安装后 toy 已补证 |
 | M3 默认算法 | scope、frontier、bridge、archive/父代分配与 epoch 准入固定样例；StagedGEPA v3 接入多父代配额、多 scope 父代、持久化 catalog、周期准备、等价去重与准备阶段恢复；完整执行版本难度、诊断元数据与冻结采样截止点；诊断/假设/workplan/回执纯策略及生成诊断引用冻结 | 独立计量的模型诊断与原始证据认证、丰富 workplan 的实际交付/消费审计/修改边界执行；历史证据修订与跨运行 archive 生命周期、regression proposals、process/objective；完整 shadow/replay、差异说明和默认切换 |
 | M4 执行层 | baseline/修复/提交状态、Hitch wire/transport/执行合同、capabilities 辅助职责已拆；训练唯一实现 | service/evaluator/capabilities 的剩余编排拆分、根 types 分域、provider 能力归拢、存储原语与训练公共类型边界审计 |
 | M5 收尾 | 新入口、双语言入门、发布包与 CI 检查；兼容转发保留 | schema/help/样例一致性；配置迁移 dry-run/字段映射；迁移回退演练；旧入口收拢至 compat；完成下表全部验收 |
@@ -37,7 +37,7 @@
 | C2 | 已验证当前边界 | seed 投影与 operator/meta 视图；真实 OS 拒绝凭据、私有文件和网络；真实容器隔离 verifier |
 | C3 | 部分 | gate 16 组、scope 10 组、frontier/bridge 20 组、archive 11 组与 55 份父代分配、epoch 准入 13 组、历史采样元数据 10 组、完整父代批次 55 份及诊断/提案交付 10 组固定比较通过；完整历史决策序列/预算等价尚未完成 |
 | C4 | 部分 | 历史身份 fixtures 原样校验，不改旧数据；完整配置迁移、匹配 runtime 继续与回退演练待补 |
-| Q1 | 部分 | 新层依赖、运行时环、lint/typecheck 和外部包消费检查通过；完整 wire schema 生成、公共导出约束、遗留模块边界还需收尾 |
+| Q1 | 部分 | 新层依赖、运行时环、lint/typecheck 和外部包消费检查通过；完整 wire payload 类型由 schema 生成并在两端结构校验；公共导出约束与遗留模块边界还需收尾 |
 | Q2 | 部分 | 当前中英文 quickstart 与发布脚本已更新；最终所有路径和进阶能力应通过同一发布验证 |
 
 ## 实施顺序与清理门槛

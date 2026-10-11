@@ -55,7 +55,13 @@ export async function protocolProcess(
       clearTimeout(timeout)
       signal.removeEventListener('abort', abort)
       if (failure || code !== 0) reject(failure ?? new Error(`algorithm-worker-failed: ${diagnostics.slice(0, 4096)}`))
-      else resolve(Buffer.concat(chunks).toString('utf8'))
+      else {
+        try {
+          resolve(new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(Buffer.concat(chunks)))
+        } catch {
+          reject(new Error('protocol-invalid-utf8'))
+        }
+      }
     })
     if (signal.aborted) abort()
     child.stdin.end(input)

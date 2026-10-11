@@ -47,3 +47,7 @@ Python 已提供历史 shared/local/cross 采样的纯函数与可选 `ScopeSamp
 诊断/提案纯策略现迁入 Python：已认证 dossier 的失败族、成功对照、假设配额与去重、候选 workplan、限定摘录和消费回执，分别对照 10 组未修改旧 TS 输出。新摘要仅用于新合同；旧 dossier 等身份作为不透明输入原样保留。该阶段尚未接入模型诊断、原始证据认证、实际消费审计及修改边界执行；`GenerationBudget` 仅声明限制，不能视为已有模型计量。
 
 `Operation` 末尾新增可选 `diagnosis_id`，保留旧 Python 位置参数和未绑定生成调用。默认 GEPA 显式引用已提交诊断；未绑定的批次操作在 runtime 预留时冻结所选诊断。断线后的 inspect 和完成回执沿用该引用，成功与无效生成均保留来源。协议增加 `generation_diagnosis_binding: receipt-v1` 能力，TS/Python 必须匹配，不让旧 worker 静默忽略新语义。协议 envelope 仍为 v1；这不等于完整 wire payload schema 已生成。历史 run 使用原冻结 runtime，不迁写其日志或身份。进程内算法改为独立输入副本，runtime 以原视图校验返回决策。
+
+随后补齐完整 payload 字段的生成与结构校验：合同 `$defs` 生成 TS/Python 候选、视图、操作、决策和消息类型，替代手写 TS 重复类型。作者 dataclass 保留原位置参数和默认值；可空的内容/执行/诊断身份与 evidence condition 明确区分于不可为空的容器。状态和回执扩展仍是有界 JSON 对象，业务证据认证不委托给 schema。
+
+新增 `payload_schema: algorithm-payload-v1` 与 `max_json_depth: 64` 能力。未知固定字段、非法数字/Unicode/JSON、超深内容、重复操作任务、超过 64 个操作会在外部执行或状态提交前拒绝；消息上限包含结尾换行。响应必须是一条 UTF-8 JSON 行，重复和过期回复不被接受。旧 worker 不满足能力协商时明确拒绝；不原地迁写旧 run 身份或数据。当前 scope/diagnosis 等固定历史比较保持原规则，这次收紧只适用于新运行的 wire 合同。

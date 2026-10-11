@@ -574,3 +574,22 @@ it('rejects forged diagnosis references even when an in-process algorithm mutate
   expect(f.store.run.algorithmState).toEqual({})
   expect(f.store.run.decisions).toEqual([])
 })
+
+it('rejects undeclared operation fields before committing an in-process decision', async () => {
+  const f = fixture()
+  let calls = 0
+  f.provider.generate = async () => {
+    calls++
+    return { 'AGENTS.md': 'unused' }
+  }
+  f.algorithm.step = async () => ({
+    state: { committed: true },
+    reason: 'Attempt an undeclared path',
+    operations: [{ kind: 'generate', candidate: 'next', parent: 'initial', tasks: [], path: '/private' }],
+  })
+  await expect(f.runtime.start(f.plan, signal())).rejects.toThrow('protocol-payload-invalid')
+  expect(calls).toBe(0)
+  expect(f.store.run.decisions).toEqual([])
+  expect(f.store.run.algorithmState).toEqual({})
+  expect(f.store.run.operations.some((o) => o.kind === 'generation')).toBe(false)
+})

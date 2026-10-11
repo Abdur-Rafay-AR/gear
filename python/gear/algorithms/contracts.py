@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any, Literal, Protocol
+from typing import Any, Protocol
+
+from .._protocol.generated import OperationKind
 
 
 @dataclass(frozen=True)
@@ -31,7 +33,7 @@ class SearchView:
 
 @dataclass(frozen=True)
 class Operation:
-    kind: Literal["diagnose_seed", "generate", "evaluate_seed", "nominate", "stop"]
+    kind: OperationKind
     candidate: str = ""
     tasks: tuple[str, ...] = ()
     parent: str = ""

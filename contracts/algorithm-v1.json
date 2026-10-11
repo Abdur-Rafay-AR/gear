@@ -2,31 +2,6 @@
   "protocolVersion": 1,
   "canonicalVersion": "gear-canonical-v1",
   "maxBytes": 1048576,
-  "requestFields": [
-    "protocol_version",
-    "request_id",
-    "run_id",
-    "step_id",
-    "input_digest",
-    "input",
-    "capabilities"
-  ],
-  "responseFields": [
-    "protocol_version",
-    "request_id",
-    "run_id",
-    "step_id",
-    "input_digest",
-    "decision",
-    "capabilities"
-  ],
-  "operations": [
-    "diagnose_seed",
-    "generate",
-    "evaluate_seed",
-    "nominate",
-    "stop"
-  ],
   "goldenValues": [
     null,
     {},
@@ -61,6 +36,289 @@
     ],
     "max_message_bytes": 1048576,
     "canonical_version": "gear-canonical-v1",
-    "generation_diagnosis_binding": "receipt-v1"
+    "generation_diagnosis_binding": "receipt-v1",
+    "payload_schema": "algorithm-payload-v1",
+    "max_json_depth": 64
+  },
+  "$defs": {
+    "JsonObject": {
+      "type": "object",
+      "additionalProperties": {}
+    },
+    "OperationKind": {
+      "enum": [
+        "diagnose_seed",
+        "generate",
+        "evaluate_seed",
+        "nominate",
+        "stop"
+      ]
+    },
+    "CandidateView": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scores": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "content_digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "execution_digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "score_evidence": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "scores"
+      ],
+      "additionalProperties": false
+    },
+    "SearchView": {
+      "type": "object",
+      "properties": {
+        "seed_tasks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "candidates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CandidateView"
+          }
+        },
+        "champion": {
+          "type": "string"
+        },
+        "max_candidates": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "remaining_evaluations": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "random_seed": {
+          "type": "string"
+        },
+        "completed": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonObject"
+          }
+        },
+        "task_families": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "evidence_condition": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "seed_tasks",
+        "candidates",
+        "champion",
+        "max_candidates",
+        "remaining_evaluations",
+        "random_seed",
+        "completed"
+      ],
+      "additionalProperties": false
+    },
+    "AlgorithmOperation": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/OperationKind"
+        },
+        "candidate": {
+          "type": "string"
+        },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "parent": {
+          "type": "string"
+        },
+        "diagnosis_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "candidate",
+        "tasks",
+        "parent"
+      ],
+      "additionalProperties": false
+    },
+    "AlgorithmDecision": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "$ref": "#/$defs/JsonObject"
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AlgorithmOperation"
+          },
+          "minItems": 1,
+          "maxItems": 64
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "state",
+        "operations",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "AlgorithmInput": {
+      "type": "object",
+      "properties": {
+        "view": {
+          "$ref": "#/$defs/SearchView"
+        },
+        "state": {
+          "$ref": "#/$defs/JsonObject"
+        }
+      },
+      "required": [
+        "view",
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "ProtocolEnvelope": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": 1
+        },
+        "request_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "step_id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "input_digest": {
+          "type": "string",
+          "minLength": 1
+        },
+        "capabilities": {
+          "$ref": "#/$defs/JsonObject"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "request_id",
+        "run_id",
+        "step_id",
+        "input_digest",
+        "capabilities"
+      ]
+    },
+    "AlgorithmRequest": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ProtocolEnvelope"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "input": {
+              "$ref": "#/$defs/AlgorithmInput"
+            }
+          },
+          "required": [
+            "input"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "AlgorithmResponse": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ProtocolEnvelope"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "decision": {
+              "$ref": "#/$defs/AlgorithmDecision"
+            }
+          },
+          "required": [
+            "decision"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    }
   }
 }

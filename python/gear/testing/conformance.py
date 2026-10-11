@@ -9,6 +9,7 @@ from dataclasses import asdict
 from typing import Any
 
 from .._protocol.canonical import digest
+from .._protocol.generated import validate_algorithm_decision
 from ..algorithms import Decision, SearchAlgorithm, SearchView
 from .toy import toy_round
 
@@ -24,6 +25,7 @@ class _CheckedAlgorithm:
             raise ValueError("algorithm-mutated-input")
         if not isinstance(first, Decision):
             raise TypeError("algorithm-must-return-Decision")
+        validate_algorithm_decision(asdict(first))
         first = copy.deepcopy(first)
         repeated_view, repeated_state = copy.deepcopy(view), copy.deepcopy(state)
         second = self.algorithm.step(repeated_view, repeated_state)
@@ -31,24 +33,13 @@ class _CheckedAlgorithm:
             raise ValueError("algorithm-mutated-input")
         if not isinstance(second, Decision):
             raise TypeError("algorithm-must-return-Decision")
+        validate_algorithm_decision(asdict(second))
         if digest(asdict(first)) != digest(asdict(second)):
             raise ValueError("algorithm-decision-not-deterministic")
-        if not first.reason or not 1 <= len(first.operations) <= 64:
-            raise ValueError("algorithm-decision-needs-reason-and-bounded-operations")
         candidates = {c.id for c in view.candidates}
         coverage = {c.id: set(c.scores) for c in view.candidates}
         for index, operation in enumerate(first.operations):
-            if operation.kind not in {
-                "diagnose_seed",
-                "generate",
-                "evaluate_seed",
-                "nominate",
-                "stop",
-            }:
-                raise ValueError("unknown-algorithm-operation")
-            if len(set(operation.tasks)) != len(operation.tasks) or not set(operation.tasks) <= set(
-                view.seed_tasks
-            ):
+            if not set(operation.tasks) <= set(view.seed_tasks):
                 raise ValueError("algorithm-tasks-outside-admitted-seed")
             if operation.kind == "generate":
                 if (

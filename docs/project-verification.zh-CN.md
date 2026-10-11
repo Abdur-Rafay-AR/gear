@@ -9,10 +9,10 @@
 | 检查 | 结果与边界 |
 | --- | --- |
 | TypeScript 全量回归 | `697a63d` 的远端 CI：104 个测试文件通过、7 个按环境跳过；无模型环境项单独验证 |
-| 项目定向回归 | 诊断/提案策略及引用绑定接入后：14 个文件、155 项通过，含固定 fixture、真实 worker 闭环、采样截止点、多父代/epoch/bridge 恢复与 CLI 作者流程；随后无效生成来源记录的运行时 37 项复验通过 |
-| Python 全量回归 | 诊断/提案策略接入后本地 359 项：355 项通过，4 项按环境跳过 |
+| 项目定向回归 | 完整 payload schema 接入后：14 个文件、208 项通过，含跨语言结构正反例、协议拒绝、固定 GEPA fixture、真实 worker 闭环与恢复、作者 CLI |
+| Python 全量回归 | payload schema 接入后本地 365 项：361 项通过，4 项按环境跳过 |
 | Python 公共 API | Ruff lint/format、Mypy strict 通过 |
-| TS 质量 | typecheck、Biome、协议生成一致性、205 个模块依赖/循环检查通过 |
+| TS 质量 | typecheck、Biome、协议生成一致性、207 个模块依赖/循环检查通过 |
 | CI/发布规则 | 14 项规则测试通过；dev 代码变更启用完整回归 |
 | 独立 tgz/wheel | 六组 Target/模板组合；check/compile；共享应用 evaluate/refine/report/resume/export；SDK；无 GPU CPU loop 及恢复通过 |
 | Python 真实 sandbox | macOS 实测拒绝工作目录之外的私有测试文件、宿主凭据环境变量和已监听的 loopback 端口 |
@@ -33,6 +33,20 @@
 `a306123` 的 [历史采样 CI](https://github.com/rsi-gear/gear/actions/runs/38122255845) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。多父代阶段的验证另记如下。
 
 `c17efd2` 的 [多父代阶段 CI](https://github.com/rsi-gear/gear/actions/runs/38123146789) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。下述诊断与提案策略有独立本地记录，不将该 CI 算作新提交验证。
+
+`c88f2f5` 的 [诊断策略及引用绑定 CI](https://github.com/rsi-gear/gear/actions/runs/38124628907) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。以下 payload schema 属于后续新改动，验证单独记录。
+
+## 生成的完整算法 payload 合同
+
+`contracts/algorithm-v1.json` 的 `$defs` 生成候选、视图、操作、决策、输入及完整请求/响应的 TS 类型和 Python TypedDict；TS domain 改为薄类型转发，Python 作者保留 dataclass 并复用生成枚举。运行时、Python worker 和离线 testkit 使用生成 schema 的同一结构定义，移除旧手写 TS 类型以及重复的结构检查。生成器遇到未支持的关键字或冲突继承字段即失败，`check:protocol` 检查输出一致。
+
+新增 `algorithm-payload-v1` 与 64 层上限的能力声明；缺失/未知固定字段、非法 null、非有限数、非安全整数、布尔预算、重复任务、超量操作、非 JSON 对象、循环和非法 Unicode 被拒绝。开放的算法状态及回执扩展仍须是有界 JSON。JSON 的 `1` / `1.0` 按同一整数值接纳，Python 包装预算时显式转为 int；输入摘要保持原 canonical 语义。消息严格 UTF-8、单行且以换行结束，1 MiB 计入该换行；响应关联、重复响应、能力错配、坏 JSON、取消、崩溃及过大输出有拒绝回归。结构错误不包含数据值或用户 map key。
+
+`test-contracts/algorithm-payload-v1.json` 的 47 组正反例由声明合同固定，不由新校验器反推期望；TS/Python 分别对同一文件验证。6 项 Python 测试另外检查作者 dataclass 字段覆盖、开放状态边界、加载插件前拒绝坏输入、写 stdout 前拒绝坏输出和非 UTF-8 输入。内核新增进程内算法的未知操作字段拒绝测试，确认不提交 decision/state 或生成 reservation。结构检查不替代 seed 权限、预算、证据认证或最终 gate。
+
+最终项目回归 208 项通过；Python 全量 365 项中 361 通过、4 跳过。Ruff（42 文件）、Mypy strict（38 文件，含生成传输类型与校验器）、typecheck、Biome、207 模块边界和协议生成检查通过。真实 macOS worker sandbox 两项通过；独立 tgz/wheel 的六组模板、两种 Target、SDK、双 CLI、CPU 训练及恢复通过。中断前两个本地进程未留下完成结果，确认句柄不存在后重跑以上项目/安装检查；没有将中断当作成功。生成文件末尾空行由 diff 检查发现并在生成器中修正。
+
+本轮未调用模型，未修改 README、历史身份或原工作区。M3 的模型计量与证据认证、完整历史 GEPA 迁移、剩余执行层拆分、公共导出约束及人工验收仍见目标跟踪表。
 
 ## 诊断、提案策略与固定生成引用
 

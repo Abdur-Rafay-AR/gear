@@ -155,4 +155,10 @@ python -m gear algorithm test archive_policy:build_algorithm --source ./examples
 
 正式运行冻结代码及依赖身份，把 Python worker 放入断网 sandbox。它看不到 tasks.csv、项目目录、.gear、凭据或 held-out 数据。修改源码、依赖或 profile 后开新 run；已提交 decision 会在 resume 时复用。插件的 stdout 会重定向到 stderr，worker 的 stdout 保留给有版本的 JSON 协议。
 
+`contracts/algorithm-v1.json` 的 `$defs` 现在是候选、SearchView、Operation、Decision、输入及请求/响应字段的唯一传输定义。`node scripts/generate-project-protocol.mjs` 生成 TS 类型、Python TypedDict 和绑定同一 schema 的校验入口；`npm run check:protocol` 检查产物没有漂移。Python 作者仍使用薄 dataclass/Protocol，操作枚举复用生成类型，并有字段集合与序列化对照测试。旧 TS 手写传输类型及 runtime/testkit 重复的结构检查已移除。
+
+固定结构拒绝未知字段；作者自定义状态和完成回执的扩展内容仍是 JSON 对象。所有数字必须有限，整数必须位于安全范围；预算和 step 是非负整数，不接受 bool。缺失与 null 不通用互换，仅可空身份字段明确接受两者。字符串必须是有效 Unicode，循环、非 JSON 对象与超过 64 层的值拒绝。消息是严格 UTF-8 的单行 JSON，1 MiB 上限包含结尾换行；重复响应、错误封帧、非法 UTF-8、能力不符及过期请求关联分别报错，不把响应原文或用户 map key 放进结构错误。
+
+新能力 `payload_schema: algorithm-payload-v1` 和 `max_json_depth: 64` 需两端完全匹配。Python 在导入插件前校验输入、写 stdout 前校验输出；TS 在接收回复及提交进程内 decision 前校验；离线作者 testkit 复用同一生成校验入口。范围、预算、父代权限、诊断来源及最终 gate 仍由 runtime 独立验证，结构通过不能绕过这些规则。生成器只接受当前实现的 schema 子集，遇到未实现关键字立即失败。
+
 高级 TypeScript 消费者通过 `rsi-gear/project` 的 `ProjectApplication` 和 `rsi-gear/project/api` 的端口接入 provider/algorithm；私有状态实现不作为新项目 API 导出。CLI、Python SDK 和项目 Skill 路由共享此应用服务。
