@@ -43,6 +43,8 @@ hitch:
 
 For a supported daemon deployment, start one daemon for that root and use `mode: daemon`. Hitch 0.2.6+ is required. A credential wrapper may support direct only; the bundled DSH OAuth example explicitly does. Never put secret values in a committed profile; `passEnv` lists variable names.
 
+`hitch.infrastructureRetries: 0` disables Hitch's internal infrastructure retries. A nonnegative integer sets an explicit limit; omitting it retains the historical default. This differs from the logical repetitions in `attempts` and changes new submission identities. Durable project operations require explicit zero so the core budget owns extra execution; recovery must preserve saved arguments.
+
 ## Advanced paths
 
 [Context offloading](../../dsh-meta-context-offloading-spec.zh-CN.md) applies to the native DSH Meta adapter and must be sealed before the evolution starts. [Algorithm settings](example-algorithm.md) belong to their specific search implementation. [Training configuration](training.md) is a separate controller contract. The [source schema](../../../src/config.ts) remains authoritative for this checkout.

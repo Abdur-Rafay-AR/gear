@@ -95,6 +95,9 @@ export class HitchExecutionContract {
       harnessId: this.options.harnessId,
       model: request.condition.model,
       attempts: request.condition.repetitions,
+      ...(this.options.infrastructureRetries === undefined
+        ? {}
+        : { infrastructureRetries: this.options.infrastructureRetries }),
       maxConcurrent: this.options.maxConcurrent,
       timeoutMs: round.taskBudgetMs,
       setupTimeoutMs: this.options.setupTimeoutMs,
@@ -131,6 +134,12 @@ export class HitchExecutionContract {
     const submittedRequest = record(submission.request, 'Hitch eval submitted request')
     if (!isDeepStrictEqual(submittedRequest, inspectedRequest)) {
       throw new HitchEvaluationError('Hitch submitted request differs from the eval request', 'invalid_hitch_result')
+    }
+    if (
+      this.options.infrastructureRetries !== undefined &&
+      submittedRequest.infrastructure_retries !== this.options.infrastructureRetries
+    ) {
+      throw new HitchEvaluationError('Hitch retry policy differs from the frozen condition', 'invalid_hitch_result')
     }
     const idempotencyKeyHash = string(submission.idempotency_key_hash, 'Hitch eval idempotency key hash')
     if (idempotencyKeyHash !== sha256(this.daemonIdempotencyKey(round, request))) {
@@ -244,6 +253,12 @@ export class HitchExecutionContract {
     }
     const attempts = integer(plan.attempts, 'plan.attempts')
     const requestedAttempts = integer(inspectedRequest.attempts, 'request.attempts')
+    if (
+      this.options.infrastructureRetries !== undefined &&
+      inspectedRequest.infrastructure_retries !== this.options.infrastructureRetries
+    ) {
+      throw new HitchEvaluationError('Hitch retry policy differs from the frozen condition', 'invalid_hitch_result')
+    }
     if (attempts <= 0 || attempts !== request.condition.repetitions || requestedAttempts !== attempts) {
       throw new HitchEvaluationError(
         'Hitch eval plan attempts do not match the frozen condition',
@@ -357,6 +372,9 @@ export class HitchExecutionContract {
         backend: 'harbor',
         harnessId: this.options.harnessId,
         sandboxProfileRef: round.sandboxProfileRef,
+        ...(this.options.infrastructureRetries === undefined
+          ? {}
+          : { infrastructureRetries: this.options.infrastructureRetries }),
       }),
     )
   }

@@ -287,3 +287,13 @@ CI 新增固定 Harbor 0.21.0 的独立隔离测试任务，Hitch 合同任务�
 旧兼容入口和新执行客户端分别通过相同证据测试：保留有效零分、自定义 `custom_metric=0.75`、`audit_count=17`、父评测/attempt 身份及诊断；每次只发出一条 `verifier inspect` 命令，不提交、watch 或 rerun。新 reader 纳入当前实现身份闭包；额外的源码篡改测试证明 reader 改动会改变 Hitch 身份。只读诊断分页的既有排除规则与历史摘要规则未改。
 
 定向四文件 131 项中，首次 130 项通过，唯一失败为预期变化的当前实现摘要。源码/正式构建一致性、reader 篡改识别及历史身份通过后更新当前快照；最后 evaluator 与身份两个文件 119 项全部通过，包含补充的原始多 metric 和只读命令断言。typecheck、Biome、222 模块边界、协议一致性通过；项目 tgz/wheel 旅程和独立搜索包消费/恢复通过。没有模型调用，没有改变评分、预算或历史数据；实际项目 Harbor provider 的接线与条件认证仍未完成。
+
+## 显式 Hitch 重试策略与物理执行边界
+
+`7a48a2b` 的 [持久化操作 CI](https://github.com/rsi-gear/gear/actions/runs/38134142055) 和 `404f4d2` 的 [证据读取 CI](https://github.com/rsi-gear/gear/actions/runs/38134668446) 均全部通过，包括新增的真实 Harbor verifier 隔离任务。
+
+接线审计发现固定 Hitch 默认允许基础设施重试。新可选 `hitch.infrastructureRetries` 显式转为 CLI 参数并进入 idempotency key、有效配置及配对条件身份；新持久化操作要求显式设为 0，在准备提交前拒绝隐式默认或正数重试。结果检查同时核对 daemon 冻结提交和 direct/daemon 的 inspected request，不能用改过重试条件的新客户端接受旧条件的结果。历史配置未声明该字段时保留原参数和摘要公式，不改写已有提交意图。
+
+定向五文件 139 项第二轮 138 项通过，唯一失败为当前实现摘要预期变动；源码/构建与历史固定值通过后更新当前快照，7 项身份测试重跑通过。新增测试还发现并补齐重试参数的有效配置摘要绑定，修正 daemon fixture 的版本为所需 0.2.6。持久化操作 12 项全部通过。真实固定 Hitch 的恢复、取消和 SIGKILL 三种合同最终完整重跑 3 项通过，额外读取 daemon 的实际请求记录，均确认 `infrastructure_retries=0`。
+
+typecheck、Biome、222 模块边界、协议及独立 tgz/wheel 旅程通过。本轮未调用模型，未修改 README、历史身份或数据。此项封闭 Hitch 内部重试入口；完整项目 provider 仍须在提交前固定任务集合，并认证实际物理执行数、环境条件和 verifier 来源，不能仅以此选项宣称预算全链路完成。

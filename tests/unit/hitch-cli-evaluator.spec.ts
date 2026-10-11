@@ -472,6 +472,28 @@ else {
   return { fixture, evaluator, invocationLog, environmentLog, submissionState }
 }
 
+it.each(['direct', 'daemon'] as const)('freezes explicit zero infrastructure retries for %s execution', async mode => {
+  const f = await setup('0.2.6', {}, { controlPlane: { mode, requireModelCapture: false } })
+  const evaluator = new HitchEvaluationClient({ ...f.evaluator.options, infrastructureRetries: 0 })
+  const state = round(f.fixture.root, f.fixture.championRef, f.fixture.manifest.digest)
+  const input = request('seed', f.fixture.championRef), signal = new AbortController().signal
+  const intent = evaluator.prepareSubmission(state, input)
+  const reservation = await evaluator.reserve(state, input, signal, intent)
+  expect((await evaluator.evaluate(state, input, signal, reservation)).completeness).toBe('complete')
+  const calls = (await readFile(f.invocationLog, 'utf8')).trim().split('\n').map(line => JSON.parse(line) as string[])
+  const dispatched = calls.find(args => args[0] === 'eval' && args[1] === (mode === 'daemon' ? 'submit' : 'run'))!
+  expect(dispatched.slice(dispatched.indexOf('--infrastructure-retries'), dispatched.indexOf('--infrastructure-retries') + 2))
+    .toEqual(['--infrastructure-retries', '0'])
+  const changed = new HitchEvaluationClient({ ...evaluator.options, infrastructureRetries: 1 })
+  await expect(changed.inspectResult(state, input, reservation, signal, intent)).rejects.toMatchObject({ code: 'invalid_hitch_result' })
+})
+
+it('rejects invalid infrastructure retry limits before execution', async () => {
+  const { evaluator } = await setup()
+  for (const infrastructureRetries of [-1, 0.5, NaN, Infinity])
+    expect(() => new HitchEvaluationClient({ ...evaluator.options, infrastructureRetries })).toThrow('non-negative integer')
+})
+
 describe('HitchCliEvaluator', () => {
   it.each(['direct', 'daemon'] as const)('uses the reusable %s execution client without legacy round state', async mode => {
     const { fixture, evaluator, invocationLog } = await setup('0.2.6', {}, {

@@ -34,6 +34,7 @@ async function fixture() {
       harnessId: 'pi',
       model: 'gpt-5.6-luna',
       attempts: 1,
+      infrastructureRetries: 0,
       maxConcurrent: 1,
       setupTimeoutMs: 10000,
       terminationGraceMs: 100,
@@ -220,6 +221,18 @@ it('requires daemon submission with durable intent', async () => {
   const f = await fixture()
   f.binding.options.controlPlane!.mode = 'direct'
   await expect(f.operations.execute(f.id, f.binding, f.signal)).rejects.toThrow('daemon mode')
+  expect(f.client.reserve).not.toHaveBeenCalled()
+})
+
+it('rejects implicit or positive infrastructure retries before preparing any submission', async () => {
+  const f = await fixture()
+  for (const infrastructureRetries of [undefined, 1]) {
+    const binding = structuredClone(f.binding)
+    if (infrastructureRetries === undefined) delete binding.options.infrastructureRetries
+    else binding.options.infrastructureRetries = infrastructureRetries
+    await expect(f.operations.execute(f.id, binding, f.signal)).rejects.toThrow('explicit zero infrastructure retries')
+  }
+  expect(f.client.prepareSubmission).not.toHaveBeenCalled()
   expect(f.client.reserve).not.toHaveBeenCalled()
 })
 

@@ -9,6 +9,8 @@ export interface HitchConfig {
   root: string
   model: string
   attempts: number
+  /** Explicit infrastructure retries; omit only to retain the historical Hitch default. */
+  infrastructureRetries?: number
   maxConcurrent: number
   setupTimeoutMs: number
   terminationGraceMs: number
@@ -269,6 +271,7 @@ export const ConfigSchema: Schema<Config> = Schema.object({
     root: Schema.string().default(''),
     model: Schema.string().default(''),
     attempts: Schema.number().default(1),
+    infrastructureRetries: Schema.number(),
     maxConcurrent: Schema.number().default(4),
     setupTimeoutMs: Schema.number().default(1_800_000),
     terminationGraceMs: Schema.number().default(5_000),

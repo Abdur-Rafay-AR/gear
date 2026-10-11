@@ -22,6 +22,11 @@ function requiredConfig(): Record<string, unknown> {
 }
 
 describe('Gear configuration defaults', () => {
+  it('preserves the legacy retry default and accepts an explicit zero', () => {
+    expect(ConfigSchema(requiredConfig() as never).hitch.infrastructureRetries).toBeUndefined()
+    expect(ConfigSchema({ ...requiredConfig(), hitch: { infrastructureRetries: 0 } } as never)
+      .hitch.infrastructureRetries).toBe(0)
+  })
   it('keeps legacy compiler coverage unavailable unless a fixed report protocol is configured', () => {
     const legacy = ConfigSchema(requiredConfig() as never)
     expect(legacy.compiler.reportProtocol).toBeUndefined()

@@ -77,3 +77,5 @@ Hitch 的提交、reservation 恢复、观察、取消、rerun 及运行身份�
 持久化操作基础现由 `HitchEvaluationOperations` 提供：提交前保存冻结输入与原 key，恢复沿用原 reservation，取消通过只读查找处理响应丢失。取消不能确认远端状态时保留 pending；它不启动新执行，也不释放尚未确认的预算。SIGKILL 后的真实 daemon 恢复/取消已验证，但项目 provider 尚未接线。Harbor 0.21.0 的 separate verifier 已通过伪造评分和后台写入负例；shared 模式未获同等隔离认证，不能自动改写已有任务配置或把静态导入成功当作执行准入。
 
 原始 verifier 证据现在可直接通过执行客户端读取，由独立 `HitchVerifierEvidenceReader` 统一校验，旧 evaluator 原方法已删除并继承同一入口。原始 reward map 不经过 eval 汇总的指标归一化；后续项目 Harbor 接线仍须核对父 eval/run/trial/attempt 和任务身份，绑定实际 execution plan 后才能参与配对或证据缓存，不能仅凭 profile 名称认定条件等价。
+
+`hitch.infrastructureRetries` 是可选的非负整数；不声明时保留历史 Hitch 默认，显式配置会改变新提交身份。新持久化操作必须使用 0，避免单次项目预留因 provider 的隐式基础设施重试产生额外物理尝试。该配置与 `attempts`（逻辑重复槽位）不同，不替代核心的物理预算预留；旧提交意图不能在恢复时追加或替换参数。

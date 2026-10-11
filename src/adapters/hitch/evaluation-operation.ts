@@ -114,6 +114,8 @@ export class HitchEvaluationOperations {
     binding = structuredClone(binding)
     if (binding.options.controlPlane?.mode !== 'daemon')
       throw new TypeError('Durable Hitch operations require daemon mode')
+    if (binding.options.infrastructureRetries !== 0)
+      throw new TypeError('Durable Hitch operations require explicit zero infrastructure retries')
     const receipt = await this.lock(id, async () => {
       const previous = await this.read(id)
       if (previous) {

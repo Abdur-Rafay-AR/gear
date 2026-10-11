@@ -43,6 +43,8 @@ hitch:
 
 支持 daemon 的部署应先为该 root 启动一个 daemon，再选择 `mode: daemon`，要求 Hitch 0.2.6+。凭据 wrapper 可能仅支持 direct，配套 DSH OAuth 示例即如此。提交的 profile 中不放秘密值；`passEnv` 只列变量名。
 
+`hitch.infrastructureRetries: 0` 显式关闭 Hitch 内部的基础设施重试；非负整数允许设置明确上限，省略字段保留历史默认。它不同于 `attempts` 的逻辑重复次数，且会进入新提交身份。项目持久化操作要求显式为 0，由核心预算决定额外执行；恢复不能改写已保存的参数。
+
 ## 进阶路径
 
 [Context offloading](../../dsh-meta-context-offloading-spec.zh-CN.md)适用于 native DSH Meta adapter，必须在新建实验前封存。[算法设置](example-algorithm.md)依赖对应搜索实现；[训练配置](training.md)使用独立 controller 合同。当前 checkout 的[源码 schema](../../../src/config.ts)是字段定义依据。

@@ -12,6 +12,15 @@ const fixture = JSON.parse(readFileSync(new URL('../../test-contracts/hitch-exec
 }
 
 describe('extracted Hitch execution contract', () => {
+  it('binds an explicit retry policy without changing the absent-policy identity', () => {
+    const legacy = new HitchExecutionContract(fixture.options, fixture.options.repositoryPath)
+    const zero = new HitchExecutionContract({ ...fixture.options, infrastructureRetries: 0 }, fixture.options.repositoryPath)
+    const one = new HitchExecutionContract({ ...fixture.options, infrastructureRetries: 1 }, fixture.options.repositoryPath)
+    expect(legacy.baseParity(fixture.round, fixture.request)).not.toHaveProperty('infrastructureRetries')
+    expect(zero.baseParity(fixture.round, fixture.request)).toHaveProperty('infrastructureRetries', 0)
+    expect(new Set([legacy, zero, one].map(c => c.daemonIdempotencyKey(fixture.round, fixture.request))).size).toBe(3)
+    expect(new Set([legacy, zero, one].map(c => c.effectiveConfigDigest(fixture.round, fixture.request))).size).toBe(3)
+  })
   it.each(fixture.cases)('retains the pre-extraction execution identity: $name', (entry) => {
     const contract = new HitchExecutionContract({ ...fixture.options, ...entry.options }, fixture.options.repositoryPath)
     contract.assertEvaluationRequest(fixture.round, fixture.request)

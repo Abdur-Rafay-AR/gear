@@ -56,6 +56,11 @@ export class HitchEvaluationClient {
     if (!/^[a-z0-9][a-z0-9_-]*$/u.test(options.harnessId)) throw new TypeError('hitch.harnessId is invalid')
     if (!Number.isSafeInteger(options.attempts) || options.attempts <= 0)
       throw new TypeError('hitch.attempts must be a positive integer')
+    if (
+      options.infrastructureRetries !== undefined &&
+      (!Number.isSafeInteger(options.infrastructureRetries) || options.infrastructureRetries < 0)
+    )
+      throw new TypeError('hitch.infrastructureRetries must be a non-negative integer')
     if (!Number.isSafeInteger(options.maxConcurrent) || options.maxConcurrent <= 0)
       throw new TypeError('hitch.maxConcurrent must be a positive integer')
     if (!Number.isSafeInteger(options.setupTimeoutMs) || options.setupTimeoutMs < 0)
@@ -412,6 +417,9 @@ export class HitchEvaluationClient {
       ...(request.condition.model.length === 0 ? [] : ['--model', request.condition.model]),
       '--attempts',
       String(request.condition.repetitions),
+      ...(this.options.infrastructureRetries === undefined
+        ? []
+        : ['--infrastructure-retries', String(this.options.infrastructureRetries)]),
       '--max-concurrent',
       String(this.options.maxConcurrent),
       '--timeout',

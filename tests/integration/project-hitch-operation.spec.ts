@@ -69,6 +69,7 @@ describe.skipIf(!hitchRoot)('durable operations against the pinned Hitch daemon'
           harnessId: 'pi',
           model: 'gpt-5.6-luna',
           attempts: 1,
+          infrastructureRetries: 0,
           maxConcurrent: 1,
           setupTimeoutMs: 10000,
           terminationGraceMs: 100,
@@ -106,6 +107,7 @@ describe.skipIf(!hitchRoot)('durable operations against the pinned Hitch daemon'
       try {
         const client = new HitchEvaluationClient(binding.options)
         const intent = client.prepareSubmission(binding.context, binding.request)!
+        expect(intent.parameters).toMatchObject({ args: expect.arrayContaining(['--infrastructure-retries', '0']) })
         expect(await client.lookupReservation(intent, signal)).toBeUndefined()
         expect(started).toBe(0)
         const first = new HitchEvaluationOperations(journal, (options) => new LostResponseClient(options))
@@ -150,6 +152,7 @@ describe.skipIf(!hitchRoot)('durable operations against the pinned Hitch daemon'
         expect(started).toBe(1)
         expect(JSON.parse(await readFile(join(journal, `${id.slice(7)}.json`), 'utf8')).cancelled).toBe(true)
         const remote = await daemonClient(daemonRoot)
+        expect((await remote.request(`/v1/evals/${evals[0]}`)).request.infrastructure_retries).toBe(0)
         await expect.poll(async () => (await remote.request(`/v1/evals/${evals[0]}`)).control.state).toBe('cancelled')
         await expect(first.execute(id, binding, signal)).rejects.toMatchObject({ code: 'hitch_operation_cancelled' })
       } finally {
