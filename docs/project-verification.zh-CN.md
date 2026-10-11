@@ -18,14 +18,16 @@
 | DSH 固定 carrier | rc.2 的有效 Skill 与完整 Harness 两组原生加载、prompt assembly、Skill 读取检查通过 |
 | DSH/Pi 原生行为 | 发布用 runner 在真实 Docker 中各完成一次 Luna 调用；插件/extension 指定输出，经可信评分器得 1；运行后 inspect 一致 |
 
-完整回归之后的终态生成失败处理由最终定向回归和发布包测试覆盖。Linux/macOS CI 已配置真实 worker 隔离门禁；本机实测为 macOS，远端 CI 尚未触发。平台模型测试是显式启用项，不把跳过记为通过。未运行 GPU 训练，也未用自动化代替人工易用性测试。
+完整回归之后的终态生成失败处理由最终定向回归和发布包测试覆盖。Linux/macOS CI 已配置真实 worker 隔离门禁；`c811b1f` 的 [远端 CI](https://github.com/rsi-gear/gear/actions/runs/38109997985) 中两个平台的隔离、CPU 训练和 Hitch 合同检查已经通过，Quality 全量作业仍在运行。平台模型测试是显式启用项，不把跳过记为通过。未运行 GPU 训练，也未用自动化代替人工易用性测试。
 
 ## 推送后修复
 
 - `paired-pass-rate-v1` 修正最终 gate：先检查 seed 改善，再检查 held-out 不退步；拒绝的 seed 不触发 held-out 试验。32 项运行时测试通过，其中 16 组评分组合与历史 GEPA `decideFinal` 交叉比较，覆盖持平、退步、改善、预算和终态恢复。typecheck 通过。
 - capabilities 拆分后，50 项经验、能力和轨迹回归通过，2 项真实日志测试按环境跳过；typecheck 和 202 模块边界/循环检查通过。
-- 项目回归现为 5 个文件、49 项通过；新增算法请求的整组 seed 预算预检，预算不足时不开始部分评测，恢复继续复用原 decision 和 reservation。独立 tgz/wheel、六组模板、两种 Target 和 CPU loop 再次通过。发布测试对 Python 低于 3.10 的情况现在提前报告解释器要求。
-- 以下 Luna 记录为首批实现的真实运行证据，使用当时冻结的 gate；不能据此声称修正后的门禁已完成模型验收。
+- 项目回归现为 5 个文件、50 项通过；新增算法请求的整组 seed 预算预检，预算不足时不开始部分评测，恢复继续复用原 decision 和 reservation。独立 tgz/wheel、六组模板、两种 Target 和 CPU loop 再次通过。发布测试对 Python 低于 3.10 的情况现在提前报告解释器要求。
+- 报告现在按实际已提交的评测范围计算缺失数：seed gate 拒绝后，未安排的 held-out 不标为缺失；中断的部分 baseline 不显示完整 pass rate。
+- 修正后的 gate 已完成两种 Target 的真实 Luna 复测：Pi 和 DSH 的 smoke 均 1/1，seed 都是 1 → 1，均以 `seed-not-improved` 保留原 champion，未运行 held-out。refine 新增物理评测分别为 0 和 1，两者终态 resume 一致。随后的 seed 预算预检和报告调整由上述定向回归覆盖。
+- 下表保留首批实现的真实运行证据，使用当时冻结的 gate，与这次修复后的记录分开。
 
 ## Luna 项目闭环
 

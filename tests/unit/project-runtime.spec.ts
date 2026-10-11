@@ -162,8 +162,15 @@ describe('durable project runtime', () => {
     expect(run.champion).toBe(historical.outcome === 'accepted' ? 'next' : 'initial')
     expect(run.gate?.seed).toEqual({ before: seedBefore, after: seedAfter })
     expect(f.submissions).toHaveLength(seedAfter > seedBefore ? 4 : 2)
-    if (seedAfter <= seedBefore)
+    if (seedAfter <= seedBefore) {
       expect(run.gate).toMatchObject({ reason: 'seed-not-improved', heldOut: null, before: null, after: null })
+      for (const candidate of projectReport(run).candidates)
+        expect(candidate.partitions.find((p) => p.split === 'held_out')).toMatchObject({
+          planned: 0,
+          missing: 0,
+          passRate: null,
+        })
+    }
     expect((await f.runtime.resume(run.id, signal())).gate).toEqual(run.gate)
     expect(JSON.stringify(projectReport(run, 'meta').gate)).not.toContain('heldOut')
   })
@@ -317,6 +324,21 @@ describe('durable project runtime', () => {
     f.plan.maxEvaluations = 1
     await expect(f.runtime.start(f.plan, signal())).rejects.toMatchObject({ details: { code: 'budget-exhausted' } })
     expect(f.submissions).toHaveLength(0)
+  })
+  it('does not label an interrupted partial baseline as a complete pass rate', async () => {
+    const f = fixture()
+    f.plan.benchmark.tasks.push({ ...f.plan.benchmark.tasks[0]!, id: 'seed-2' })
+    let count = 0
+    const evaluate = f.provider.evaluate.bind(f.provider)
+    f.provider.evaluate = async (...args) => {
+      if (++count === 2) throw new Error('second-trial-pending')
+      const result = await evaluate(...args)
+      result.output = 'correct'
+      return result
+    }
+    await expect(f.runtime.start(f.plan, signal())).rejects.toThrow('second-trial-pending')
+    const partition = projectReport(f.store.run).candidates[0]!.partitions[0]
+    expect(partition).toMatchObject({ planned: 2, observed: 1, valid: 1, missing: 1, passRate: null })
   })
   it('preflights the whole algorithm-selected seed scope and retains its decision on budget exhaustion', async () => {
     const f = fixture()

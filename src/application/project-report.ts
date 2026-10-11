@@ -1,5 +1,26 @@
 import type { ProjectRun } from '../runtime/project.js'
 
+function plannedTasks(run: ProjectRun, candidate: string, split: 'seed' | 'held_out'): Set<string> {
+  const ids = new Set(run.trials.filter((t) => t.candidate === candidate && t.split === split).map((t) => t.taskId))
+  const partition = run.plan.benchmark.tasks.filter((t) => t.split === split).map((t) => t.id)
+  if (run.plan.kind === 'evaluate') {
+    if (candidate === run.plan.target.id && split === run.plan.split) for (const id of run.plan.taskIds) ids.add(id)
+  } else if (split === 'seed') {
+    if (candidate === run.plan.target.id) for (const id of partition) ids.add(id)
+    for (const saved of run.decisions)
+      for (const op of saved.decision.operations)
+        if (op.kind === 'evaluate_seed' && op.candidate === candidate) for (const id of op.tasks) ids.add(id)
+  } else if (
+    run.plan.validation === 'holdout' &&
+    run.nominee &&
+    run.gate?.reason !== 'seed-not-improved' &&
+    (candidate === run.plan.target.id || candidate === run.nominee)
+  ) {
+    for (const id of partition) ids.add(id)
+  }
+  return ids
+}
+
 export function projectReport(run: ProjectRun, view: 'operator' | 'meta' = 'operator') {
   const candidates = run.candidates.map((candidate) => {
     const trials = run.trials.filter((t) => t.candidate === candidate.id)
@@ -13,12 +34,7 @@ export function projectReport(run: ProjectRun, view: 'operator' | 'meta' = 'oper
         .map((split) => {
           const selected = trials.filter((t) => t.split === split),
             valid = selected.filter((t) => t.score !== null)
-          const planned =
-            run.plan.kind === 'evaluate'
-              ? split === run.plan.split
-                ? run.plan.taskIds.length
-                : 0
-              : run.plan.benchmark.tasks.filter((t) => t.split === split).length
+          const planned = plannedTasks(run, candidate.id, split).size
           return {
             split,
             scope: selected.map((t) => t.taskId),
@@ -29,7 +45,7 @@ export function projectReport(run: ProjectRun, view: 'operator' | 'meta' = 'oper
             invalid: selected.length - valid.length,
             missing: Math.max(0, planned - selected.length),
             passRate:
-              selected.length > 0 && valid.length === selected.length
+              planned > 0 && selected.length === planned && valid.length === planned
                 ? valid.reduce((sum, t) => sum + t.score!, 0) / valid.length
                 : null,
           }
