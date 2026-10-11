@@ -3,12 +3,13 @@ import { canonicalDigest } from '../../domain/canonical.js'
 import { validateArtifactPath } from '../../domain/mutation-policy.js'
 import type { HarnessAdapter } from '../../ports/harness.js'
 import type { TargetSnapshot } from '../../ports/project.js'
-import { snapshotCheckout } from '../storage/git-checkout.js'
 import { GitSnapshots } from '../storage/git-snapshots.js'
+import { gitSourceCheckout } from '../storage/git-source.js'
 
 const carrierAssets = ['package.json', 'package-lock.json', 'pnpm-lock.yaml', 'build-carrier.mjs']
 const nativeAssets = ['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', 'run.mjs', 'dsh-policy.mjs']
 export interface HitchCarrierRevision {
+  /** Stable transport directory. Read this candidate by commit, never by the checked-out HEAD. */
   repository: string
   commit: string
   identity: string
@@ -57,7 +58,11 @@ export class HitchCarrier {
       'carrier.json': `${JSON.stringify({ version: 1, targetDigest, runtime: this.identity, adapter: this.adapter.ref })}\n`,
     }
     const identity = canonicalDigest(files)
-    const commit = await new GitSnapshots(this.root).publish(files, identity)
-    return { repository: await snapshotCheckout(this.root, commit), commit, identity, targetDigest }
+    const snapshots = new GitSnapshots(this.root)
+    const commit = await snapshots.publish(files, identity)
+    // Target changes must not change Hitch's repositoryPath comparison condition.
+    // This anchor contains only fixed build assets; every candidate is selected by its exact OID.
+    const anchor = await snapshots.publish({ ...this.files }, canonicalDigest(this.files))
+    return { repository: await gitSourceCheckout(this.root, anchor), commit, identity, targetDigest }
   }
 }

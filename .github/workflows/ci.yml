@@ -198,7 +198,7 @@ jobs:
       - name: Install Harbor for the guarded entry and Python bridge contract
         run: python -m pip install harbor==0.21.0
       - name: Verify Gear against the real Hitch CLI and daemon
-        run: GEAR_HARBOR_PYTHON="$(command -v python)" npm test -- tests/integration/hitch-rerun-contract.spec.ts tests/integration/project-hitch-operation.spec.ts tests/integration/project-harbor-runtime.spec.ts
+        run: GEAR_HARBOR_PYTHON="$(command -v python)" npm test -- tests/integration/hitch-rerun-contract.spec.ts tests/integration/project-hitch-operation.spec.ts tests/integration/project-harbor-runtime.spec.ts tests/integration/project-hitch-source.spec.ts
         env:
           HITCH_CONTRACT_ROOT: ${{ github.workspace }}/.hitch-contract
 

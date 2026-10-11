@@ -1,7 +1,7 @@
 import { execFile, spawn } from 'node:child_process'
-import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, realpath, rename, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { promisify } from 'node:util'
 import { afterEach, expect, it } from 'vitest'
 import { dshTarget } from '../../src/adapters/dsh/target.js'
@@ -48,16 +48,80 @@ it.each([dshTarget, piTarget])(
       adapter: adapter.ref,
     })
     const changed = { ...files, [adapter === piTarget ? 'AGENTS.md' : 'prompts/system.md']: 'Changed policy' }
-    expect((await carrier.prepare({ ...target, files: changed, digest: canonicalDigest(changed) })).commit).not.toBe(
-      revision.commit,
+    const next = await carrier.prepare({ ...target, files: changed, digest: canonicalDigest(changed) })
+    expect(next.commit).not.toBe(revision.commit)
+    expect(next.repository).toBe(revision.repository)
+    // An already-returned source can read future candidates without changing its HEAD.
+    expect((await execute('git', [...args, `${next.commit}:target/${Object.keys(changed)[0]}`])).stdout).toBe(
+      changed[Object.keys(changed)[0]!],
     )
+    expect((await execute('git', ['-C', revision.repository, 'ls-tree', '--name-only', 'HEAD'])).stdout).not.toContain(
+      'target',
+    )
+    const restarted = await HitchCarrier.create(carrier.root, adapter)
+    expect(await restarted.prepare(target)).toEqual(revision)
+    expect(await restarted.prepare({ ...target, files: changed, digest: canonicalDigest(changed) })).toEqual(next)
     await expect(carrier.prepare({ ...target, files: changed })).rejects.toThrow('digest-mismatch')
     const forbidden = { ...files, 'auth.json': 'secret' }
     await expect(carrier.prepare({ ...target, files: forbidden, digest: canonicalDigest(forbidden) })).rejects.toThrow()
     expect(Object.keys(carrier.files).some((path) => /tests\/|solution\/|credential|auth\.json/.test(path))).toBe(false)
     await writeFile(join(revision.repository, 'unexpected'), 'private')
-    await expect(carrier.prepare(target)).rejects.toThrow('checkout-conflict')
+    await expect(carrier.prepare(target)).rejects.toThrow('source-conflict')
     expect(await readFile(join(revision.repository, 'unexpected'), 'utf8')).toBe('private')
+  },
+)
+
+it('shares one fixed source across simultaneous candidates without replacing their contents', async () => {
+  const root = await temporary()
+  const carrier = await HitchCarrier.create(join(root, 'objects.git'), piTarget)
+  const targets = ['first', 'second'].map((content) => ({
+    id: content,
+    files: { 'AGENTS.md': content },
+    digest: canonicalDigest({ 'AGENTS.md': content }),
+  }))
+  const revisions = await Promise.all(targets.map((target) => carrier.prepare(target)))
+  expect(revisions[0]!.repository).toBe(revisions[1]!.repository)
+  for (const [index, revision] of revisions.entries()) {
+    expect(
+      (await execute('git', ['-C', revision.repository, 'show', `${revision.commit}:target/AGENTS.md`])).stdout,
+    ).toBe(targets[index]!.id)
+  }
+  expect((await execute('git', ['-C', revisions[0]!.repository, 'status', '--porcelain'])).stdout).toBe('')
+})
+
+it.each(['head', 'repository', 'symlink', 'root-symlink', 'metadata-link'] as const)(
+  'refuses %s drift without repairing or overwriting it',
+  async (kind) => {
+    const root = await temporary()
+    const carrier = await HitchCarrier.create(join(root, 'objects.git'), piTarget)
+    const target = { id: 'first', files: { 'AGENTS.md': 'first' }, digest: canonicalDigest({ 'AGENTS.md': 'first' }) }
+    const revision = await carrier.prepare(target)
+    if (kind === 'head') {
+      await execute('git', ['-C', revision.repository, 'checkout', '--detach', revision.commit])
+    } else if (kind === 'repository') {
+      const foreign = join(root, 'foreign')
+      await execute('git', ['init', '--quiet', foreign])
+      await writeFile(join(revision.repository, '.git'), `gitdir: ${join(foreign, '.git')}\n`)
+    } else if (kind === 'metadata-link') {
+      await rename(join(revision.repository, '.git'), join(root, 'metadata'))
+      await symlink(join(root, 'metadata'), join(revision.repository, '.git'))
+    } else {
+      const outside = join(root, 'outside')
+      await mkdir(outside)
+      await writeFile(join(outside, 'canary'), 'preserve')
+      const changed = kind === 'root-symlink' ? dirname(revision.repository) : revision.repository
+      await rename(changed, `${changed}.original`)
+      await symlink(outside, changed)
+    }
+    await expect(carrier.prepare(target)).rejects.toThrow('source-conflict')
+    if (kind === 'head')
+      expect((await execute('git', ['-C', revision.repository, 'rev-parse', 'HEAD'])).stdout.trim()).toBe(
+        revision.commit,
+      )
+    else if (kind === 'repository')
+      expect(await readFile(join(revision.repository, '.git'), 'utf8')).toBe(`gitdir: ${join(root, 'foreign/.git')}\n`)
+    else if (kind === 'metadata-link') expect(await readFile(join(root, 'metadata'), 'utf8')).toContain('gitdir: ')
+    else expect(await readFile(join(root, 'outside/canary'), 'utf8')).toBe('preserve')
   },
 )
 

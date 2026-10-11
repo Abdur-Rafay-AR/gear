@@ -325,3 +325,15 @@ Node 入口使用 `execve` 直接成为 Python/Harbor 进程，实际 PID 和取
 最终完整性检查代码直接嵌入 Hitch 计算指纹的入口，避免先 import 旁边的启动模块再检查其摘要。单测将三个资源分别替换成会抛出特定错误的代码，确认它们在执行前因摘要不符而被拒绝；入口与 Hitch 合同 12 项复验通过。两种真实软链接攻击又通过最终入口定向复验：2 项通过、4 项未选中；这些未选中用例在前述完整 6 项回归中已通过，不能把这次定向运行单独记作全量通过。
 
 typecheck、Biome、223 模块边界、协议、Ruff 和 14 项 CI/发布规则检查通过；tgz/wheel 发布旅程通过，新入口的全部资源均有安装后存在性检查。未调用模型、修改 README 或改写历史身份。完整项目 profile/daemon 接线、评测 backend identity 及实际物理执行/镜像条件核对仍未完成，默认 Harbor 执行能力保持未启用。
+
+## 固定候选 Git 来源与比较条件
+
+`19b336b` 的 [封存入口 CI](https://github.com/rsi-gear/gear/actions/runs/38138327206) 全部通过。后续接线审计发现，每个 carrier 候选原来返回不同的检出路径，而 Hitch 的比较条件包含 `repositoryPath`，会把同一任务上的候选变化误算为执行条件变化。
+
+现在固定构建资源决定一个独立、干净的来源目录，关联专属 Git 对象库。来源 HEAD 不包含 Target；Hitch 依然按各候选的完整 commit OID 解析、提取和传输。后续发布不切换来源 HEAD，新实例和并发调用沿用原来源。原候选树、提交公式、旧检出与操作凭据不迁写。HEAD、关联对象库、来源目录或 `.git` 文件被替换时拒绝，保留改动和外部 canary，不自动修复或覆盖。
+
+最终 carrier 单测与真实 Hitch 来源合同共 25 项通过。真实合同对 DSH/Pi 各自先让固定版本的 Hitch CLI 解析 baseline，再发布候选并从同一路径解析新 commit；两份 pack 均通过 Hitch 的完整性及预期 harness/revision/commit 检查，错误 commit 被拒绝。旧版本仍可解析，`baseParity` 保持相同而提交幂等键不同。新增合同与既有恢复、取消和 Harbor 入口合同共用同一固定 Hitch CI 作业。
+
+DSH/Pi 的真实 Linux 容器构建、二次缓存、封存产物完整性和原生版本检查另有 2 项全部通过，日志 `/tmp/gear-stable-carrier-build.log`。该回归没有启用 Luna 行为测试，不作为新的模型实测。存储历史值、Hitch 执行条件、封存 Harbor 入口和持久化操作四文件 29 项通过；发布清单 1 项通过。build、typecheck、Biome、224 模块边界与协议检查通过。
+
+本轮未修改 Python 算法或训练、README、原用户工作区和历史数据。未重跑完整 Python 或 tgz/wheel 旅程；已执行上述与来源变更相关的回归，CI 继续承担完整门禁。固定来源仅消除了路径引起的条件漂移；实际任务镜像/资源、backend identity、物理尝试数认证与完整项目 Harbor provider 接线仍待完成。
