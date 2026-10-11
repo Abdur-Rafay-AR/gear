@@ -97,7 +97,7 @@ try {
   ])
   run(installed, [
     '-c',
-    "from gear.algorithms import StagedGEPA; from gear.algorithms.gepa.scopes import ScopeConfig, TaskSetLimit; from gear.testing import toy_round; assert toy_round(StagedGEPA(scope_config=ScopeConfig(bridge=TaskSetLimit(1))))['nominee'] == 'candidate-1'",
+    "from gear.algorithms import EpochPolicy, StagedGEPA; from gear.algorithms.gepa.scopes import ScopeConfig, TaskSetLimit; from gear.testing import toy_round; assert toy_round(StagedGEPA(scope_config=ScopeConfig(bridge=TaskSetLimit(1)), epoch_policy=EpochPolicy(2)))['nominee'] == 'candidate-1'",
   ])
   run(installed, [
     '-c',

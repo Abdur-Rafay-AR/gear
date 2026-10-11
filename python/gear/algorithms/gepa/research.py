@@ -15,6 +15,11 @@ from .frontier import FrontierCandidate, ScopeFrontier, scope_frontier
 from .scope_types import ordered_ids
 
 
+def must_pass_guard_identity(task_ids: tuple[str, ...]) -> str:
+    """New-run identity for seed pass-rate guards; never a legacy guard digest."""
+    return digest(["must-pass", ordered_ids(task_ids)]) if task_ids else ""
+
+
 @dataclass(frozen=True)
 class ArchiveMember:
     id: str

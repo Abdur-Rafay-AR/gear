@@ -6,71 +6,30 @@ implement process/objective promotion and adaptive regression proposal stages.
 
 from __future__ import annotations
 
-import math
 from collections.abc import Mapping
+from copy import deepcopy
 from dataclasses import asdict, dataclass, field, replace
-from fractions import Fraction
 from typing import Any
 
 from ..contracts import Decision, Operation, ParentPolicy, SearchView
-from .archive import FrontierParentPolicy, comparison_key
 from .bridge import BridgeNominee, select_bridge
-from .scope_types import FailureFamily, SamplingTask, ScopeConfig, ordered_ids
-from .scopes import create_scope
-
-
-@dataclass(frozen=True)
-class LocalPlan:
-    candidate: str
-    family: str
-    task_ids: tuple[str, ...]
-    weights: Mapping[str, float]
-
-
-def _profiles(view: SearchView) -> dict[str, Mapping[str, float]]:
-    return {candidate.id: candidate.scores for candidate in view.candidates}
-
-
-def _score(
-    view: SearchView,
-    candidate: str,
-    tasks: tuple[str, ...],
-    weights: Mapping[str, float] | None = None,
-) -> int | None:
-    scores = _profiles(view).get(candidate, {})
-    if not tasks or any(t not in scores for t in tasks):
-        return None
-    if any(not math.isfinite(scores[t]) or not 0 <= scores[t] <= 1 for t in tasks):
-        raise ValueError("Staged GEPA requires pass scores in [0, 1]")
-    values = [Fraction(str(scores[t])) for t in tasks]
-    score = (
-        sum((value * Fraction(str(weights[t])) for t, value in zip(tasks, values)), Fraction())
-        if weights is not None
-        else sum(values, Fraction()) / len(tasks)
-    )
-    return comparison_key(score)
-
-
-def _missing(view: SearchView, candidates: tuple[str, ...], tasks: tuple[str, ...]) -> int:
-    profiles = _profiles(view)
-    return sum(
-        task not in profiles.get(candidate, {}) for candidate in candidates for task in tasks
-    )
-
-
-def _plans(state: Mapping[str, Any]) -> tuple[LocalPlan, ...]:
-    return tuple(
-        LocalPlan(p["candidate"], p["family"], tuple(p["task_ids"]), dict(p["weights"]))
-        for p in state.get("plans", [])
-    )
+from .epochs import EpochPolicy
+from .scope_types import SamplingTask, ScopeConfig
+from .stage_evidence import missing as _missing
+from .stage_evidence import nominate
+from .stage_evidence import profiles as _profiles
+from .stage_evidence import score as _score
+from .stage_planning import plan_generation, record_local
+from .stage_planning import plans as _plans
 
 
 @dataclass(frozen=True)
 class StagedGEPA:
     scope_config: ScopeConfig = field(default_factory=ScopeConfig)
-    parent_policy: ParentPolicy = field(default_factory=FrontierParentPolicy)
+    parent_policy: ParentPolicy | None = None
     batch_size: int = 2
     bridge_max_candidates: int = 2
+    epoch_policy: EpochPolicy = field(default_factory=EpochPolicy)
 
     def __post_init__(self) -> None:
         if type(self.batch_size) is not int or not 1 <= self.batch_size <= 16:
@@ -79,26 +38,18 @@ class StagedGEPA:
             raise ValueError("Bridge quota must be a nonnegative integer")
 
     def _nominate(self, view: SearchView, state: Mapping[str, Any], reason: str) -> Decision:
-        eligible = []
-        for candidate in view.candidates:
-            score = _score(view, candidate.id, view.seed_tasks)
-            if score is not None and all(
-                candidate.scores.get(t) == 1 for t in self.scope_config.guard_task_ids
-            ):
-                eligible.append((candidate.id, score))
-        nominee = (
-            min(eligible, key=lambda item: (-item[1], item[0].encode("utf-16-be")))[0]
-            if eligible
-            else view.champion
-        )
-        return Decision(
-            {**state, "stage": "done"}, (Operation("nominate", candidate=nominee),), reason
-        )
+        return nominate(view, state, self.scope_config.guard_task_ids, reason)
 
     def step(self, view: SearchView, state: Mapping[str, Any]) -> Decision:
-        if state and state.get("recipe") != "staged-gepa-v1":
+        if state and state.get("recipe") != "staged-gepa-v2":
             raise ValueError("State belongs to another recipe; use its frozen runtime")
-        current = {"recipe": "staged-gepa-v1", "stage": "parents", "index": 0, "round": 0, **state}
+        current = {
+            "recipe": "staged-gepa-v2",
+            "stage": "parents",
+            "index": 0,
+            "round": 0,
+            **deepcopy(dict(state)),
+        }
         stage, index, round_index = current["stage"], current["index"], current["round"]
         if type(index) is not int or index < 0 or type(round_index) is not int or round_index < 0:
             raise ValueError("Invalid staged GEPA counters")
@@ -106,75 +57,12 @@ class StagedGEPA:
             return Decision(current, (Operation("stop"),), "Search finished")
         config = replace(self.scope_config, seed=view.random_seed)
         tasks = tuple(SamplingTask(t, view.task_families.get(t, "seed")) for t in view.seed_tasks)
-        if stage == "parents":
-            if index >= view.max_candidates or view.remaining_evaluations < len(view.seed_tasks):
-                return self._nominate(view, current, "Nominate from complete common seed evidence")
-            parent = self.parent_policy(view)
-            if _score(view, parent, view.seed_tasks) is None:
-                raise ValueError("Parent must have complete seed evidence")
-            scores = _profiles(view)[parent]
-            families: dict[str, list[str]] = {}
-            for task in tasks:
-                if scores[task.id] < 1:
-                    families.setdefault(task.stratum, []).append(task.id)
-            if not families:
-                return self._nominate(
-                    view, current, "Selected parent has no observed seed failures"
-                )
-            family_ids = ordered_ids(list(families))
-            offset = round_index % len(family_ids)
-            family_ids = family_ids[offset:] + family_ids[:offset]
-            successes = tuple(t for t in view.seed_tasks if scores[t] == 1)
-            proposals: list[LocalPlan] = []
-            for family_id in family_ids[: min(self.batch_size, view.max_candidates - index)]:
-                controls = tuple(
-                    t.id for t in tasks if t.stratum == family_id and t.id in successes
-                )
-                scope = create_scope(
-                    tasks,
-                    config,
-                    FailureFamily(family_id, tuple(families[family_id]), controls),
-                    successes,
-                )
-                if scope is not None:
-                    proposals.append(
-                        LocalPlan(
-                            f"candidate-{index + len(proposals) + 1}",
-                            family_id,
-                            scope.task_ids,
-                            scope.weights,
-                        )
-                    )
-            # Reserve a conservative full-seed expansion before any generation.
-            while (
-                proposals
-                and sum(len(p.task_ids) for p in proposals) + len(view.seed_tasks)
-                > view.remaining_evaluations
-            ):
-                proposals.pop()
-            if not proposals:
-                return self._nominate(
-                    view, current, "Budget cannot cover a local scope and seed expansion"
-                )
-            operations = tuple(
-                op
-                for p in proposals
-                for op in (
-                    Operation("diagnose_seed", candidate=parent, tasks=p.task_ids),
-                    Operation("generate", candidate=p.candidate, parent=parent),
-                )
+        if stage in ("parents", "epochs", "epoch-results", "generate"):
+            return plan_generation(
+                view, current, config, self.epoch_policy, self.parent_policy, self.batch_size
             )
-            return Decision(
-                {
-                    **current,
-                    "stage": "local",
-                    "parent": parent,
-                    "index": index + len(proposals),
-                    "plans": [asdict(p) for p in proposals],
-                },
-                operations,
-                "Generate one candidate per admitted failure family",
-            )
+        if stage == "bridge":
+            record_local(view, current, config)
         plans = _plans(current)
         next_round = {**current, "stage": "parents", "round": round_index + 1, "plans": []}
         if stage == "local":
@@ -205,7 +93,7 @@ class StagedGEPA:
             nominees = []
             for plan in sorted(plans, key=lambda p: p.family.encode("utf-16-be")):
                 score = _score(view, plan.candidate, plan.task_ids, plan.weights)
-                before = _score(view, str(current["parent"]), plan.task_ids, plan.weights)
+                before = _score(view, plan.parent, plan.task_ids, plan.weights)
                 if (
                     score is not None
                     and before is not None

@@ -1,0 +1,1208 @@
+{
+  "source_commit": "ea7b02ed716d77525333b4d441f2bf729d20d018",
+  "scope": "Historical epoch admission with a frozen proposal; scope sampling is covered separately.",
+  "cases": [
+    {
+      "period": 1,
+      "round": 1,
+      "maxHistorical": 1,
+      "cells": 6,
+      "repair": 20,
+      "repairPerCandidate": 0,
+      "cached": [],
+      "name": "all-participants-fit",
+      "input": {
+        "period": 1,
+        "round_index": 1,
+        "max_historical": 1,
+        "previous": {
+          "id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "family": "family",
+          "epoch": 1,
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ],
+          "weights": {
+            "task-0": 0.5,
+            "task-1": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "proposed": {
+          "id": "sha256:347cfac6f323dbac9802b4f1fbbf10d2f3a6a622016d0743d2718ec846b892c6",
+          "family": "family",
+          "epoch": 2,
+          "task_ids": [
+            "task-2",
+            "task-3"
+          ],
+          "weights": {
+            "task-2": 0.5,
+            "task-3": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "anchor": "anchor",
+        "selected": [
+          "chosen"
+        ],
+        "historical_probabilities": {
+          "chosen": 0.5,
+          "specialist": 0.5
+        },
+        "historical_order": [
+          "chosen",
+          "specialist"
+        ],
+        "remaining": {
+          "cells": 6,
+          "repair_cells": 20
+        },
+        "cached": [],
+        "repair_per_candidate": 0
+      },
+      "expected": {
+        "epoch": 2,
+        "admission": {
+          "family_id": "family",
+          "previous_scope_id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "proposed_scope_id": "sha256:347cfac6f323dbac9802b4f1fbbf10d2f3a6a622016d0743d2718ec846b892c6",
+          "participant_ids": [
+            "anchor",
+            "chosen",
+            "specialist"
+          ],
+          "excluded_historical_ids": [],
+          "status": "admitted",
+          "reason_codes": [],
+          "cost": {
+            "cells": 6,
+            "repair_cells": 0
+          }
+        },
+        "quotes": [
+          {
+            "ids": [
+              "anchor",
+              "chosen",
+              "specialist"
+            ],
+            "tasks": [
+              "task-2",
+              "task-3"
+            ],
+            "cost": {
+              "cells": 6,
+              "repair_cells": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "period": 1,
+      "round": 1,
+      "maxHistorical": 1,
+      "cells": 4,
+      "repair": 20,
+      "repairPerCandidate": 0,
+      "cached": [],
+      "name": "drop-optional-specialist",
+      "input": {
+        "period": 1,
+        "round_index": 1,
+        "max_historical": 1,
+        "previous": {
+          "id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "family": "family",
+          "epoch": 1,
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ],
+          "weights": {
+            "task-0": 0.5,
+            "task-1": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "proposed": {
+          "id": "sha256:347cfac6f323dbac9802b4f1fbbf10d2f3a6a622016d0743d2718ec846b892c6",
+          "family": "family",
+          "epoch": 2,
+          "task_ids": [
+            "task-2",
+            "task-3"
+          ],
+          "weights": {
+            "task-2": 0.5,
+            "task-3": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "anchor": "anchor",
+        "selected": [
+          "chosen"
+        ],
+        "historical_probabilities": {
+          "chosen": 0.5,
+          "specialist": 0.5
+        },
+        "historical_order": [
+          "chosen",
+          "specialist"
+        ],
+        "remaining": {
+          "cells": 4,
+          "repair_cells": 20
+        },
+        "cached": [],
+        "repair_per_candidate": 0
+      },
+      "expected": {
+        "epoch": 2,
+        "admission": {
+          "family_id": "family",
+          "previous_scope_id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "proposed_scope_id": "sha256:347cfac6f323dbac9802b4f1fbbf10d2f3a6a622016d0743d2718ec846b892c6",
+          "participant_ids": [
+            "anchor",
+            "chosen"
+          ],
+          "excluded_historical_ids": [
+            "specialist"
+          ],
+          "status": "admitted",
+          "reason_codes": [],
+          "cost": {
+            "cells": 4,
+            "repair_cells": 0
+          }
+        },
+        "quotes": [
+          {
+            "ids": [
+              "anchor",
+              "chosen",
+              "specialist"
+            ],
+            "tasks": [
+              "task-2",
+              "task-3"
+            ],
+            "cost": {
+              "cells": 6,
+              "repair_cells": 0
+            }
+          },
+          {
+            "ids": [
+              "anchor",
+              "chosen"
+            ],
+            "tasks": [
+              "task-2",
+              "task-3"
+            ],
+            "cost": {
+              "cells": 4,
+              "repair_cells": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "period": 1,
+      "round": 1,
+      "maxHistorical": 1,
+      "cells": 3,
+      "repair": 20,
+      "repairPerCandidate": 0,
+      "cached": [],
+      "name": "mandatory-parents-exceed-budget",
+      "input": {
+        "period": 1,
+        "round_index": 1,
+        "max_historical": 1,
+        "previous": {
+          "id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "family": "family",
+          "epoch": 1,
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ],
+          "weights": {
+            "task-0": 0.5,
+            "task-1": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "proposed": {
+          "id": "sha256:347cfac6f323dbac9802b4f1fbbf10d2f3a6a622016d0743d2718ec846b892c6",
+          "family": "family",
+          "epoch": 2,
+          "task_ids": [
+            "task-2",
+            "task-3"
+          ],
+          "weights": {
+            "task-2": 0.5,
+            "task-3": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "anchor": "anchor",
+        "selected": [
+          "chosen"
+        ],
+        "historical_probabilities": {
+          "chosen": 0.5,
+          "specialist": 0.5
+        },
+        "historical_order": [
+          "chosen",
+          "specialist"
+        ],
+        "remaining": {
+          "cells": 3,
+          "repair_cells": 20
+        },
+        "cached": [],
+        "repair_per_candidate": 0
+      },
+      "expected": {
+        "epoch": 2,
+        "admission": {
+          "family_id": "family",
+          "previous_scope_id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "proposed_scope_id": "sha256:347cfac6f323dbac9802b4f1fbbf10d2f3a6a622016d0743d2718ec846b892c6",
+          "participant_ids": [
+            "anchor",
+            "chosen"
+          ],
+          "excluded_historical_ids": [
+            "specialist"
+          ],
+          "status": "budget-insufficient",
+          "reason_codes": [
+            "scope-preparation-budget"
+          ],
+          "cost": {
+            "cells": 4,
+            "repair_cells": 0
+          }
+        },
+        "quotes": [
+          {
+            "ids": [
+              "anchor",
+              "chosen",
+              "specialist"
+            ],
+            "tasks": [
+              "task-2",
+              "task-3"
+            ],
+            "cost": {
+              "cells": 6,
+              "repair_cells": 0
+            }
+          },
+          {
+            "ids": [
+              "anchor",
+              "chosen"
+            ],
+            "tasks": [
+              "task-2",
+              "task-3"
+            ],
+            "cost": {
+              "cells": 4,
+              "repair_cells": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "period": 1,
+      "round": 1,
+      "maxHistorical": 1,
+      "cells": 6,
+      "repair": 2,
+      "repairPerCandidate": 1,
+      "cached": [],
+      "name": "repair-budget-prunes-specialist",
+      "input": {
+        "period": 1,
+        "round_index": 1,
+        "max_historical": 1,
+        "previous": {
+          "id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "family": "family",
+          "epoch": 1,
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ],
+          "weights": {
+            "task-0": 0.5,
+            "task-1": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "proposed": {
+          "id": "sha256:347cfac6f323dbac9802b4f1fbbf10d2f3a6a622016d0743d2718ec846b892c6",
+          "family": "family",
+          "epoch": 2,
+          "task_ids": [
+            "task-2",
+            "task-3"
+          ],
+          "weights": {
+            "task-2": 0.5,
+            "task-3": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "anchor": "anchor",
+        "selected": [
+          "chosen"
+        ],
+        "historical_probabilities": {
+          "chosen": 0.5,
+          "specialist": 0.5
+        },
+        "historical_order": [
+          "chosen",
+          "specialist"
+        ],
+        "remaining": {
+          "cells": 6,
+          "repair_cells": 2
+        },
+        "cached": [],
+        "repair_per_candidate": 1
+      },
+      "expected": {
+        "epoch": 2,
+        "admission": {
+          "family_id": "family",
+          "previous_scope_id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "proposed_scope_id": "sha256:347cfac6f323dbac9802b4f1fbbf10d2f3a6a622016d0743d2718ec846b892c6",
+          "participant_ids": [
+            "anchor",
+            "chosen"
+          ],
+          "excluded_historical_ids": [
+            "specialist"
+          ],
+          "status": "admitted",
+          "reason_codes": [],
+          "cost": {
+            "cells": 4,
+            "repair_cells": 2
+          }
+        },
+        "quotes": [
+          {
+            "ids": [
+              "anchor",
+              "chosen",
+              "specialist"
+            ],
+            "tasks": [
+              "task-2",
+              "task-3"
+            ],
+            "cost": {
+              "cells": 6,
+              "repair_cells": 3
+            }
+          },
+          {
+            "ids": [
+              "anchor",
+              "chosen"
+            ],
+            "tasks": [
+              "task-2",
+              "task-3"
+            ],
+            "cost": {
+              "cells": 4,
+              "repair_cells": 2
+            }
+          }
+        ]
+      }
+    },
+    {
+      "period": 1,
+      "round": 1,
+      "maxHistorical": 1,
+      "cells": 6,
+      "repair": 1,
+      "repairPerCandidate": 1,
+      "cached": [],
+      "name": "repair-budget-rejects-mandatory",
+      "input": {
+        "period": 1,
+        "round_index": 1,
+        "max_historical": 1,
+        "previous": {
+          "id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "family": "family",
+          "epoch": 1,
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ],
+          "weights": {
+            "task-0": 0.5,
+            "task-1": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "proposed": {
+          "id": "sha256:347cfac6f323dbac9802b4f1fbbf10d2f3a6a622016d0743d2718ec846b892c6",
+          "family": "family",
+          "epoch": 2,
+          "task_ids": [
+            "task-2",
+            "task-3"
+          ],
+          "weights": {
+            "task-2": 0.5,
+            "task-3": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "anchor": "anchor",
+        "selected": [
+          "chosen"
+        ],
+        "historical_probabilities": {
+          "chosen": 0.5,
+          "specialist": 0.5
+        },
+        "historical_order": [
+          "chosen",
+          "specialist"
+        ],
+        "remaining": {
+          "cells": 6,
+          "repair_cells": 1
+        },
+        "cached": [],
+        "repair_per_candidate": 1
+      },
+      "expected": {
+        "epoch": 2,
+        "admission": {
+          "family_id": "family",
+          "previous_scope_id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "proposed_scope_id": "sha256:347cfac6f323dbac9802b4f1fbbf10d2f3a6a622016d0743d2718ec846b892c6",
+          "participant_ids": [
+            "anchor",
+            "chosen"
+          ],
+          "excluded_historical_ids": [
+            "specialist"
+          ],
+          "status": "budget-insufficient",
+          "reason_codes": [
+            "scope-preparation-budget"
+          ],
+          "cost": {
+            "cells": 4,
+            "repair_cells": 2
+          }
+        },
+        "quotes": [
+          {
+            "ids": [
+              "anchor",
+              "chosen",
+              "specialist"
+            ],
+            "tasks": [
+              "task-2",
+              "task-3"
+            ],
+            "cost": {
+              "cells": 6,
+              "repair_cells": 3
+            }
+          },
+          {
+            "ids": [
+              "anchor",
+              "chosen"
+            ],
+            "tasks": [
+              "task-2",
+              "task-3"
+            ],
+            "cost": {
+              "cells": 4,
+              "repair_cells": 2
+            }
+          }
+        ]
+      }
+    },
+    {
+      "period": 1,
+      "round": 1,
+      "maxHistorical": 1,
+      "cells": 2,
+      "repair": 20,
+      "repairPerCandidate": 0,
+      "cached": [
+        "anchor:task-2",
+        "anchor:task-3",
+        "chosen:task-2",
+        "chosen:task-3"
+      ],
+      "name": "reuse-missing-cost-cache",
+      "input": {
+        "period": 1,
+        "round_index": 1,
+        "max_historical": 1,
+        "previous": {
+          "id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "family": "family",
+          "epoch": 1,
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ],
+          "weights": {
+            "task-0": 0.5,
+            "task-1": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "proposed": {
+          "id": "sha256:347cfac6f323dbac9802b4f1fbbf10d2f3a6a622016d0743d2718ec846b892c6",
+          "family": "family",
+          "epoch": 2,
+          "task_ids": [
+            "task-2",
+            "task-3"
+          ],
+          "weights": {
+            "task-2": 0.5,
+            "task-3": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "anchor": "anchor",
+        "selected": [
+          "chosen"
+        ],
+        "historical_probabilities": {
+          "chosen": 0.5,
+          "specialist": 0.5
+        },
+        "historical_order": [
+          "chosen",
+          "specialist"
+        ],
+        "remaining": {
+          "cells": 2,
+          "repair_cells": 20
+        },
+        "cached": [
+          "anchor:task-2",
+          "anchor:task-3",
+          "chosen:task-2",
+          "chosen:task-3"
+        ],
+        "repair_per_candidate": 0
+      },
+      "expected": {
+        "epoch": 2,
+        "admission": {
+          "family_id": "family",
+          "previous_scope_id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "proposed_scope_id": "sha256:347cfac6f323dbac9802b4f1fbbf10d2f3a6a622016d0743d2718ec846b892c6",
+          "participant_ids": [
+            "anchor",
+            "chosen",
+            "specialist"
+          ],
+          "excluded_historical_ids": [],
+          "status": "admitted",
+          "reason_codes": [],
+          "cost": {
+            "cells": 2,
+            "repair_cells": 0
+          }
+        },
+        "quotes": [
+          {
+            "ids": [
+              "anchor",
+              "chosen",
+              "specialist"
+            ],
+            "tasks": [
+              "task-2",
+              "task-3"
+            ],
+            "cost": {
+              "cells": 2,
+              "repair_cells": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "period": 1,
+      "round": 1,
+      "maxHistorical": 0,
+      "cells": 6,
+      "repair": 20,
+      "repairPerCandidate": 0,
+      "cached": [],
+      "name": "no-historical-specialists",
+      "input": {
+        "period": 1,
+        "round_index": 1,
+        "max_historical": 0,
+        "previous": {
+          "id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "family": "family",
+          "epoch": 1,
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ],
+          "weights": {
+            "task-0": 0.5,
+            "task-1": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "proposed": {
+          "id": "sha256:347cfac6f323dbac9802b4f1fbbf10d2f3a6a622016d0743d2718ec846b892c6",
+          "family": "family",
+          "epoch": 2,
+          "task_ids": [
+            "task-2",
+            "task-3"
+          ],
+          "weights": {
+            "task-2": 0.5,
+            "task-3": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "anchor": "anchor",
+        "selected": [
+          "chosen"
+        ],
+        "historical_probabilities": {
+          "chosen": 0.5,
+          "specialist": 0.5
+        },
+        "historical_order": [
+          "chosen",
+          "specialist"
+        ],
+        "remaining": {
+          "cells": 6,
+          "repair_cells": 20
+        },
+        "cached": [],
+        "repair_per_candidate": 0
+      },
+      "expected": {
+        "epoch": 2,
+        "admission": {
+          "family_id": "family",
+          "previous_scope_id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "proposed_scope_id": "sha256:347cfac6f323dbac9802b4f1fbbf10d2f3a6a622016d0743d2718ec846b892c6",
+          "participant_ids": [
+            "anchor",
+            "chosen"
+          ],
+          "excluded_historical_ids": [],
+          "status": "admitted",
+          "reason_codes": [],
+          "cost": {
+            "cells": 4,
+            "repair_cells": 0
+          }
+        },
+        "quotes": [
+          {
+            "ids": [
+              "anchor",
+              "chosen"
+            ],
+            "tasks": [
+              "task-2",
+              "task-3"
+            ],
+            "cost": {
+              "cells": 4,
+              "repair_cells": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "period": 1,
+      "round": 1,
+      "maxHistorical": 2,
+      "cells": 6,
+      "repair": 20,
+      "repairPerCandidate": 0,
+      "cached": [],
+      "name": "mandatory-anchor-only",
+      "selected": false,
+      "input": {
+        "period": 1,
+        "round_index": 1,
+        "max_historical": 2,
+        "previous": {
+          "id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "family": "family",
+          "epoch": 1,
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ],
+          "weights": {
+            "task-0": 0.5,
+            "task-1": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "proposed": {
+          "id": "sha256:347cfac6f323dbac9802b4f1fbbf10d2f3a6a622016d0743d2718ec846b892c6",
+          "family": "family",
+          "epoch": 2,
+          "task_ids": [
+            "task-2",
+            "task-3"
+          ],
+          "weights": {
+            "task-2": 0.5,
+            "task-3": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "anchor": "anchor",
+        "selected": [],
+        "historical_probabilities": {
+          "chosen": 0.5,
+          "specialist": 0.5
+        },
+        "historical_order": [
+          "chosen",
+          "specialist"
+        ],
+        "remaining": {
+          "cells": 6,
+          "repair_cells": 20
+        },
+        "cached": [],
+        "repair_per_candidate": 0
+      },
+      "expected": {
+        "epoch": 2,
+        "admission": {
+          "family_id": "family",
+          "previous_scope_id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "proposed_scope_id": "sha256:347cfac6f323dbac9802b4f1fbbf10d2f3a6a622016d0743d2718ec846b892c6",
+          "participant_ids": [
+            "anchor",
+            "chosen",
+            "specialist"
+          ],
+          "excluded_historical_ids": [],
+          "status": "admitted",
+          "reason_codes": [],
+          "cost": {
+            "cells": 6,
+            "repair_cells": 0
+          }
+        },
+        "quotes": [
+          {
+            "ids": [
+              "anchor",
+              "chosen",
+              "specialist"
+            ],
+            "tasks": [
+              "task-2",
+              "task-3"
+            ],
+            "cost": {
+              "cells": 6,
+              "repair_cells": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "period": 1,
+      "round": 1,
+      "maxHistorical": 1,
+      "cells": 6,
+      "repair": 20,
+      "repairPerCandidate": 0,
+      "cached": [],
+      "name": "no-committed-family-history",
+      "history": false,
+      "input": {
+        "period": 1,
+        "round_index": 1,
+        "max_historical": 1,
+        "previous": {
+          "id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "family": "family",
+          "epoch": 1,
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ],
+          "weights": {
+            "task-0": 0.5,
+            "task-1": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "proposed": null,
+        "anchor": "anchor",
+        "selected": [
+          "chosen"
+        ],
+        "historical_probabilities": {
+          "chosen": 0.5,
+          "specialist": 0.5
+        },
+        "historical_order": [
+          "chosen",
+          "specialist"
+        ],
+        "remaining": {
+          "cells": 6,
+          "repair_cells": 20
+        },
+        "cached": [],
+        "repair_per_candidate": 0
+      },
+      "expected": {
+        "epoch": 2,
+        "admission": {
+          "family_id": "family",
+          "previous_scope_id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "proposed_scope_id": null,
+          "participant_ids": [],
+          "excluded_historical_ids": [],
+          "status": "no-history",
+          "reason_codes": [
+            "no-committed-family-diagnosis"
+          ],
+          "cost": {
+            "cells": 0,
+            "repair_cells": 0
+          }
+        },
+        "quotes": []
+      }
+    },
+    {
+      "period": 1,
+      "round": 1,
+      "maxHistorical": 1,
+      "cells": 6,
+      "repair": 20,
+      "repairPerCandidate": 0,
+      "cached": [],
+      "name": "equivalent-scope-stays-unchanged",
+      "equivalent": true,
+      "input": {
+        "period": 1,
+        "round_index": 1,
+        "max_historical": 1,
+        "previous": {
+          "id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "family": "family",
+          "epoch": 1,
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ],
+          "weights": {
+            "task-0": 0.5,
+            "task-1": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "proposed": {
+          "id": "sha256:e213f80f7620c62922ba13c8cea8c59ccc1688722a9f20303a8b2b115c499e62",
+          "family": "family",
+          "epoch": 2,
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ],
+          "weights": {
+            "task-0": 0.5,
+            "task-1": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "anchor": "anchor",
+        "selected": [
+          "chosen"
+        ],
+        "historical_probabilities": {
+          "chosen": 0.5,
+          "specialist": 0.5
+        },
+        "historical_order": [
+          "chosen",
+          "specialist"
+        ],
+        "remaining": {
+          "cells": 6,
+          "repair_cells": 20
+        },
+        "cached": [],
+        "repair_per_candidate": 0
+      },
+      "expected": {
+        "epoch": 2,
+        "admission": {
+          "family_id": "family",
+          "previous_scope_id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "proposed_scope_id": "sha256:e213f80f7620c62922ba13c8cea8c59ccc1688722a9f20303a8b2b115c499e62",
+          "participant_ids": [],
+          "excluded_historical_ids": [],
+          "status": "unchanged",
+          "reason_codes": [
+            "equivalent-task-scope"
+          ],
+          "cost": {
+            "cells": 0,
+            "repair_cells": 0
+          }
+        },
+        "quotes": []
+      }
+    },
+    {
+      "period": null,
+      "round": 3,
+      "maxHistorical": 1,
+      "cells": 6,
+      "repair": 20,
+      "repairPerCandidate": 0,
+      "cached": [],
+      "name": "stable-policy-does-not-prepare",
+      "input": {
+        "period": null,
+        "round_index": 3,
+        "max_historical": 1,
+        "previous": {
+          "id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "family": "family",
+          "epoch": 1,
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ],
+          "weights": {
+            "task-0": 0.5,
+            "task-1": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "proposed": {
+          "id": "sha256:c929368e9d84e261a2455722fb96c578735b30779df23f68e9548fca077fba4b",
+          "family": "family",
+          "epoch": 1,
+          "task_ids": [
+            "task-2",
+            "task-3"
+          ],
+          "weights": {
+            "task-2": 0.5,
+            "task-3": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "anchor": "anchor",
+        "selected": [
+          "chosen"
+        ],
+        "historical_probabilities": {
+          "chosen": 0.5,
+          "specialist": 0.5
+        },
+        "historical_order": [
+          "chosen",
+          "specialist"
+        ],
+        "remaining": {
+          "cells": 6,
+          "repair_cells": 20
+        },
+        "cached": [],
+        "repair_per_candidate": 0
+      },
+      "expected": {
+        "epoch": 1,
+        "admission": null,
+        "quotes": []
+      }
+    },
+    {
+      "period": 2,
+      "round": 1,
+      "maxHistorical": 1,
+      "cells": 6,
+      "repair": 20,
+      "repairPerCandidate": 0,
+      "cached": [],
+      "name": "not-an-update-boundary",
+      "input": {
+        "period": 2,
+        "round_index": 1,
+        "max_historical": 1,
+        "previous": {
+          "id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "family": "family",
+          "epoch": 1,
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ],
+          "weights": {
+            "task-0": 0.5,
+            "task-1": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "proposed": {
+          "id": "sha256:c929368e9d84e261a2455722fb96c578735b30779df23f68e9548fca077fba4b",
+          "family": "family",
+          "epoch": 1,
+          "task_ids": [
+            "task-2",
+            "task-3"
+          ],
+          "weights": {
+            "task-2": 0.5,
+            "task-3": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "anchor": "anchor",
+        "selected": [
+          "chosen"
+        ],
+        "historical_probabilities": {
+          "chosen": 0.5,
+          "specialist": 0.5
+        },
+        "historical_order": [
+          "chosen",
+          "specialist"
+        ],
+        "remaining": {
+          "cells": 6,
+          "repair_cells": 20
+        },
+        "cached": [],
+        "repair_per_candidate": 0
+      },
+      "expected": {
+        "epoch": 1,
+        "admission": null,
+        "quotes": []
+      }
+    },
+    {
+      "period": 2,
+      "round": 0,
+      "maxHistorical": 1,
+      "cells": 6,
+      "repair": 20,
+      "repairPerCandidate": 0,
+      "cached": [],
+      "name": "first-round-has-no-preparation",
+      "input": {
+        "period": 2,
+        "round_index": 0,
+        "max_historical": 1,
+        "previous": {
+          "id": "sha256:af0ecfb037001b42950a0c94936764f2524336ab6ed4a0e59f6a919b4739c46e",
+          "family": "family",
+          "epoch": 1,
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ],
+          "weights": {
+            "task-0": 0.5,
+            "task-1": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "proposed": {
+          "id": "sha256:c929368e9d84e261a2455722fb96c578735b30779df23f68e9548fca077fba4b",
+          "family": "family",
+          "epoch": 1,
+          "task_ids": [
+            "task-2",
+            "task-3"
+          ],
+          "weights": {
+            "task-2": 0.5,
+            "task-3": 0.5
+          },
+          "guard_identity": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "anchor": "anchor",
+        "selected": [
+          "chosen"
+        ],
+        "historical_probabilities": {
+          "chosen": 0.5,
+          "specialist": 0.5
+        },
+        "historical_order": [
+          "chosen",
+          "specialist"
+        ],
+        "remaining": {
+          "cells": 6,
+          "repair_cells": 20
+        },
+        "cached": [],
+        "repair_per_candidate": 0
+      },
+      "expected": {
+        "epoch": 1,
+        "admission": null,
+        "quotes": []
+      }
+    }
+  ]
+}

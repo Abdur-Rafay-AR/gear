@@ -9,8 +9,8 @@
 | 检查 | 结果与边界 |
 | --- | --- |
 | TypeScript 全量回归 | `697a63d` 的远端 CI：104 个测试文件通过、7 个按环境跳过；无模型环境项单独验证 |
-| 项目定向回归 | archive 策略迁移后：10 个文件、101 项通过，含固定 fixture、真实 worker 协议闭环、bridge 恢复与 CLI 作者流程 |
-| Python 全量回归 | archive 策略迁移后本地 335 项：331 项通过，4 项按环境跳过 |
+| 项目定向回归 | epoch 生命周期接入后：11 个文件、116 项通过，含固定 fixture、真实 worker 闭环、epoch/bridge 恢复与 CLI 作者流程 |
+| Python 全量回归 | epoch 生命周期接入后本地 341 项：337 项通过，4 项按环境跳过 |
 | Python 公共 API | Ruff lint/format、Mypy strict 通过 |
 | TS 质量 | typecheck、Biome、协议生成一致性、204 个模块依赖/循环检查通过 |
 | CI/发布规则 | 14 项规则测试通过；dev 代码变更启用完整回归 |
@@ -25,6 +25,8 @@
 `b1f147e` 的 [作者接口 CI](https://github.com/rsi-gear/gear/actions/runs/38118016443) 随后全部通过，含 Quality 全量、安装包检查、CPU、Linux/macOS sandbox 与真实 Hitch 合同；后续 Hitch 拆分及 OneShot 补证的本地结果分别记录，不把此 CI 当作后续提交验证。
 
 `5af4b27` 的 [Hitch 拆分与 OneShot CI](https://github.com/rsi-gear/gear/actions/runs/38118585504) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。随后 archive 迁移的本地验证单独记录如下。
+
+`ea7b02e` 的 [archive 与父代策略 CI](https://github.com/rsi-gear/gear/actions/runs/38119768715) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。下面的 epoch 集成属于其后新增代码，不用该 CI 代替新代码验证。
 
 ## 推送后修复
 
@@ -74,6 +76,20 @@ Python 新增 seed-only archive 投影、`ParentInput` / `ParentPlan`、无可�
 新增 5 项 Python 测试验证固定比较、重放/输入不变、身份/证据冲突拒绝、配额合同与局部完整证据；局部缺失评分不再隐式按零分判为失败。公开 `archive_policy.py` 用题族 archive 选择父代，通过真实 Python 协议 worker 接入 durable runtime：两次生成、完整 seed、独立 held-out gate 和终态恢复，不重复提交。
 
 本地项目 101 项通过，Python 全量 335 项中 331 通过、4 跳过；Ruff lint/format、28 个公共模块 Mypy strict、typecheck、Biome、204 模块边界和协议生成检查通过。macOS 实际 worker sandbox 两项通过。独立 tgz/wheel 安装检查通过，新增从安装包用两种 CLI 检查 archive 策略及 factory；六组模板/Target、SDK、CPU training 和恢复继续通过。本轮没有新增模型调用，没有修改 README、历史身份或原用户工作区。
+
+## 周期 scope 准备与 archive 阶段集成
+
+`StagedGEPA` 的状态显式升级为 `staged-gepa-v2`。运行内 catalog、scope/候选登记、题族历史、共享 epoch 输入和父代选择写入原有 decision 状态；原始评分仍从 runtime 的 seed-only view 投影，不复制 evidence journal。默认从多 scope 前沿抽一个父代批次；局部完整的历史候选可继续探索，最终提名仍须完整 seed。原 `parent_policy=fn` 可覆盖完整 seed 父代，原构造位置参数保持顺序。独立评分/预算投影移至 `stage_evidence.py`，准备与生成计划移至 `stage_planning.py`，移除 staged 中的重复实现。
+
+`EpochPolicy` 默认稳定复用；周期模式先冻结旧 archive 的父代，再冻结每个新 scope 的必需/可选参与者和 evaluate 操作。champion 与从该旧 scope 选出的父代不能因预算不足被删除，可选历史候选依概率从末尾剔除。新 scope 的整组 baseline 完整且通过 must-pass guards 才登记；否则保留旧 scope。新 scope 不导致当前父代重抽，后续批次才使用更新后的 archive。每个 epoch 的共享成功题输入只冻结一次；修正了同 epoch 随父代变化重采样的可能性。guards 从实际 seed pass scores 判断，冻结身份通过公开 helper 构造，越界/错配身份被拒绝。
+
+新增 `test-contracts/gepa-epochs-v1.json`：13 组期望值来自未修改的旧 TypeScript `prepareScopeEpochs`（源提交 `ea7b02e`），覆盖 cells/repair 预算、必需参与者、历史候选剔除、缓存、无历史、等价 scope、稳定/周期边界。fixture 预先冻结 proposed scope，验证的是准入与开销合同；scope 选题由既有采样 fixtures 验证，不能合称完整历史计划序列等价。
+
+6 项 Python 测试覆盖上述固定对照、多批次 catalog、局部父代、缺失 baseline 保留旧资格、共享输入冻结、guard 校验、输入不变和 v1 状态拒绝。实际 Python 协议 worker 经 durable runtime 运行四次生成，并在 epoch 评测已完成但响应丢失时中断；恢复复用原 decision、父代及参与者，新 scope 在确认完整前未启用，未重复物理提交，终态 resume 一致。
+
+本地项目 116 项通过；Python 全量 341 项中 337 通过、4 跳过；Ruff、31 个公共模块 Mypy strict、typecheck、Biome、204 模块边界与协议检查通过。macOS worker sandbox 两项通过。独立 tgz/wheel 通过，安装后的 wheel 可使用 `EpochPolicy` 配置 StagedGEPA，六组模板/Target、CPU training 恢复、SDK 和双算法 CLI 继续通过。没有新增模型测试，没有改写旧 run 身份、README 或原工作区。
+
+仍未完成：跨 run archive 与历史证据修订、历史难度/诊断的完整来源、process/objective、多父代批次、regression proposal、全序列 shadow/replay 与默认算法切换。此处完成了运行内周期准备及恢复，不代表 M3/M5 全部验收。
 
 ## Hitch 执行合同拆分
 

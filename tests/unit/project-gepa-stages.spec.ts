@@ -8,7 +8,8 @@ import type { ProjectProvider, TrialResult } from '../../src/ports/project.js'
 import type { RunStore } from '../../src/ports/run-store.js'
 import { type ProjectRun, ProjectRuntime, type RunPlan } from '../../src/runtime/project.js'
 
-function fixture(interruptBridge = false, entrypoint = 'gear.algorithms:StagedGEPA') {
+function fixture(interruptBridge = false, entrypoint = 'gear.algorithms:StagedGEPA', periodic = false) {
+  const seedSize = periodic ? 20 : 10
   let saved: ProjectRun
   let interrupted = false
   const results = new Map<string, TrialResult>()
@@ -38,9 +39,21 @@ function fixture(interruptBridge = false, entrypoint = 'gear.algorithms:StagedGE
       const result: TrialResult = {
         status: 'completed',
         physicalAttempts: 1,
-        output: input.target.id === 'initial' ? 'wrong' : 'correct',
+        output:
+          input.target.id === 'initial'
+            ? 'wrong'
+            : !periodic
+              ? 'correct'
+              : (saved.algorithmState.plans as Array<{ task_ids: string[] }> | undefined)?.[0]?.task_ids[0] ===
+                  input.task.id
+                ? 'correct'
+                : 'wrong',
       }
       results.set(input.operationId, result)
+      if (periodic && !interrupted && saved.algorithmState.stage === 'epoch-results' && input.target.id !== 'initial') {
+        interrupted = true
+        throw new Error('fixture-worker-disconnected-after-epoch-result')
+      }
       if (interruptBridge && !interrupted && saved.algorithmState.stage === 'global') {
         interrupted = true
         throw new Error('fixture-worker-disconnected-after-bridge-result')
@@ -82,7 +95,10 @@ function fixture(interruptBridge = false, entrypoint = 'gear.algorithms:StagedGE
         ['-m', 'gear._protocol.worker', entrypoint],
         {
           cwd: resolve(import.meta.dirname, '../..'),
-          env: { PYTHONPATH: ['python', 'examples/python-algorithm'].join(delimiter), PYTHONDONTWRITEBYTECODE: '1' },
+          env: {
+            PYTHONPATH: ['python', 'examples/python-algorithm', 'tests/fixtures/project_algorithms'].join(delimiter),
+            PYTHONDONTWRITEBYTECODE: '1',
+          },
           input: `${JSON.stringify(request)}\n`,
           encoding: 'utf8',
           stdio: ['pipe', 'pipe', 'pipe'],
@@ -99,20 +115,20 @@ function fixture(interruptBridge = false, entrypoint = 'gear.algorithms:StagedGE
     algorithmIdentity: algorithm.identity,
     target: { id: 'initial', files: { 'AGENTS.md': 'initial' }, digest: canonicalDigest('initial') },
     validation: 'holdout',
-    maxEvaluations: 60,
-    maxCandidates: 2,
+    maxEvaluations: periodic ? 100 : 60,
+    maxCandidates: periodic ? 4 : 2,
     split: 'seed',
-    taskIds: Array.from({ length: 10 }, (_, i) => `seed-${i}`),
+    taskIds: Array.from({ length: seedSize }, (_, i) => `seed-${i}`),
     benchmark: {
       version: 1,
       sourceDigest: 'fixture-source',
       digest: 'fixture-benchmark',
       metric: { name: 'pass_rate', direction: 'maximize', range: [0, 1], missing: 'invalid' },
-      tasks: Array.from({ length: 12 }, (_, i) => ({
-        id: i < 10 ? `seed-${i}` : `PRIVATE-HOLDOUT-${i}`,
-        instruction: i < 10 ? 'Produce correct' : 'PRIVATE-HOLDOUT',
-        family: `family-${i % 2}`,
-        split: i < 10 ? ('seed' as const) : ('held_out' as const),
+      tasks: Array.from({ length: seedSize + 2 }, (_, i) => ({
+        id: i < seedSize ? `seed-${i}` : `PRIVATE-HOLDOUT-${i}`,
+        instruction: i < seedSize ? 'Produce correct' : 'PRIVATE-HOLDOUT',
+        family: periodic ? 'same' : `family-${i % 2}`,
+        split: i < seedSize ? ('seed' as const) : ('held_out' as const),
         scorer: { kind: 'text' as const, expected: 'correct', normalization: 'exact' as const },
         fixtures: { positive: 'correct', negative: 'wrong' },
       })),
@@ -189,4 +205,30 @@ it('uses the public multi-scope archive parent policy in a durable Python GEPA r
   expect(await f.runtime().resume(run.id, new AbortController().signal)).toEqual(run)
   expect(f.calls).toEqual(submitted)
   expect(f.generations.size).toBe(2)
+})
+
+it('recovers a frozen periodic scope preparation without resampling parents or resubmitting a lost result', async () => {
+  const f = fixture(false, 'periodic:build_algorithm', true)
+  await expect(f.runtime().start(f.plan, new AbortController().signal)).rejects.toThrow(
+    'disconnected-after-epoch-result',
+  )
+  const pending = f.saved().decisions.find((d) => !d.done)!
+  const frozen = structuredClone(pending.decision)
+  expect(frozen.state.stage).toBe('epoch-results')
+  const preparation = frozen.state.pending_epoch as { scope: { id: string }; admission: { participant_ids: string[] } }
+  expect(preparation.admission.participant_ids).toContain('initial')
+  expect(preparation.admission.participant_ids).toContain(frozen.state.parent)
+  expect(
+    (frozen.state.catalog as Array<{ scope: { id: string } }>).some((c) => c.scope.id === preparation.scope.id),
+  ).toBe(false)
+  const run = await f.runtime().resume(f.saved().id, new AbortController().signal)
+  expect(run.status).toBe('complete')
+  expect(run.decisions[pending.step]!.decision).toEqual(frozen)
+  expect(new Set(f.calls).size).toBe(f.calls.length)
+  expect(new Set(f.steps).size).toBe(f.steps.length)
+  expect(f.generations.size).toBe(4)
+  expect((run.algorithmState.catalog as unknown[]).length).toBeGreaterThanOrEqual(4)
+  const calls = [...f.calls]
+  expect(await f.runtime().resume(run.id, new AbortController().signal)).toEqual(run)
+  expect(f.calls).toEqual(calls)
 })

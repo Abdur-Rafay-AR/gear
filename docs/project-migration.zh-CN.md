@@ -31,3 +31,7 @@ Python 已提供历史 shared/local/cross 采样的纯函数与可选 `ScopeSamp
 多 scope archive 的纯投影现已迁入 Python：按题族选择最新可用 epoch、保留尚未被可用新版替换的旧 scope、去除语义等价 scope 的重复概率，并区分候选实例与 Target 内容身份。`ParentInput` / `ParentPlan`、索引随机源及 scoped/champion 混合策略有 11 组旧实现 archive 和 55 份父代分配固定对照；公开 `archive_policy.py` 示例通过项目运行层的完整离线回合。原始证据认证与 revision 仍由 runtime 负责，不能将这些纯函数视为已迁移完整历史 archive 生命周期。周期性 scope 准备、历史难度和 adaptive epochs 仍未接入默认 recipe。
 
 完整 seed 的 `FrontierParentPolicy` 复用同一 archive 投影，随机选择实现集中到 `RandomSource`，原公开 frontier imports 保留。局部采样修正为只把已观察的低分题视为失败，未观察题不再隐式按零分分类。新模块正常进入算法源码身份；不重算旧数据或修改历史身份，活跃旧运行继续使用其冻结版本。
+
+后续 `StagedGEPA` 已升级为明确的新状态 `staged-gepa-v2`：多 scope 父代、scope catalog、题族历史与每个 epoch 的共享输入进入原子 decision；周期准备通过原 runtime 评测，完整且满足 guard 后启用新 scope。默认稳定复用，`EpochPolicy(update_every_rounds=...)` 显式启用周期变化。v2 选择局部完整父代，先补齐 local baseline；旧版只从完整 seed 选择父代，并重新生成局部 scope。这个变化有新源码身份与状态版本，不能直接恢复 v1。原先的构造位置参数保持顺序，原 `parent_policy=fn` 覆盖保留完整 seed 合同。
+
+13 组旧实现固定 proposal 的 epoch 准入比较覆盖 cells/repair 预算、参与者剔除、缓存、周期边界和等价 scope；scope 采样另有独立固定样例。真实 Python worker 的准备阶段中断后恢复不重抽父代、不重复提交，终态 resume 一致。此处的 catalog 属于单 run 的算法计划状态，原始证据与预算仍由 runtime 拥有；跨 run 历史 archive、证据修订和完整历史诊断尚未迁完，不能宣称默认历史 GEPA 等价或切换完成。

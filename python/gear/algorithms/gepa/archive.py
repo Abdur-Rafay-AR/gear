@@ -22,6 +22,7 @@ from .research import (
     ResearchArchive,
     ScopedProfile,
     build_research_archive,
+    must_pass_guard_identity,
 )
 
 __all__ = [
@@ -40,16 +41,21 @@ def project_seed_archive(
     view: SearchView,
     scopes: tuple[ArchiveScope, ...],
     registrations: Mapping[str, tuple[str, ...]] | None = None,
+    *,
+    must_pass_guards: Mapping[str, tuple[str, ...]] | None = None,
 ) -> ResearchArchive:
     """Project runtime-certified pass scores without copying an evidence database.
 
     New project views use candidate admission order to break identical-Target
     ties. Optional registrations limit which scope/candidate pairs may support
-    the archive; absent registrations admit all observed pairs. Guarded and
-    process/objective profiles use build_research_archive after trusted grading.
+    the archive; absent registrations admit all observed pairs. Explicit
+    must-pass guards use certified pass scores. Other guards and process/objective
+    profiles use build_research_archive after trusted grading.
     """
     members, profiles = [], []
     candidate_ids = {c.id for c in view.candidates}
+    if must_pass_guards is not None and not set(must_pass_guards) <= {s.id for s in scopes}:
+        raise ValueError("Unknown guard scope")
     if registrations is not None and (
         not set(registrations) <= {s.id for s in scopes}
         or any(not set(ids) <= candidate_ids for ids in registrations.values())
@@ -66,8 +72,14 @@ def project_seed_archive(
         if any(not math.isfinite(v) or not 0 <= v <= 1 for v in scores.values()):
             raise ValueError("Frontier parent policy requires observed pass scores")
         for scope in scopes:
-            if scope.guard_identity:
+            guards = (must_pass_guards or {}).get(scope.id, ())
+            if scope.guard_identity and (
+                scope.guard_identity != must_pass_guard_identity(guards)
+                or not set(guards) <= set(scope.task_ids)
+            ):
                 raise ValueError("Guarded profiles require trusted guard evaluation")
+            if guards and not scope.guard_identity:
+                raise ValueError("Guarded scope requires a frozen guard identity")
             if registrations is not None and candidate.id not in registrations.get(scope.id, ()):
                 continue
             observed = {t: scores[t] for t in scope.task_ids if t in scores}
@@ -96,6 +108,7 @@ def project_seed_archive(
                         {t: comparison_key(v) for t, v in observed.items()},
                         aggregate,
                         observed_at=index,
+                        guard_passed=all(scores.get(t) == 1 for t in guards),
                     ),
                 )
             )
