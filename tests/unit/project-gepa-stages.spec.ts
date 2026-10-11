@@ -172,3 +172,21 @@ it('runs an independent OneShot algorithm through baseline, proposal, full seed,
   expect(f.calls).toEqual(submitted)
   expect(f.generations.size).toBe(1)
 })
+
+it('uses the public multi-scope archive parent policy in a durable Python GEPA run', async () => {
+  const f = fixture(false, 'archive_policy:build_algorithm')
+  const run = await f.runtime().start(f.plan, new AbortController().signal)
+  expect(run.status).toBe('complete')
+  expect(run.gate?.accepted).toBe(true)
+  expect(run.champion).not.toBe('initial')
+  expect(run.trials.filter((t) => t.candidate === run.nominee && t.split === 'seed')).toHaveLength(10)
+  expect(run.trials.filter((t) => t.candidate === run.nominee && t.split === 'held_out')).toHaveLength(2)
+  expect(run.decisions.every((d) => d.decision.reason.length > 0)).toBe(true)
+  expect(f.generations.size).toBe(2)
+  expect(f.calls.length).toBeLessThanOrEqual(f.plan.maxEvaluations)
+  expect(new Set(f.calls).size).toBe(f.calls.length)
+  const submitted = [...f.calls]
+  expect(await f.runtime().resume(run.id, new AbortController().signal)).toEqual(run)
+  expect(f.calls).toEqual(submitted)
+  expect(f.generations.size).toBe(2)
+})

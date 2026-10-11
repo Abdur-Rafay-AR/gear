@@ -104,7 +104,13 @@ try {
     `from gear import Project; assert Project(${JSON.stringify(join(temp, 'pi-json'))}, command=(${JSON.stringify(process.execPath)},${JSON.stringify(cli)})).check()['ok']`,
   ])
   const examples = join(temp, 'node_modules/rsi-gear/examples/python-algorithm')
-  for (const entrypoint of ['policy:champion_parent', 'policy:build_algorithm', 'one_shot:build_algorithm']) {
+  for (const entrypoint of [
+    'policy:champion_parent',
+    'policy:build_algorithm',
+    'one_shot:build_algorithm',
+    'archive_policy:choose_parent',
+    'archive_policy:build_algorithm',
+  ]) {
     const args = ['algorithm', 'test', entrypoint, '--source', examples]
     const checked = JSON.parse(run(installed, ['-m', 'gear', ...args]))
     assert.equal(checked.ok, true)

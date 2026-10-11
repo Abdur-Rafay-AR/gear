@@ -9,8 +9,8 @@
 | 检查 | 结果与边界 |
 | --- | --- |
 | TypeScript 全量回归 | `697a63d` 的远端 CI：104 个测试文件通过、7 个按环境跳过；无模型环境项单独验证 |
-| 项目定向回归 | 作者接口补齐后：9 个文件、87 项通过，含固定 fixture、真实 worker 协议闭环、bridge 恢复与 CLI 作者流程 |
-| Python 全量回归 | 作者接口补齐后本地 330 项：326 项通过，4 项按环境跳过 |
+| 项目定向回归 | archive 策略迁移后：10 个文件、101 项通过，含固定 fixture、真实 worker 协议闭环、bridge 恢复与 CLI 作者流程 |
+| Python 全量回归 | archive 策略迁移后本地 335 项：331 项通过，4 项按环境跳过 |
 | Python 公共 API | Ruff lint/format、Mypy strict 通过 |
 | TS 质量 | typecheck、Biome、协议生成一致性、204 个模块依赖/循环检查通过 |
 | CI/发布规则 | 14 项规则测试通过；dev 代码变更启用完整回归 |
@@ -23,6 +23,8 @@
 `697a63d` 的 [远端 CI](https://github.com/rsi-gear/gear/actions/runs/38116355997) 已全部通过：Quality 全量、真实容器 verifier、独立项目 tgz/wheel、外部搜索 API、Linux/macOS sandbox、CPU 训练及 Hitch 合同。该提交远端 Python 为 316 项（312 通过、4 跳过）；后续作者接口的本地验证单独记录如下，不把前次 CI 当作新代码验证。平台模型测试是显式启用项，不把跳过记为通过。未运行 GPU 训练，也未用自动化代替人工易用性测试。
 
 `b1f147e` 的 [作者接口 CI](https://github.com/rsi-gear/gear/actions/runs/38118016443) 随后全部通过，含 Quality 全量、安装包检查、CPU、Linux/macOS sandbox 与真实 Hitch 合同；后续 Hitch 拆分及 OneShot 补证的本地结果分别记录，不把此 CI 当作后续提交验证。
+
+`5af4b27` 的 [Hitch 拆分与 OneShot CI](https://github.com/rsi-gear/gear/actions/runs/38118585504) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。随后 archive 迁移的本地验证单独记录如下。
 
 ## 推送后修复
 
@@ -62,6 +64,16 @@
 真实 macOS sandbox 两项通过：既有凭据/文件/网络隔离，及 SDK 封存策略的实际执行。修改原作者文件后仍使用冻结策略，修改已封存文件后拒绝执行。独立 tgz/wheel 检查通过，新增从安装包运行单文件父代、GEPA factory 和独立 `OneShot` 算法；Python 与 Node CLI 决策摘要一致；同步/异步 SDK 和源码封存均通过。此轮没有新增模型调用。完整历史 GEPA 等价、迁移与人工验收仍未完成。
 
 独立 `OneShot` 示例随后经真实 Python 协议进程完成 durable runtime 回合：baseline → 一次生成 → 10 题完整 seed → 2 题 held-out gate → champion 更新。它没有继承或调用 GEPA；计划不包含 diagnose/local/bridge。终态 resume 不增加物理提交或候选生成。新增测试与原有两项 StagedGEPA 闭环/恢复测试共 3 项通过，typecheck 通过；安装后 toy 的证据保留在上一段。此项为离线 fixture provider 合同，不是额外模型实验。
+
+## 多 scope archive 与父代分配
+
+`test-contracts/gepa-archive-v1.json` 的 11 组 archive 与 55 份父代分配计划由源提交 `5af4b27` 的旧 TypeScript 实现生成；没有修改旧 archive、frontier 或 parent policy。固定样例覆盖 bootstrap、多题族均匀混合、等价 scope 去重、新 epoch 未就绪时回退、旧 epoch 替换、guard 拒绝、缺失 process 与后续补齐、相同 Target 内容、champion 固定引用以及冻结的旧 locale 排序。双语言分别比较同一固定输入/输出，不由 Python 生成期望值。
+
+Python 新增 seed-only archive 投影、`ParentInput` / `ParentPlan`、无可变游标的 `RandomSource` 和 scoped/champion 混合策略。原 `FrontierParentPolicy` 复用新投影，frontier 实现移至单独模块并保留原 imports；移除重复随机实现。候选实例身份与内容身份分开；可信 profile 冲突、scope/候选越界与非法配额被拒绝。投影不持久化原始 observations，不接管 runtime 的证据认证或修订。周期性 epoch 准备、adaptive scope 与完整历史 archive 生命周期尚未完成。
+
+新增 5 项 Python 测试验证固定比较、重放/输入不变、身份/证据冲突拒绝、配额合同与局部完整证据；局部缺失评分不再隐式按零分判为失败。公开 `archive_policy.py` 用题族 archive 选择父代，通过真实 Python 协议 worker 接入 durable runtime：两次生成、完整 seed、独立 held-out gate 和终态恢复，不重复提交。
+
+本地项目 101 项通过，Python 全量 335 项中 331 通过、4 跳过；Ruff lint/format、28 个公共模块 Mypy strict、typecheck、Biome、204 模块边界和协议生成检查通过。macOS 实际 worker sandbox 两项通过。独立 tgz/wheel 安装检查通过，新增从安装包用两种 CLI 检查 archive 策略及 factory；六组模板/Target、SDK、CPU training 和恢复继续通过。本轮没有新增模型调用，没有修改 README、历史身份或原用户工作区。
 
 ## Hitch 执行合同拆分
 

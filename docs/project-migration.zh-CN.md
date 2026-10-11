@@ -27,3 +27,7 @@ Python 已提供历史 shared/local/cross 采样的纯函数与可选 `ScopeSamp
 `Candidate.content_digest` 是可选的只读 Target 内容身份，用于阻止相同代码在父代抽样中重复占位。旧的两参数 Python `Candidate(id, scores)` 和缺少该字段的 worker 输入继续可用；没有身份时不会推测内容相同。runtime 和算法源码身份正常变化，活跃旧 run 仍需匹配的冻结版本。CPU toy 也已对齐有效零分复用：重复请求已有观察不覆盖评分、不重复扣减预算。
 
 作者路径新增 `Project.open`、同步/异步 SDK、`refine(algorithm=...)` 和 `gear algorithm test` / `python -m gear algorithm test`。`Project(path)`、原来的 gear.yaml factory 和 `toy_round` 继续有效。单次算法覆盖只写入新 run binding；对象经普通 Python 源码封存交给原 worker，不能借此恢复采用不同身份的旧 run。源码变更应开新 run，已封存目录不可覆盖。异步取消本地客户端不等于取消 provider 任务，后者仍需显式核对和取消。CPU testkit 已集中为唯一 toy 执行实现，Benchmark facade 通过公开 Project 方法调用，不再依赖私有 `_request`。
+
+多 scope archive 的纯投影现已迁入 Python：按题族选择最新可用 epoch、保留尚未被可用新版替换的旧 scope、去除语义等价 scope 的重复概率，并区分候选实例与 Target 内容身份。`ParentInput` / `ParentPlan`、索引随机源及 scoped/champion 混合策略有 11 组旧实现 archive 和 55 份父代分配固定对照；公开 `archive_policy.py` 示例通过项目运行层的完整离线回合。原始证据认证与 revision 仍由 runtime 负责，不能将这些纯函数视为已迁移完整历史 archive 生命周期。周期性 scope 准备、历史难度和 adaptive epochs 仍未接入默认 recipe。
+
+完整 seed 的 `FrontierParentPolicy` 复用同一 archive 投影，随机选择实现集中到 `RandomSource`，原公开 frontier imports 保留。局部采样修正为只把已观察的低分题视为失败，未观察题不再隐式按零分分类。新模块正常进入算法源码身份；不重算旧数据或修改历史身份，活跃旧运行继续使用其冻结版本。

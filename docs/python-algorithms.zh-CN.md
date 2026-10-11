@@ -6,6 +6,7 @@
 | --- | --- | --- |
 | 选父代 | `GEPA(parent_policy=fn)` | `gear/algorithms/gepa/parents.py` |
 | 从完整 seed 前沿抽父代 | `GEPA(parent_policy=FrontierParentPolicy())` | `gear/algorithms/gepa/archive.py` |
+| 多 scope archive 与父代配额 | `project_seed_archive`、`ScopedFrontierPolicy`、`ChampionGepaPolicy` | `gear/algorithms/gepa/research.py`、`parent_plan.py`、`parent_policies.py` |
 | 选局部题目 | `GEPA(task_sampler=fn)` | `gear/algorithms/gepa/sampling.py` |
 | shared/local/cross 选题 | `GEPA(task_sampler=ScopeSampler(...))` | `gear/algorithms/gepa/scopes.py` |
 | 提案计划 | `GEPA(proposal_planner=fn)` | `gear/algorithms/gepa/proposal.py` |
@@ -90,6 +91,20 @@ def build_algorithm():
 生成前会给完整 seed 扩展预留保守余量；bridge 规划按实际缺失的观察槽位计算整组开销，并保留可能胜者的后续扩展预算。最终物理预算、receipt、取消和恢复仍由 runtime 管理。状态标识为 `staged-gepa-v1`，不能装载默认 recipe 或历史 GEPA 的状态；中断后运行层复用已经提交的整个决策。无效生成消耗一次候选额度，不会重发。完整 seed 尚未覆盖的候选不能进入最终排名。
 
 `scope_frontier` 是独立的公开纯函数，消费已验证 profile 的整数比较键；它计算逐题前沿、合并相同 Target 的代表、移除联合冗余候选、区分 pending 和 guard 拒绝，并混合 outcome/process 权重。`FrontierParentPolicy` 是当前 pass-rate 视图的适配器，只使用完整 seed；候选的 `content_digest` 由 runtime 提供，只传内容身份，不传源码。缺少这个可选字段时不会推测两个候选相同。高级 archive 的证据修订、scope 等价合并和历史来源仍需由可信执行层核验。
+
+多 scope 作者可先用 `project_seed_archive(view, scopes, registrations)` 将已观察的 seed pass scores 投影成 archive。`scopes` 是 `ArchiveScope` 元组，包含 ID、题族、epoch、任务与归一化权重；可选 `registrations` 限定每个 scope 已纳入哪些候选。局部评分完整的候选可以成为该 scope 的父代，但这不使它获得完整 seed 的提名资格。缺失评分保持缺失，默认局部选题也不再把缺失当作失败。这个便捷投影不接受 guard 身份：需要 guard、process 或 objective 的作者应先取得可信运行层验证的 profile，再调用 `build_research_archive`。
+
+`build_research_archive` 选择每个题族最新的可用 epoch：新 epoch 证据不完整时保留旧版；相同任务、权重与 guard 身份的 scope 只计算一次概率，不因改名或增加 epoch 而重复增权。候选实例身份与 Target 内容身份分开，内容相同的候选保留原实例引用，但不重复占据前沿。输入只能包含 seed 与已经解决修订冲突的 profile；函数拒绝身份变化、越界任务及冲突的有效评分。它不持有原始证据、revision journal 或外部执行状态。
+
+`parent_input(archive, max_candidates, random_seed, include_champion=True)` 返回类型化父代视图。`ScopedFrontierPolicy(batch_count=...)` 按 scope/frontier 分配候选额度；`ChampionGepaPolicy(champion_probability=...)` 混合已验证 champion 与探索父代。它们的签名是 `(ParentInput, RandomSource) -> ParentPlan`，不能直接作为 `GEPA(parent_policy=...)` 的单参数回调。分发包中的 `examples/python-algorithm/archive_policy.py` 展示如何构建题族 scopes、取得单个分配并返回候选 ID；可运行：
+
+```sh
+python -m gear algorithm test archive_policy:build_algorithm --source ./examples/python-algorithm
+```
+
+`ParentPlan` 保留完整父代概率、scope/父代引用、slots、draw index 与 reason codes；`validate_parent_plan` 核验范围和配额。`RandomSource.choice(distribution, index=...)` 无可变随机游标，返回选择、完整分布、索引和新 canonical 输入摘要。新算法默认按 UTF-16 ID 排序；比较历史决策时必须显式冻结旧排序。运行层继续持久化作者返回的 decision，并独立执行预算校验。
+
+`test-contracts/gepa-archive-v1.json` 的 11 组 archive 与 55 份分配计划由未修改的旧 TypeScript 实现生成，双语言分别比较固定结果。该包示例也通过真实 Python worker 接入运行层，完成生成、完整 seed、最终 gate 和终态恢复。此处迁移的是可信证据的 archive 投影和选择策略；周期性 epoch 准备、历史证据修订、adaptive scope、regression proposal 与完整历史流程切换仍未完成。
 
 `select_bridge` 接收已经冻结题族顺序的 nominees，并返回共同计划和 quota/capacity/budget 排除记录；预算回调只报价，不发起执行。`test-contracts/gepa-stages-v1.json` 固定了旧实现的 10 组 frontier 和 10 组 bridge 输出，包含重复 Target、量化平局、缺失 process、guard、轮换、缓存与额度不足。旧 JavaScript 的 locale 排序由 fixture 显式冻结；新 recipe 采用跨平台固定的 UTF-16 ID 顺序，不读取宿主 locale。此 recipe 是新版本流程，默认 `algorithm: gepa` 未切换；多 scope archive 生命周期、process/objective 执行、adaptive scope 和 regression proposal 尚待完整迁移。
 
