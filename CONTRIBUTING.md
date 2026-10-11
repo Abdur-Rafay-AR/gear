@@ -124,8 +124,8 @@ fixtures in `tests/helpers/` and `tests/fixtures/`. Clean up processes, ports,
 and files; avoid real credentials, personal state, and fixed-sleep assumptions.
 
 CI selects jobs using [changed-path rules](.github/scripts/ci-changes.mjs).
-Development pushes keep the quick checks; relevant `main` pushes and PRs, and
-manual CI runs, include the full regression suite. Platform, Python training,
+Relevant `dev` and `main` pushes and PRs, and manual CI runs, include the full
+regression suite. Platform, Python training,
 and Hitch contract checks have separate jobs. CPU tests do not establish GPU
 support; training or hardware changes need the applicable environment and
 evidence from the [training guide](docs/training/README.zh-CN.md).
@@ -179,3 +179,39 @@ A merge to `main` triggers publication after its CI succeeds, using the version
 in `package.json`; an already published version is skipped. Coordinate version
 bumps with maintainers and update both package manifests. The workflow does not
 require a manually created GitHub Release.
+
+## Project interface checks
+
+New project code follows domain → ports → runtime/application → adapters boundaries;
+`npm run check:boundaries` rejects new runtime cycles and imports that violate those
+rules. CLI, Python `gear.Project`, and the project Skill route share the application
+service. Historical schemas remain in `src/compat`; storage owns IO and locking.
+Do not rewrite old identities during module moves.
+
+Run `npm run lint`, `npm run typecheck`, `npm run check:protocol`,
+`npm run check:boundaries`, and `npm run test:project`. The wire contract source is
+`contracts/algorithm-v1.json`; regenerate with `node scripts/generate-project-protocol.mjs`.
+From python/, run `ruff check gear --exclude training`, `ruff format --check gear --exclude training`,
+and `mypy` with the pinned dev extra. `npm run test:project:package` checks actual tgz/wheel
+consumers outside the repository. Dev and main architecture changes run the full
+TS/Python regression suite in CI. The copied historical validators retain their
+format and checks; their extraction is not a schema upgrade.
+
+Native Luna tests require explicit `GEAR_NATIVE_RUNTIME_IMAGE` and
+`DSH_OPENAI_CODEX_ACCESS_B64` environment references; run
+`npx vitest run tests/integration/project-native.spec.ts`. The test image is built
+from the packaged assets/native-runtime directory. This opt-in suite makes model
+requests. `GEAR_TEST_PROJECT_SANDBOX=required` enables the actual OS isolation test
+without a model. It must deny access to private files outside the working directory
+and a live loopback listener, not merely fail to connect to an absent service.
+
+The generated template verifiers and frozen input mount contract run in a real
+Docker container with `GEAR_VERIFIER_TEST_IMAGE=python:3.12-slim npx vitest run
+tests/integration/project-verifier.spec.ts`. This gate does not use model credentials.
+
+The extracted historical modules preserve their validation order and schemas.
+`adapters/hitch/trajectory-wire.ts` retains the complete wire checks together even
+when formatting takes it over the module length guideline; partial decoding must
+not make unvalidated trajectory fields visible. Moving executable adapter code
+requires extending its implementation identity closure and changing the fixture;
+old runs continue only with their matching frozen runtime.

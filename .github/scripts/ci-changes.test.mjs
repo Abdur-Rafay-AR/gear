@@ -18,6 +18,7 @@ test('platform tests retain runtime, fixture, dependency and configuration cover
   for (const path of ['src/sandbox.ts', 'src/refine/service.ts', 'assets/ipython-kernel.py',
     'skills/refine/references/protocol.md', 'tests/unit/notebook-runtime.spec.ts',
     'tests/unit/sandbox.spec.ts', 'tests/integration/sandbox-platform.spec.ts',
+    'tests/integration/project-worker-sandbox.spec.ts', 'python/gear/_protocol/worker.py',
     'tests/helpers/git-fixture.ts', 'tests/fixtures/notebook-helper.py',
     'tests/e2e/refine-skill.e2e.spec.ts', 'package.json', 'package-lock.json',
     'vitest.config.ts', 'tsconfig.json', 'scripts/build-private-tool-fs.mjs',
@@ -52,14 +53,14 @@ test('manual runs and unavailable comparisons select all platform jobs', () => {
   }), null)
 })
 
-test('dev code changes keep quick checks but defer full regression tests to main', () => {
+test('dev and main code changes run full regression tests', () => {
   const paths = ['src/refine/service.ts']
   assert.deepEqual(selectWorkflowJobs('push', { ref: 'refs/heads/dev' }, paths),
-    { code: true, macos: true, full_tests: false })
+    { code: true, macos: true, full_tests: true })
   // A PR's target branch determines the policy, not its source branch.
   assert.equal(selectWorkflowJobs('pull_request', { pull_request: {
     base: { ref: 'dev' }, head: { ref: 'main' },
-  } }, paths).full_tests, false)
+  } }, paths).full_tests, true)
   assert.equal(selectWorkflowJobs('pull_request', { pull_request: {
     base: { ref: 'main' }, head: { ref: 'dev' },
   } }, paths).full_tests, true)
@@ -73,7 +74,7 @@ test('docs still skip heavy checks while manual runs always include the full sui
   assert.deepEqual(selectWorkflowJobs('workflow_dispatch', { ref: 'refs/heads/dev' }, ['README.md']),
     { code: true, macos: true, full_tests: true })
   assert.equal(selectWorkflowJobs('push', { ref: 'refs/heads/main' }, null).full_tests, true)
-  assert.equal(selectWorkflowJobs('push', { ref: 'refs/heads/dev' }, null).full_tests, false)
+  assert.equal(selectWorkflowJobs('push', { ref: 'refs/heads/dev' }, null).full_tests, true)
 })
 
 test('real git comparisons cover whole pushes, PR merge bases, deletions and renames', () => {

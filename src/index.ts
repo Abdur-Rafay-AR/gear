@@ -1,3 +1,4 @@
+import { composeLegacyComponents } from './compat/composition.js'
 import { resolveSearchSettings } from './search/config.js'
 import { isAbsolute, join } from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
@@ -31,13 +32,9 @@ import {
 import { RefineService } from './refine/service.js'
 import {
   builtinComponentRef,
-  componentRef,
   ComponentRegistry,
-  rolloutProviderSemanticDigest,
 } from './evolution/components.js'
-import { hitchCliImplementation, stableLlmVerifierImplementation } from './evolution/component-identity.js'
 import {
-  LlmVerifierCandidateAssessor,
   resolveLlmVerifierRuntime,
   type LlmVerifierAssessorConfig,
 } from './selection/llm-verifier.js'
@@ -372,72 +369,7 @@ export async function apply(ctx: Context, config: PluginConfig): Promise<void> {
       sampling: { ...config.metaSampling },
     }
   }
-  const candidateGeneration = {
-    strategy: builtinComponentRef(
-      'candidate-generator',
-      config.metaAdapter.kind === 'dsh' ? 'dsh-meta-forked-proposals' : 'meta-forked-proposals',
-      {},
-    ),
-    maxCandidates: config.candidateGeneration.maxCandidates,
-    budget: {
-      ...(config.candidateGeneration.maxModelRequests === undefined ? {} : { maxModelRequests: config.candidateGeneration.maxModelRequests }),
-      ...(config.candidateGeneration.maxTokens === undefined ? {} : { maxTokens: config.candidateGeneration.maxTokens }),
-      attemptTimeoutMs: candidateAttemptTimeoutMs,
-      maxAttemptsPerCandidate: candidateMaxAttemptsPerCandidate,
-      roundTimeoutMs: candidateRoundTimeoutMs,
-      ...(config.candidateGeneration.finalizationReserveMs === undefined ? {} : { finalizationReserveMs: config.candidateGeneration.finalizationReserveMs }),
-    },
-  }
-  const rolloutProvider = componentRef('rollout-provider', 'hitch-cli', hitchCliImplementation(), structuredClone(config.hitch))
-  const rolloutAgentConfig = { agentArgs: [...config.hitch.agentArgs] }
-  const rollout = {
-    provider: rolloutProvider,
-    providerSemanticDigest: rolloutProviderSemanticDigest(
-      rolloutProvider,
-      { harnessId: config.hitch.harnessId },
-      rolloutAgentConfig,
-    ),
-    taskSampler: builtinComponentRef('task-sampler', 'dataset', {}),
-    repetitions: config.hitch.attempts,
-    ...(config.hitch.seeds === undefined || config.hitch.seeds.length === 0 ? {} : { seeds: [...config.hitch.seeds] }),
-    model: config.hitch.model,
-    sampling: { ...config.hitch.sampling },
-    agentConfig: rolloutAgentConfig,
-  }
-  components.registerRolloutProvider('hitch-cli', rollout.provider.implementation, ref => ({
-    ref,
-    createEvaluator: spec => new HitchCliEvaluator({
-      ...(spec.rollout.provider.config as unknown as HitchConfig),
-      repositoryPath: config.dshRepository,
-    }),
-  }))
-  const evaluation = {
-    ...(config.evaluationMode === undefined ? {} : { mode: config.evaluationMode }),
-    judges: [builtinComponentRef('judge', 'task-reward', {})],
-    primaryMetric: 'primaryReward',
-  }
-  let selectionAssessor = builtinComponentRef('candidate-assessor', 'evaluation-metrics', {})
-  if (config.selection.llmVerifier !== undefined) {
-    const configured = config.selection.llmVerifier
-    const assessorConfig: LlmVerifierAssessorConfig = {
-      pythonExecutable: configured.pythonExecutable,
-      runtime: await resolveLlmVerifierRuntime(configured.pythonExecutable),
-      model: configured.model,
-      criteria: structuredClone(configured.criteria),
-      ...(configured.groundTruthNote === undefined ? {} : { groundTruthNote: configured.groundTruthNote }),
-      nEvaluations: configured.nEvaluations,
-      pivots: configured.pivots,
-      seed: configured.seed,
-      maxWorkers: configured.maxWorkers,
-      maxOutputBytes: configured.maxOutputBytes,
-      maxTrajectoryEvents: configured.maxTrajectoryEvents,
-      maxTrajectoryChars: configured.maxTrajectoryChars,
-      passEnv: [...configured.passEnv],
-    }
-    const implementation = stableLlmVerifierImplementation()
-    selectionAssessor = componentRef('candidate-assessor', 'llm-verifier', implementation, assessorConfig)
-    components.registerCandidateAssessor('llm-verifier', implementation, ref => new LlmVerifierCandidateAssessor(ref))
-  }
+  const { candidateGeneration, rollout, evaluation, selectionAssessor } = await composeLegacyComponents(config, components)
   const selection = {
     assessor: selectionAssessor,
     strategy: builtinComponentRef('candidate-selector', 'highest-quality', {}),

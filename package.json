@@ -24,7 +24,8 @@
   "bin": {
     "gear-refine": "./lib/cli.js",
     "gear-hitch-codex": "./assets/hitch-codex-wrapper.mjs",
-    "gear-dsh-runtime-check": "./assets/dsh-runtime-check.mjs"
+    "gear-dsh-runtime-check": "./assets/dsh-runtime-check.mjs",
+    "gear": "./lib/cli/project.js"
   },
   "exports": {
     ".": {
@@ -63,6 +64,14 @@
     "./training": {
       "types": "./lib/training/index.d.ts",
       "default": "./lib/training/index.js"
+    },
+    "./project": {
+      "types": "./lib/application/project.d.ts",
+      "default": "./lib/application/project.js"
+    },
+    "./project/api": {
+      "types": "./lib/project-api.d.ts",
+      "default": "./lib/project-api.js"
     }
   },
   "files": [
@@ -94,7 +103,19 @@
     "examples/training-loop/**",
     "docs/schemas/",
     "docs/generic-storage-implementation.zh-CN.md",
-    "test-contracts/hitch-resources-v1.json"
+    "test-contracts/hitch-resources-v1.json",
+    "python/gear/**/*.py",
+    "contracts/**",
+    "templates/**",
+    "docs/project-quickstart.md",
+    "docs/project-quickstart.zh-CN.md",
+    "docs/python-algorithms.zh-CN.md",
+    "examples/python-algorithm/**",
+    "assets/native-runtime/Dockerfile",
+    "assets/native-runtime/*.json",
+    "assets/native-runtime/*.mjs",
+    "docs/project-migration.zh-CN.md",
+    "assets/native-runtime/*.yaml"
   ],
   "scripts": {
     "clean": "node -e \"require('node:fs').rmSync('lib',{recursive:true,force:true})\"",
@@ -111,7 +132,14 @@
     "prepack": "npm run build",
     "build:tool-fs": "node scripts/build-private-tool-fs.mjs",
     "prepare": "npm run build:tool-fs",
-    "test:training": "vitest run tests/unit/training && PYTHONPATH=python \"${GEAR_TRAINING_TEST_PYTHON:-python3}\" -m unittest discover -s python/tests -v"
+    "test:training": "vitest run tests/unit/training && PYTHONPATH=python \"${GEAR_TRAINING_TEST_PYTHON:-python3}\" -m unittest discover -s python/tests -v",
+    "test:project": "vitest run tests/unit/project*.spec.ts tests/unit/target-adapters.spec.ts --maxWorkers=2",
+    "check:boundaries": "node scripts/check-boundaries.mjs",
+    "test:python:core": "PYTHONPATH=python \"${GEAR_TRAINING_TEST_PYTHON:-python3}\" -m unittest discover -s python/tests -p test_public_gear.py -v",
+    "lint": "biome check",
+    "format": "biome check --write",
+    "check:protocol": "node scripts/generate-project-protocol.mjs --check",
+    "test:project:package": "npm run build && node scripts/check-project-package.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sandbox-runtime": "0.0.55",
@@ -133,53 +161,78 @@
     "@deepseek-ai/cordis-plugin-include": "^1.0.6",
     "@deepseek-ai/dsh-agent": "^0.1.0-rc.8 || ^0.1.1-rc.2",
     "@deepseek-ai/dsh-agent-presets": "^0.1.0-rc.8 || ^0.1.1-rc.2",
+    "@deepseek-ai/dsh-attachment": "^0.1.0-rc.8 || ^0.1.1-rc.2",
     "@deepseek-ai/dsh-commands": "^0.1.0-rc.8 || ^0.1.1-rc.2",
     "@deepseek-ai/dsh-llm": "^0.1.0-rc.8 || ^0.1.1-rc.2",
+    "@deepseek-ai/dsh-sandbox": "^0.1.0-rc.8 || ^0.1.1-rc.2",
     "@deepseek-ai/dsh-session": "^0.1.0-rc.8 || ^0.1.1-rc.2",
     "@deepseek-ai/dsh-skill": "^0.1.0-rc.8 || ^0.1.1-rc.2",
     "@deepseek-ai/dsh-system-prompt": "^0.1.0-rc.8 || ^0.1.1-rc.2",
-    "@deepseek-ai/dsh-tools": "^0.1.0-rc.8 || ^0.1.1-rc.2",
-    "@deepseek-ai/dsh-attachment": "^0.1.0-rc.8 || ^0.1.1-rc.2",
-    "@deepseek-ai/dsh-sandbox": "^0.1.0-rc.8 || ^0.1.1-rc.2"
+    "@deepseek-ai/dsh-tools": "^0.1.0-rc.8 || ^0.1.1-rc.2"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/cordis": { "optional": true },
-    "@deepseek-ai/cordis-plugin-include": { "optional": true },
-    "@deepseek-ai/dsh-agent": { "optional": true },
-    "@deepseek-ai/dsh-agent-presets": { "optional": true },
-    "@deepseek-ai/dsh-commands": { "optional": true },
-    "@deepseek-ai/dsh-llm": { "optional": true },
-    "@deepseek-ai/dsh-session": { "optional": true },
-    "@deepseek-ai/dsh-skill": { "optional": true },
-    "@deepseek-ai/dsh-system-prompt": { "optional": true },
-    "@deepseek-ai/dsh-tools": { "optional": true },
-    "@deepseek-ai/dsh-attachment": { "optional": true },
-    "@deepseek-ai/dsh-sandbox": { "optional": true }
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/cordis-plugin-include": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-agent": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-agent-presets": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-commands": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-llm": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-session": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-skill": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-system-prompt": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-tools": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-attachment": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-sandbox": {
+      "optional": true
+    }
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.15",
     "@deepseek-ai/cordis": "4.0.1",
     "@deepseek-ai/cordis-plugin-include": "1.0.6",
     "@deepseek-ai/cordis-plugin-loader": "1.0.2",
     "@deepseek-ai/dsh-agent": "0.1.0-rc.8",
     "@deepseek-ai/dsh-agent-loop": "0.1.0-rc.8",
     "@deepseek-ai/dsh-agent-presets": "0.1.0-rc.8",
+    "@deepseek-ai/dsh-attachment": "0.1.0-rc.8",
     "@deepseek-ai/dsh-commands": "0.1.0-rc.8",
     "@deepseek-ai/dsh-llm": "0.1.0-rc.8",
+    "@deepseek-ai/dsh-sandbox": "0.1.0-rc.8",
+    "@deepseek-ai/dsh-scope": "0.1.0-rc.8",
     "@deepseek-ai/dsh-session": "0.1.0-rc.8",
     "@deepseek-ai/dsh-session-persistence": "0.1.0-rc.8",
     "@deepseek-ai/dsh-skill": "0.1.0-rc.8",
     "@deepseek-ai/dsh-skill-filesystem": "0.1.0-rc.8",
-    "@deepseek-ai/dsh-tool-skill": "0.1.0-rc.8",
     "@deepseek-ai/dsh-system-prompt": "0.1.0-rc.8",
+    "@deepseek-ai/dsh-tool-skill": "0.1.0-rc.8",
     "@deepseek-ai/dsh-tools": "0.1.0-rc.8",
     "@types/diff": "^7.0.2",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.19.0",
-    "vitest": "^4.1.8",
-    "@deepseek-ai/dsh-attachment": "0.1.0-rc.8",
-    "@deepseek-ai/dsh-sandbox": "0.1.0-rc.8",
     "esbuild": "0.28.1",
     "gear-tool-fs-diff": "npm:diff@9.0.0",
-    "@deepseek-ai/dsh-scope": "0.1.0-rc.8"
+    "vitest": "^4.1.8"
   }
 }

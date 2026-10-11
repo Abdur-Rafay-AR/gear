@@ -6,8 +6,9 @@ import type { CandidateDiffFile, CandidateDiffSummary, RefinementRound } from '.
 import { isExactGitCommit } from '../types.js'
 import { createTwoFilesPatch, diffLines } from 'diff'
 
-const ALLOWED_ROOTS = new Set(['preset', 'plugins', 'prompts', 'skills', 'workflows'])
-const FORBIDDEN_NAMES = new Set(['manifest.json', 'package.json', 'package-lock.json', 'pnpm-lock.yaml', 'yarn.lock', 'bun.lock', 'bun.lockb'])
+import { validateArtifactPath } from '../domain/mutation-policy.js'
+import { dshMutationPolicy } from '../adapters/dsh/target.js'
+import type { MutationPolicy } from '../ports/harness.js'
 
 export type CandidateWorkspaceState = 'open' | 'sealing' | 'sealed' | 'finalizing' | 'committed' | 'disposed'
 
@@ -40,6 +41,7 @@ export interface CandidateWorkspaceRequest {
 }
 
 export interface CandidateWorkspaceOptions {
+  mutationPolicy?: MutationPolicy
   repositoryPath: string
   targetRoot: string
   rootForEvolution(evolutionId: string): string
@@ -67,17 +69,6 @@ function safeId(value: string, label: string): string {
 
 function posix(path: string): string { return path.split(sep).join('/') }
 
-function validateArtifactPath(path: string): string {
-  if (path.length === 0 || path.includes('\\') || path.startsWith('/') || path.includes('\0')) {
-    throw new Error(`candidate path is invalid: ${path}`)
-  }
-  const parts = path.split('/')
-  if (parts.some(part => part.length === 0 || part === '.' || part === '..')) throw new Error(`candidate path is not normalized: ${path}`)
-  if (!ALLOWED_ROOTS.has(parts[0]!)) throw new Error(`candidate path is fixed substrate: ${path}`)
-  if (parts.some(part => FORBIDDEN_NAMES.has(part))) throw new Error(`candidate path is protected: ${path}`)
-  return parts.join('/')
-}
-
 export class CandidateWorkspaceManager {
   private readonly repositoryPath: string
   private readonly targetRoot: string
@@ -86,6 +77,7 @@ export class CandidateWorkspaceManager {
   private readonly bindings = new Map<string, CandidateWorkspaceBinding>()
   private readonly activeOperations = new Map<string, number>()
   private generation = 0
+  get mutationPolicy(): MutationPolicy { return this.options.mutationPolicy ?? dshMutationPolicy }
 
   constructor(readonly options: CandidateWorkspaceOptions) {
     this.repositoryPath = resolve(options.repositoryPath)
@@ -222,7 +214,7 @@ export class CandidateWorkspaceManager {
       const repositoryPath = entry.slice(3)
       const prefix = `${this.targetRoot}/`
       if (!repositoryPath.startsWith(prefix)) throw new Error(`candidate change escapes target root: ${repositoryPath}`)
-      paths.add(validateArtifactPath(repositoryPath.slice(prefix.length)))
+      paths.add(validateArtifactPath(repositoryPath.slice(prefix.length), this.mutationPolicy))
     }
     if (paths.size === 0) return { parentRef: handle.parentRef, files: [], totalBytes: 0, patchDigest: sha256('') }
     if (paths.size > this.options.maxFiles) throw new Error(`candidate changes ${paths.size} files, over limit ${this.options.maxFiles}`)

@@ -33,6 +33,8 @@ export async function sealScriptSource(store: TrainingContentStore, directory: s
     } else {
       requireContract(stat.isFile() && files.length < 1024 && !relative.startsWith('.') && !relative.split('/').some(part => part.startsWith('.')),
         'unsafe-script-source', 'use a dedicated recipe directory, without hidden files, special files or more than 1024 files')
+      requireContract(!['gear', 'gear_training'].includes(relative.split('/')[0]!.replace(/\.py$/u, '')),
+        'script-module-conflict', 'script cannot replace a framework module')
       const bytes = await readFile(path); size += bytes.length
       requireContract(size <= 16 * 1024 * 1024, 'script-source-too-large', 'recipe source is limited to 16 MiB; use runtime dependencies for models and data')
       files.push({ path: relative, contentRef: await store.putBytes(bytes, 'application/octet-stream') })

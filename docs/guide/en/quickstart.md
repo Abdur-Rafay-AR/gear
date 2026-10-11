@@ -1,5 +1,7 @@
 # Quick start
 
+For this branch’s task-table → evaluate → refine flow, see the [project quick start](../../project-quickstart.md). The material below preserves the legacy Skill/evolution workflow and experiment sources.
+
 Use Gear's Refine Skill from Codex, Claude Code, DSH, or another agent that can load Skills and call Gear. Describe the benchmark, Meta agent, rollout agent and number of rounds in natural language to start optimizing.
 
 ## Let your agent install Gear

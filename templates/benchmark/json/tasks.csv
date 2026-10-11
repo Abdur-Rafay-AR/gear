@@ -1,0 +1,4 @@
+id,instruction,expected,family,split
+sum-01,Return a JSON object with answer equal to 2 plus 3.,"{""answer"":5}",addition,seed
+sum-02,Return a JSON object with answer equal to 4 plus 5.,"{""answer"":9}",addition,seed
+word-01,Return a JSON object with word equal to APPLE.,"{""word"":""APPLE""}",case,held_out

@@ -1,10 +1,12 @@
 # 准备 Target Harness
 
+本分支新增的任务表 → 评测 → refine 路径见 [项目入门](../../project-quickstart.zh-CN.md)，Python 策略入口见 [算法索引](../../python-algorithms.zh-CN.md)。下文保留历史 Skill/evolution 路径与实验来源。
+
 Target 是可构建的确切 Git 版本。Gear 修改声明的 Harness 目录，固定载体提供 runtime 与评测入口。
 
 ## 使用示例载体
 
-[快速开始的 bootstrap](quickstart.md)创建独立仓库，记录 substrate、初始 champion 与 manifest。Gear 源码、Target 源码、任务工作区和状态目录应分别保存。Hitch 将确定的 Target 提交构建为不可变制品，在容器中评测。
+[已随源码保留的 bootstrap](../../../examples/dsh-codex-luna/bootstrap-target.mjs)创建独立仓库，记录 substrate、初始 champion 与 manifest。Gear 源码、Target 源码、任务工作区和状态目录应分别保存。Hitch 将确定的 Target 提交构建为不可变制品，在容器中评测。
 
 ```text
 target/

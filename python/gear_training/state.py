@@ -1,19 +1,9 @@
-"""Private durable state primitives shared by node services."""
-import fcntl
-import json
-from contextlib import contextmanager
-from pathlib import Path
+"""Compatibility forwarding module; implementation lives in gear.training.state."""
+import importlib as _importlib
+import runpy as _runpy
+import sys as _sys
 
-
-def load(path, default=None):
-    try: return json.loads(Path(path).read_text())
-    except FileNotFoundError: return default
-
-
-@contextmanager
-def lock(path, *, blocking=True):
-    Path(path).parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    with open(path, "a") as stream:
-        fcntl.flock(stream, fcntl.LOCK_EX | (0 if blocking else fcntl.LOCK_NB))
-        try: yield
-        finally: fcntl.flock(stream, fcntl.LOCK_UN)
+if __name__ == "__main__":
+    _runpy.run_module('gear.training.state', run_name="__main__")
+else:
+    _sys.modules[__name__] = _importlib.import_module('gear.training.state')

@@ -249,7 +249,7 @@ class DriverLogprobOffloadArgsTests(unittest.TestCase):
         self.assertNotIn(flag, build_argv(request, HYPERPARAMETERS, paths, 0))
         hyper = {**HYPERPARAMETERS, "offloadLogprobBackward": True}
         argv = build_argv(request, hyper, paths, 0)
-        self.assertEqual(argv[argv.index(flag) + 1], "gear_training.slime_runtime.offload_logprob_backward")
+        self.assertEqual(argv[argv.index(flag) + 1], "gear.training.slime_runtime.offload_logprob_backward")
         self.assertEqual(argv.count(flag), 1)
 
     def test_option_does_not_allow_custom_hook_overrides_or_non_boolean_values(self):

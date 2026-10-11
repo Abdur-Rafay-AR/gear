@@ -114,6 +114,7 @@ export interface Judge {
 
 export interface RolloutProvider {
   readonly ref: ComponentRef<unknown>
+  readonly capabilities?: { typedSeeds?: boolean; typedTemperature?: boolean }
   createEvaluator(spec: EvolutionSpec): RefineEvaluator
 }
 

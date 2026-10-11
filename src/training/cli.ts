@@ -207,11 +207,11 @@ export async function trainingCommand(argv: string[]): Promise<unknown> {
       }
     }
     return jsonProcess(config.schemaVersion === 1 ? config.slime.python : config.hitch.python,
-      ['-m', 'gear_training.artifacts', 'seal-sft', '--store-root', store.root], input, 3_600_000)
+      ['-m', 'gear.training.artifacts', 'seal-sft', '--store-root', store.root], input, 3_600_000)
   }
   if (action === 'seal-hf' || action === 'seal-dataset') {
     requireContract(args.length === 1, 'usage', `training ${action} DIRECTORY --config CONTROLLER.json`)
-    return jsonProcess(config.schemaVersion === 1 ? config.slime.python : config.hitch.python, ['-m', 'gear_training.artifacts', action, '--store-root', store.root], { directory: args[0] }, 3_600_000)
+    return jsonProcess(config.schemaVersion === 1 ? config.slime.python : config.hitch.python, ['-m', 'gear.training.artifacts', action, '--store-root', store.root], { directory: args[0] }, 3_600_000)
   }
   if (action === 'run' && args.length === 1) {
     const input = JSON.parse(await readFile(args[0]!, 'utf8'))

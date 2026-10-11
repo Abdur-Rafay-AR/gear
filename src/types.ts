@@ -19,21 +19,8 @@ export type SemanticTarget =
   | 'workflow'
   | 'compaction'
 
-export interface HarnessArtifact {
-  path: string
-  digest: string
-  bytes: number
-}
-
-export interface HarnessManifest {
-  schemaVersion: 1
-  parentRef?: HarnessRef
-  dshBaseRef: string
-  toolchainRef: string
-  sandboxProfileRef: SandboxProfileRef
-  artifacts: HarnessArtifact[]
-  digest: string
-}
+import type { HarnessManifest } from './domain/harness.js'
+export type { HarnessArtifact, HarnessManifest, TargetManifest } from './domain/harness.js'
 
 export interface ChampionState {
   schemaVersion: 2

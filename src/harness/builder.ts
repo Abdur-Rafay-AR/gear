@@ -3,17 +3,17 @@ import { createHash } from 'node:crypto'
 import { readFile, readdir, writeFile } from 'node:fs/promises'
 import { isBuiltin } from 'node:module'
 import { isAbsolute, join, relative, resolve, sep } from 'node:path'
-import { load as loadYaml } from 'js-yaml'
 import ts from 'typescript'
 import type { CandidateDiffSummary, HarnessManifest, PreparedHarness, SealedCandidateVersion } from '../types.js'
 import { isExactGitCommit } from '../types.js'
 import type { CandidateWorkspaceHandle } from '../candidate/workspace.js'
 import { candidateCheckReport, CompilerCheckError, type CandidateCheckReport, type CompilerCheckReport } from './check-report.js'
 
-const ALLOWED_ROOTS = new Set(['preset', 'plugins', 'prompts', 'skills', 'workflows'])
-const FORBIDDEN_NAMES = new Set([
-  'package.json', 'package-lock.json', 'pnpm-lock.yaml', 'yarn.lock', 'bun.lock', 'bun.lockb',
-])
+import { MutationValidationError, SubstrateExpansionError } from '../domain/harness.js'
+export { MutationValidationError, SubstrateExpansionError } from '../domain/harness.js'
+import { validateArtifactPath } from '../domain/mutation-policy.js'
+import { dshTarget, dshMutationPolicy } from '../adapters/dsh/target.js'
+import type { HarnessAdapter } from '../ports/harness.js'
 
 export interface HarnessCompiler {
   readonly runtimeValidation?: boolean
@@ -23,7 +23,10 @@ export interface HarnessCompiler {
 export interface HarnessBuilderOptions {
   repositoryPath: string
   targetRoot: string
-  dshBaseRef: string
+  dshBaseRef?: string
+  baseRef?: string
+  adapter?: HarnessAdapter
+  runtimeIdentity?: string
   toolchainRef: string
   sandboxProfileRef: string
   gitExecutable?: string
@@ -46,20 +49,6 @@ interface GitTreeEntry {
   path: string
 }
 
-export class MutationValidationError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = 'MutationValidationError'
-  }
-}
-
-export class SubstrateExpansionError extends MutationValidationError {
-  constructor(message: string) {
-    super(message)
-    this.name = 'SubstrateExpansionError'
-  }
-}
-
 function sha256(content: Uint8Array | string): string {
   return `sha256:${createHash('sha256').update(content).digest('hex')}`
 }
@@ -75,20 +64,7 @@ function normalizedTargetRoot(path: string): string {
   return segments.join('/')
 }
 
-function safeRelativePath(path: string): string {
-  if (path.length === 0 || isAbsolute(path) || path.includes('\\')) {
-    throw new MutationValidationError(`artifact path must be a non-empty POSIX relative path: ${path}`)
-  }
-  const segments = path.split('/')
-  if (segments.some(segment => segment === '' || segment === '.' || segment === '..')) {
-    throw new MutationValidationError(`artifact path escapes or is not normalized: ${path}`)
-  }
-  if (!ALLOWED_ROOTS.has(segments[0]!)) throw new SubstrateExpansionError(`artifact root is fixed substrate: ${path}`)
-  if (segments.some(segment => FORBIDDEN_NAMES.has(segment))) {
-    throw new SubstrateExpansionError(`dependency and lock files are fixed substrate: ${path}`)
-  }
-  return segments.join('/')
-}
+function safeRelativePath(path: string): string { return validateArtifactPath(path, dshMutationPolicy) }
 
 function porcelainPaths(output: string): string[] {
   const fields = output.split('\0')
@@ -127,8 +103,14 @@ export class HarnessBuilder {
   private readonly maxGitOutputBytes: number
   readonly repositoryPath: string
   readonly targetRoot: string
+  readonly adapter: HarnessAdapter
+  private readonly baseRef: string
 
   constructor(readonly options: HarnessBuilderOptions) {
+    this.adapter = options.adapter ?? dshTarget
+    this.baseRef = options.baseRef ?? options.dshBaseRef ?? ''
+    if (!isExactGitCommit(this.baseRef)) throw new TypeError('baseRef must be an exact Git commit')
+    if (options.adapter && !options.runtimeIdentity) throw new TypeError('runtimeIdentity is required for a version 2 Target')
     this.repositoryPath = resolve(options.repositoryPath)
     this.targetRoot = normalizedTargetRoot(options.targetRoot)
     this.maxGitOutputBytes = options.maxGitOutputBytes ?? 8 * 1024 * 1024
@@ -137,7 +119,7 @@ export class HarnessBuilder {
   async initialize(): Promise<void> {
     const inside = (await this.git(['rev-parse', '--is-inside-work-tree'])).stdout.trim()
     if (inside !== 'true') throw new Error(`target DSH repository is not a Git worktree: ${this.repositoryPath}`)
-    await this.resolveExactCommit(this.options.dshBaseRef, true)
+    await this.resolveExactCommit(this.baseRef, true)
   }
 
   validationCapabilities() {
@@ -259,7 +241,7 @@ export class HarnessBuilder {
   }
 
   async readHarnessFile(ref: string, path: string): Promise<{ content: string; digest: string; bytes: number }> {
-    const normalized = safeRelativePath(path)
+    const normalized = validateArtifactPath(path, this.adapter.mutationPolicy)
     const manifest = await this.readManifest(ref)
     const artifact = manifest.artifacts.find(item => item.path === normalized)
     if (artifact === undefined) throw new MutationValidationError(`path is not in the target manifest: ${normalized}`)
@@ -297,7 +279,7 @@ export class HarnessBuilder {
     const manifest = await this.readManifest(candidate)
     if (manifest.parentRef !== parent) throw new MutationValidationError('historical candidate does not name the recorded parent')
     await this.readManifest(parent)
-    const selected = [...new Set(paths.map(safeRelativePath))].sort()
+    const selected = [...new Set(paths.map(path => validateArtifactPath(path, this.adapter.mutationPolicy)))].sort()
     if (selected.length === 0) throw new MutationValidationError('historical candidate has no recorded changed paths')
     const patch = (await this.git([
       'diff', '--no-ext-diff', '--no-color', '--unified=3', parent, candidate, '--',
@@ -330,19 +312,10 @@ export class HarnessBuilder {
   }
 
 
-  private async validateComposition(root: string): Promise<void> {
-    const compositionPath = join(root, 'preset', 'agent.cordis.yml')
-    const parsed = loadYaml(await readFile(compositionPath, 'utf8'))
-    if (!Array.isArray(parsed)) throw new MutationValidationError('preset/agent.cordis.yml must contain a Cordis row list')
-    for (const [index, row] of parsed.entries()) {
-      if (typeof row !== 'object' || row === null || typeof (row as { name?: unknown }).name !== 'string') {
-        throw new MutationValidationError(`preset row ${index + 1} must name a plugin`)
-      }
-    }
-  }
+  private async validateComposition(root: string): Promise<void> { await this.adapter.check(root) }
 
   private async validateImports(root: string): Promise<void> {
-    const allowed = this.options.allowedImports ?? ['@deepseek-ai/', 'node:']
+    const allowed = this.options.allowedImports ?? this.adapter.mutationPolicy.allowedImports
     for (const path of await files(root)) {
       if (!/\.[cm]?[jt]sx?$/u.test(path)) continue
       const source = await readFile(join(root, ...path.split('/')), 'utf8')
@@ -377,20 +350,30 @@ export class HarnessBuilder {
     }
   }
 
+  private manifestIdentity() {
+    if (!this.options.adapter) return { schemaVersion: 1 as const, dshBaseRef: this.baseRef }
+    return { schemaVersion: 2 as const, baseRef: this.baseRef, adapterRef: this.adapter.ref,
+      runtimeIdentity: this.options.runtimeIdentity!, mutationPolicyDigest: sha256(JSON.stringify(this.adapter.mutationPolicy)) }
+  }
+
   private async createManifest(root: string, parentRef: string): Promise<HarnessManifest> {
     const artifacts = []
     for (const path of await files(root)) {
       if (path === 'manifest.json') continue
+      validateArtifactPath(path, this.adapter.mutationPolicy)
       const content = await readFile(join(root, ...path.split('/')))
       artifacts.push({ path, digest: sha256(content), bytes: content.byteLength })
     }
     const identity = {
-      schemaVersion: 1 as const,
+      ...this.manifestIdentity(),
       parentRef,
-      dshBaseRef: this.options.dshBaseRef,
       toolchainRef: this.options.toolchainRef,
       sandboxProfileRef: this.options.sandboxProfileRef,
       artifacts,
+    }
+    if (identity.schemaVersion === 1) {
+      const legacy = { schemaVersion: 1 as const, parentRef, dshBaseRef: identity.dshBaseRef, toolchainRef: identity.toolchainRef, sandboxProfileRef: identity.sandboxProfileRef, artifacts }
+      return { ...legacy, digest: sha256(JSON.stringify(legacy)) }
     }
     return { ...identity, digest: sha256(JSON.stringify(identity)) }
   }
@@ -400,7 +383,9 @@ export class HarnessBuilder {
       throw new MutationValidationError(`target manifest must be an object at ${commit}`)
     }
     const manifest = value as Partial<HarnessManifest>
-    if (manifest.schemaVersion !== 1 || manifest.dshBaseRef !== this.options.dshBaseRef
+    const expected = this.manifestIdentity()
+    const identityMatches = Object.entries(expected).every(([key, value]) => (manifest as Record<string, unknown>)[key] === value)
+    if (!identityMatches
       || manifest.toolchainRef !== this.options.toolchainRef
       || manifest.sandboxProfileRef !== this.options.sandboxProfileRef
       || !Array.isArray(manifest.artifacts)
@@ -416,23 +401,23 @@ export class HarnessBuilder {
         || typeof artifact.bytes !== 'number' || !Number.isSafeInteger(artifact.bytes) || artifact.bytes < 0) {
         throw new MutationValidationError(`target manifest has an invalid artifact entry at ${commit}`)
       }
-      safeRelativePath(artifact.path)
+      validateArtifactPath(artifact.path, this.adapter.mutationPolicy)
       if (!/^sha256:[0-9a-f]{64}$/u.test(artifact.digest)) {
         throw new MutationValidationError(`target manifest has an invalid artifact digest at ${commit}`)
       }
     }
     const identity = {
-      schemaVersion: 1 as const,
+      ...expected,
       ...(manifest.parentRef === undefined ? {} : { parentRef: manifest.parentRef }),
-      dshBaseRef: manifest.dshBaseRef,
       toolchainRef: manifest.toolchainRef,
       sandboxProfileRef: manifest.sandboxProfileRef,
       artifacts: manifest.artifacts,
     }
-    if (sha256(JSON.stringify(identity)) !== manifest.digest) {
+    const ordered = identity.schemaVersion === 1 ? { schemaVersion: 1 as const, ...(identity.parentRef === undefined ? {} : { parentRef: identity.parentRef }), dshBaseRef: identity.dshBaseRef, toolchainRef: identity.toolchainRef!, sandboxProfileRef: identity.sandboxProfileRef!, artifacts: identity.artifacts } : identity
+    if (sha256(JSON.stringify(ordered)) !== manifest.digest) {
       throw new MutationValidationError(`target manifest digest is invalid at ${commit}`)
     }
-    return { ...identity, digest: manifest.digest }
+    return { ...ordered, digest: manifest.digest } as HarnessManifest
   }
 
   private async verifyManifestArtifacts(commit: string, manifest: HarnessManifest): Promise<void> {
@@ -458,7 +443,7 @@ export class HarnessBuilder {
         }
         continue
       }
-      safeRelativePath(path)
+      validateArtifactPath(path, this.adapter.mutationPolicy)
       if ((entry.mode !== '100644' && entry.mode !== '100755') || entry.type !== 'blob') {
         throw new MutationValidationError(`target artifact must be a regular file: ${path}`)
       }
@@ -480,8 +465,8 @@ export class HarnessBuilder {
   }
 
   private async assertBaseAncestor(commit: string): Promise<void> {
-    const result = await this.git(['merge-base', '--is-ancestor', this.options.dshBaseRef, commit], undefined, [0, 1])
-    if (result.code !== 0) throw new MutationValidationError(`candidate parent ${commit} is not based on fixed DSH base ${this.options.dshBaseRef}`)
+    const result = await this.git(['merge-base', '--is-ancestor', this.baseRef, commit], undefined, [0, 1])
+    if (result.code !== 0) throw new MutationValidationError(`candidate parent ${commit} is not based on fixed DSH base ${this.baseRef}`)
   }
 
   private async assertCompilerStayedInTarget(worktree: string): Promise<void> {

@@ -1,3 +1,4 @@
+import { syncDirectory } from '../adapters/storage/atomic.js'
 import { mkdir, open, readFile, rename, link, unlink } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { digestJson } from '../state/digest.js'
@@ -128,7 +129,7 @@ export class SearchStore extends SearchJournalBase {
     const temporary = `${path}.${crypto.randomUUID()}.tmp`
     const handle = await open(temporary, 'wx', 0o600)
     try { await handle.writeFile(`${JSON.stringify(value, null, 2)}\n`); await handle.sync() } finally { await handle.close() }
-    try { await beforePublish?.(); await rename(temporary, path) }
+    try { await beforePublish?.(); await rename(temporary, path); await syncDirectory(dirname(path)) }
     finally { await unlink(temporary).catch(error => { if (error.code !== 'ENOENT') throw error }) }
   }
   async read<T>(name: string): Promise<T | undefined> {
@@ -153,6 +154,7 @@ export class SearchStore extends SearchJournalBase {
     const temp = `${path}.${crypto.randomUUID()}.tmp`, file = await open(temp, 'wx', 0o600)
     try { await file.writeFile(`${JSON.stringify(value)}\n`); await file.sync() } finally { await file.close() }
     try { await link(temp, path) } catch (e) { if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e } finally { await unlink(temp) }
+    await syncDirectory(dirname(path))
     return value.digest
   }
 }

@@ -8,8 +8,7 @@ import { pathToFileURL } from 'node:url'
 import type { CandidateWorkspaceManager } from './workspace.js'
 
 const VIRTUAL_ROOT = '/candidate/harness'
-const ALLOWED_ROOTS = new Set(['preset', 'plugins', 'prompts', 'skills', 'workflows'])
-const PROTECTED_NAMES = new Set(['manifest.json', 'package.json', 'package-lock.json', 'pnpm-lock.yaml', 'yarn.lock', 'bun.lock', 'bun.lockb', '.git'])
+
 
 function contained(path: string, root: string): boolean {
   const offset = relative(root, path)
@@ -80,8 +79,8 @@ export class CandidateFileSystem extends LocalFileSystem {
     const relativeParent = this.assertTarget(target)
     const entries = await super.listDir(target, signal)
     return entries.filter(entry => {
-      if (PROTECTED_NAMES.has(entry.name)) return false
-      return relativeParent.length !== 0 || ALLOWED_ROOTS.has(entry.name)
+      if (this.manager.mutationPolicy.protectedNames.includes(entry.name)) return false
+      return relativeParent.length !== 0 || this.manager.mutationPolicy.roots.includes(entry.name)
     }).map(entry => {
       const relativePath = relativeParent.length === 0 ? entry.name : join(relativeParent, entry.name)
       return { ...entry, target: { targetKey: entry.target.targetKey, displayPath: virtualPath(relativePath) } }
@@ -137,10 +136,10 @@ export class CandidateFileSystem extends LocalFileSystem {
     if (segments.some(segment => segment.length === 0 || segment === '.' || segment === '..')) {
       throw new FsError('candidate path must be normalized and cannot traverse parents', 'FS_PERMISSION_DENIED')
     }
-    if (segments.length > 0 && !ALLOWED_ROOTS.has(segments[0]!)) {
+    if (segments.length > 0 && !this.manager.mutationPolicy.roots.includes(segments[0]!)) {
       throw new FsError(`candidate path is fixed substrate: ${path}`, 'FS_PERMISSION_DENIED')
     }
-    if (segments.some(segment => PROTECTED_NAMES.has(segment))) {
+    if (segments.some(segment => this.manager.mutationPolicy.protectedNames.includes(segment))) {
       throw new FsError(`candidate path is protected: ${path}`, 'FS_PERMISSION_DENIED')
     }
     const root = resolve(handle.targetPath)
@@ -156,7 +155,7 @@ export class CandidateFileSystem extends LocalFileSystem {
     if (!contained(physical, root)) throw new FsError('stale or foreign candidate target', 'FS_PERMISSION_DENIED')
     const offset = relative(root, physical)
     const segments = offset === '' ? [] : offset.split(sep)
-    if (segments.length > 0 && (!ALLOWED_ROOTS.has(segments[0]!) || segments.some(part => PROTECTED_NAMES.has(part)))) {
+    if (segments.length > 0 && (!this.manager.mutationPolicy.roots.includes(segments[0]!) || segments.some(part => this.manager.mutationPolicy.protectedNames.includes(part)))) {
       throw new FsError('candidate target is protected', 'FS_PERMISSION_DENIED')
     }
     return offset

@@ -1,5 +1,7 @@
 # Gear user guide
 
+For this branch’s task-table → evaluate → refine flow, see the [project quick start](../../project-quickstart.md). The material below preserves the legacy Skill/evolution workflow and experiment sources.
+
 Gear is an algorithm library for agent optimization that you can invoke through a Skill. Provide an existing benchmark or define your own in Harbor format, and Gear can automatically optimize both the agent's Harness and its model using evaluation feedback.
 
 ## Choose a path

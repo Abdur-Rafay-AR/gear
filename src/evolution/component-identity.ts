@@ -245,6 +245,12 @@ function artifactClosureDigest(artifacts: readonly Artifact[]): string {
 function currentArtifacts(kind: 'hitch-cli' | 'llm-verifier'): Artifact[] {
   if (kind === 'hitch-cli') return [
     { logicalName: 'evaluator/hitch-cli', path: currentFile('../evaluator/hitch-cli.js'), format: 'hitch-rollout-module' },
+    { logicalName: 'adapters/hitch/contracts', path: currentFile('../adapters/hitch/contracts.js'), format: 'module' },
+    { logicalName: 'adapters/hitch/wire-primitives', path: currentFile('../adapters/hitch/wire-primitives.js'), format: 'module' },
+    { logicalName: 'adapters/hitch/verifier-wire', path: currentFile('../adapters/hitch/verifier-wire.js'), format: 'module' },
+    { logicalName: 'adapters/hitch/trajectory-wire', path: currentFile('../adapters/hitch/trajectory-wire.js'), format: 'module' },
+    { logicalName: 'adapters/hitch/result-wire', path: currentFile('../adapters/hitch/result-wire.js'), format: 'module' },
+    { logicalName: 'adapters/hitch/transport', path: currentFile('../adapters/hitch/transport.js'), format: 'module' },
     { logicalName: 'evaluator/cleanup', path: currentFile('../evaluator/cleanup.js'), format: 'module' },
     { logicalName: 'state/digest', path: currentFile('../state/digest.js'), format: 'module' },
     { logicalName: 'state/dataset', path: currentFile('../state/dataset.js'), format: 'module' },

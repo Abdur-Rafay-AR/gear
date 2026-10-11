@@ -1,0 +1,4 @@
+id,instruction,expected,family,split
+sum-01,Compute 2 plus 3. Output only the number.,5,addition,seed
+sum-02,Compute 4 plus 5. Output only the number.,9,addition,seed
+word-01,Uppercase apple. Output only the word.,APPLE,case,held_out

@@ -1,5 +1,7 @@
 # Gear 用户指南
 
+本分支新增的任务表 → 评测 → refine 路径见 [项目入门](../../project-quickstart.zh-CN.md)，Python 策略入口见 [算法索引](../../python-algorithms.zh-CN.md)。下文保留历史 Skill/evolution 路径与实验来源。
+
 Gear 是一个可通过 Skill 调用的 Agent 优化算法库。给定现有 benchmark，或使用 Harbor 格式定义自己的 benchmark，Gear 就能根据评测反馈自动优化 Agent Harness 和模型。
 
 ## 选择阅读路径

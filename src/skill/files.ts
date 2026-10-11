@@ -4,8 +4,7 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import type { CandidateWorkspaceManager } from '../candidate/workspace.js'
 
 const VIRTUAL_ROOT = '/candidate/harness'
-const ALLOWED_ROOTS = new Set(['preset', 'plugins', 'prompts', 'skills', 'workflows'])
-const PROTECTED_NAMES = new Set(['manifest.json', 'package.json', 'package-lock.json', 'pnpm-lock.yaml', 'yarn.lock', 'bun.lock', 'bun.lockb', '.git'])
+
 
 function digest(content: Uint8Array | string): string {
   return `sha256:${createHash('sha256').update(content).digest('hex')}`
@@ -62,10 +61,10 @@ export class SkillCandidateFiles {
       const visit = async (physical: string, relativePath: string): Promise<void> => {
         const children = await readdir(physical, { withFileTypes: true })
         for (const child of children.sort((left, right) => left.name.localeCompare(right.name))) {
-          if (PROTECTED_NAMES.has(child.name)) continue
-          if (relativePath.length === 0 && !ALLOWED_ROOTS.has(child.name)) continue
+          if (this.manager.mutationPolicy.protectedNames.includes(child.name)) continue
+          if (relativePath.length === 0 && !this.manager.mutationPolicy.roots.includes(child.name)) continue
           const childRelative = relativePath.length === 0 ? child.name : join(relativePath, child.name)
-          if (childRelative.split(sep).some(segment => PROTECTED_NAMES.has(segment))) continue
+          if (childRelative.split(sep).some(segment => this.manager.mutationPolicy.protectedNames.includes(segment))) continue
           if (entries.length >= this.maxTreeEntries) throw new Error(`candidate tree exceeds ${this.maxTreeEntries} entries`)
           const childPhysical = join(physical, child.name)
           const info = await lstat(childPhysical)
@@ -174,8 +173,8 @@ export class SkillCandidateFiles {
     path = path.replace(/^(?:\.\/)+/u, '') || '.'
     const segments = path === '.' ? [] : path.split(/[\\/]/u)
     if (segments.some(segment => segment.length === 0 || segment === '.' || segment === '..')) throw new Error('candidate path must be normalized')
-    if (segments.length > 0 && !ALLOWED_ROOTS.has(segments[0]!)) throw new Error(`candidate path is fixed substrate: ${path}`)
-    if (segments.some(segment => PROTECTED_NAMES.has(segment))) throw new Error(`candidate path is protected: ${path}`)
+    if (segments.length > 0 && !this.manager.mutationPolicy.roots.includes(segments[0]!)) throw new Error(`candidate path is fixed substrate: ${path}`)
+    if (segments.some(segment => this.manager.mutationPolicy.protectedNames.includes(segment))) throw new Error(`candidate path is protected: ${path}`)
     const physical = resolve(root, ...segments)
     if (!contained(physical, root)) throw new Error('candidate path escapes the active workspace')
     await this.assertNoLinks(root, allowMissing ? dirname(physical) : physical)

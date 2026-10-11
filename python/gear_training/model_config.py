@@ -1,10 +1,9 @@
-"""Read language-model metadata from flat or composite HF configurations."""
+"""Compatibility forwarding module; implementation lives in gear.training.model_config."""
+import importlib as _importlib
+import runpy as _runpy
+import sys as _sys
 
-
-def language_metadata(config):
-    text = config.get("text_config", {})
-    if not isinstance(text, dict):
-        text = {}
-    dtype = config.get("torch_dtype", config.get("dtype", text.get("torch_dtype", text.get("dtype"))))
-    context = config.get("max_position_embeddings", text.get("max_position_embeddings"))
-    return dtype, context
+if __name__ == "__main__":
+    _runpy.run_module('gear.training.model_config', run_name="__main__")
+else:
+    _sys.modules[__name__] = _importlib.import_module('gear.training.model_config')

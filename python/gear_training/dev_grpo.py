@@ -1,10 +1,9 @@
-"""GRPO entrypoint and aliases for the shared native online-RL components."""
-from .online_rl import FrozenTaskSource, HitchRolloutExecutor, GRPODatasetBuilder, PolicyDatasetBuilder, SlimeModelUpdater, build_loop
+"""Compatibility forwarding module; implementation lives in gear.training.dev_grpo."""
+import importlib as _importlib
+import runpy as _runpy
+import sys as _sys
 
-
-def main():
-    from .dev_launcher import main as launch
-    return launch()
-
-
-if __name__ == "__main__": raise SystemExit(main())
+if __name__ == "__main__":
+    _runpy.run_module('gear.training.dev_grpo', run_name="__main__")
+else:
+    _sys.modules[__name__] = _importlib.import_module('gear.training.dev_grpo')

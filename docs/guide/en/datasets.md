@@ -1,5 +1,7 @@
 # Tasks and evaluations
 
+For this branch’s task-table → evaluate → refine flow, see the [project quick start](../../project-quickstart.md). The material below preserves the legacy Skill/evolution workflow and experiment sources.
+
 Prepare the task set before starting an evolution. Gear freezes dataset content and evaluation settings so a later round cannot silently change the experiment.
 
 ## Small first, then full evaluation
@@ -22,7 +24,7 @@ node ../hitch-marketing-guide/benchmark-packages/automationbench/import.mjs \
   --out "$PWD/.evolve-lab/marketing-guide/one-task"
 ```
 
-Use the generated directory as `GEAR_SMOKE_DATASET` in Quick start. The full 100-task case requires explicit task selection and its export manifest; a one-task run is not a full benchmark score. See the [pinned adapter instructions](https://github.com/rsi-gear/agent-hitch/blob/67c527b9321e37755c77ee50545af4b9524ec731/benchmark-packages/automationbench/README.md).
+Use the generated directory as seedTasksPath in the legacy Skill/evolution configuration and configure an independent held-out directory. The [task-table project interface](../../project-quickstart.md) accepts CSV/JSONL templates; it does not import arbitrary Harbor verifiers. The full 100-task case requires explicit task selection and its export manifest; a one-task run is not a full benchmark score. See the [pinned adapter instructions](https://github.com/rsi-gear/agent-hitch/blob/67c527b9321e37755c77ee50545af4b9524ec731/benchmark-packages/automationbench/README.md).
 
 ## Split evidence by purpose
 

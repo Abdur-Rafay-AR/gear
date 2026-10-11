@@ -25,6 +25,7 @@ describe('published Gear bundle', () => {
     expect(pkg.files).toContain('skills/refine/**')
     expect(pkg.bin).toEqual({
       'gear-refine': './lib/cli.js',
+      gear: './lib/cli/project.js',
       'gear-hitch-codex': './assets/hitch-codex-wrapper.mjs',
       'gear-dsh-runtime-check': './assets/dsh-runtime-check.mjs',
     })

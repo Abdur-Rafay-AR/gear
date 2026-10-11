@@ -1,0 +1,49 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
+  "files": {
+    "includes": [
+      "src/application/**",
+      "src/domain/**",
+      "src/ports/**",
+      "src/runtime/**",
+      "src/adapters/**",
+      "src/cli/**",
+      "src/project-api.ts",
+      "tests/unit/project*.spec.ts",
+      "tests/unit/target-adapters.spec.ts",
+      "!src/domain/algorithm-protocol.ts",
+      "assets/native-runtime/*.mjs",
+      "tests/integration/project*.spec.ts",
+      "scripts/check-boundaries.mjs",
+      "scripts/check-project-package.mjs",
+      "scripts/generate-project-protocol.mjs"
+    ]
+  },
+  "formatter": {
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "asNeeded"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "style": {
+        "noNonNullAssertion": "off"
+      }
+    }
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  }
+}

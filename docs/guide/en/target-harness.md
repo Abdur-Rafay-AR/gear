@@ -1,5 +1,7 @@
 # Prepare a Target harness
 
+For this branch’s task-table → evaluate → refine flow, see the [project quick start](../../project-quickstart.md). The material below preserves the legacy Skill/evolution workflow and experiment sources.
+
 A Target is a buildable, exact Git revision. Gear edits the declared Harness tree while a fixed carrier supplies the runtime and evaluation entrypoint.
 
 ## Use the example carrier

@@ -1,5 +1,7 @@
 # 任务与评测
 
+本分支新增的任务表 → 评测 → refine 路径见 [项目入门](../../project-quickstart.zh-CN.md)，Python 策略入口见 [算法索引](../../python-algorithms.zh-CN.md)。下文保留历史 Skill/evolution 路径与实验来源。
+
 开始进化前先准备任务集。Gear 固定数据内容和评测配置，后续轮次不能静默改变实验条件。
 
 ## 从一题扩展到完整评测
@@ -22,7 +24,7 @@ node ../hitch-marketing-guide/benchmark-packages/automationbench/import.mjs \
   --out "$PWD/.evolve-lab/marketing-guide/one-task"
 ```
 
-将生成目录传给快速开始中的 `GEAR_SMOKE_DATASET`。完整 100 题实验需要显式选择全部任务，并保留导出清单；单题运行不代表完整 benchmark 分数。适配器参数见[固定版本说明](https://github.com/rsi-gear/agent-hitch/blob/67c527b9321e37755c77ee50545af4b9524ec731/benchmark-packages/automationbench/README.md)。
+将生成目录作为既有 Skill/evolution 配置中的 seedTasksPath，并明确配置独立 held-out 目录。任务表项目入口使用 [CSV/JSONL 模板](../../project-quickstart.zh-CN.md)，目前不直接导入任意自定义 Harbor verifier。完整 100 题实验需要显式选择全部任务，并保留导出清单；单题运行不代表完整 benchmark 分数。适配器参数见[固定版本说明](https://github.com/rsi-gear/agent-hitch/blob/67c527b9321e37755c77ee50545af4b9524ec731/benchmark-packages/automationbench/README.md)。
 
 ## 按用途划分证据
 

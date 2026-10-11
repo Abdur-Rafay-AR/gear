@@ -9,6 +9,22 @@ Use Gear as the authority for evolution state, candidate workspaces, evaluation,
 selection, and promotion. This skill is the Meta Agent entrypoint; the Target
 Agent runs separately through the rollout provider configured in Gear.
 
+## Project interface
+
+When the user is operating a directory with `gear.yaml`, use the packaged
+`gear` application commands: `benchmark check --view meta`, `evaluate --limit 1 --view meta`,
+`refine --rounds N --view meta`, `report --view meta`, and `resume RUN_ID --view meta`.
+The Meta view excludes held-out task rows and scores. Use the operator view only
+when the user explicitly requests a final validation report, and never feed its
+held-out results back into candidate proposals. Inspect an existing run
+before creating another when the user asks to continue. Configuration and
+budgets are in gear.yaml; do not manually edit .gear state. CLI and the Python
+`gear.Project` SDK share the same application service. `benchmark check` is a
+static and fixture check; only actual evaluation establishes runtime behavior.
+The project recipe is separately versioned and cannot resume historical
+failure-cluster evolution records. Use the legacy connection flow below for
+those records or an active native `refine_request` assignment.
+
 ## Connect
 
 Use the native `refine_request` tool when it is available. It carries the same

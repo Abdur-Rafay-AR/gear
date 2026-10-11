@@ -1,8 +1,9 @@
-"""Default native composition; scripts can instead compose any four stages."""
-from gear_training.recipes.registry import is_sft
-from gear_training.online_rl import build_loop as build_online_loop
-from gear_training.offline_sft import build_loop as build_sft_loop
+"""Compatibility forwarding module; implementation lives in gear.training.recipes.dev_script.recipe."""
+import importlib as _importlib
+import runpy as _runpy
+import sys as _sys
 
-
-def build_loop(config, runtime):
-    return (build_sft_loop if is_sft(runtime.request) else build_online_loop)(config, runtime)
+if __name__ == "__main__":
+    _runpy.run_module('gear.training.recipes.dev_script.recipe', run_name="__main__")
+else:
+    _sys.modules[__name__] = _importlib.import_module('gear.training.recipes.dev_script.recipe')

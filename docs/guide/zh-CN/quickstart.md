@@ -1,5 +1,7 @@
 # 快速开始
 
+本分支新增的任务表 → 评测 → refine 路径见 [项目入门](../../project-quickstart.zh-CN.md)，Python 策略入口见 [算法索引](../../python-algorithms.zh-CN.md)。下文保留历史 Skill/evolution 路径与实验来源。
+
 在 Codex、Claude Code、DSH，或其他能够加载 Skill 并调用 Gear 的 Agent 中使用 Refine Skill。用自然语言说明 benchmark、Meta Agent、rollout Agent 和优化轮数，即可开始优化。
 
 ## 让 Agent 帮你安装

@@ -10,6 +10,7 @@ const documentationScripts = new Set([
 ])
 const macosTests = new Set([
   'tests/integration/sandbox-platform.spec.ts',
+  'tests/integration/project-worker-sandbox.spec.ts',
   'tests/unit/sandbox.spec.ts',
   'tests/unit/notebook-runtime.spec.ts',
 ])
@@ -22,6 +23,7 @@ function isDocumentation(path) {
 }
 
 function affectsMacos(path) {
+  if (path.startsWith('python/gear/_protocol/')) return true
   if (macosTests.has(path) || /^tests\/(?:helpers|fixtures|e2e)\//u.test(path)) return true
   // These suites and examples do not run in test:sandbox:platform. Keep all
   // src/, assets/, skills/, build/configuration and unknown paths conservative.
@@ -43,8 +45,8 @@ export function selectWorkflowJobs(eventName, event, paths) {
   return {
     ...jobs,
     full_tests: jobs.code && (manual
-      || (eventName === 'pull_request' && event.pull_request?.base?.ref === 'main')
-      || (eventName === 'push' && event.ref === 'refs/heads/main')),
+      || (eventName === 'pull_request' && ['main', 'dev'].includes(event.pull_request?.base?.ref))
+      || (eventName === 'push' && ['refs/heads/main', 'refs/heads/dev'].includes(event.ref))),
   }
 }
 
@@ -61,7 +63,7 @@ export function changedPaths(eventName, event, git = args => execFileSync('git',
     return null
   }
   // New branches, missing history and unknown events select all platform jobs.
-  // The full regression suite still follows the main/manual event policy.
+  // The full regression suite still follows the dev/main/manual event policy.
   if (![base, head].every(sha => /^[a-f0-9]{40}$/u.test(sha ?? '') && !/^0+$/u.test(sha))) return null
   try {
     if (eventName === 'pull_request') base = git(['merge-base', base, head]).trim()
