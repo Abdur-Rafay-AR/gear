@@ -1,0 +1,2799 @@
+{
+  "version": 1,
+  "source_commit": "53f30ad",
+  "projection": "verified profile keys and frozen locale order; no legacy digests or journals",
+  "archive": [
+    {
+      "name": "joint-redundant-fronts",
+      "size": 3,
+      "process": false,
+      "champion": "A",
+      "process_fraction": 0.25,
+      "candidates": [
+        {
+          "id": "A",
+          "scores": [
+            1,
+            1,
+            0
+          ],
+          "observed_at": 0
+        },
+        {
+          "id": "B",
+          "scores": [
+            1,
+            0,
+            1
+          ],
+          "observed_at": 1
+        },
+        {
+          "id": "C",
+          "scores": [
+            0,
+            1,
+            1
+          ],
+          "observed_at": 2
+        },
+        {
+          "id": "D",
+          "scores": [
+            0.7,
+            0.7,
+            0.7
+          ],
+          "observed_at": 3
+        }
+      ],
+      "input": {
+        "task_ids": [
+          "task-0",
+          "task-1",
+          "task-2"
+        ],
+        "weights": {
+          "task-0": 0.3333333333333333,
+          "task-1": 0.3333333333333333,
+          "task-2": 0.3333333333333333
+        },
+        "champion": "A",
+        "process_fraction": 0.25,
+        "tie_order": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "candidates": [
+          {
+            "id": "A",
+            "identity": "b809fc2d012aeec93cc96f36fa0b92ccd3d70b3e:sha256:80a3d3262ad8088bdcc32b9a983fb013a7a3e6b64bace56ec696f847794bd696",
+            "score_keys": {
+              "task-0": "1000000",
+              "task-1": "1000000",
+              "task-2": "0"
+            },
+            "aggregate_key": "666667",
+            "observed_at": 0,
+            "guard_passed": true,
+            "process_keys": {},
+            "process_complete": true
+          },
+          {
+            "id": "B",
+            "identity": "ad3b7ffd82401078fab26238b36c9b51c27fb990:sha256:7d43d19ffd557c8f6c2b2f53dad04e6a39ab128e2f3f831b6ffcf032c0ac44bd",
+            "score_keys": {
+              "task-0": "1000000",
+              "task-1": "0",
+              "task-2": "1000000"
+            },
+            "aggregate_key": "666667",
+            "observed_at": 1,
+            "guard_passed": true,
+            "process_keys": {},
+            "process_complete": true
+          },
+          {
+            "id": "C",
+            "identity": "3a0bc2c1718fed43d25fdbb8830097643dc026b5:sha256:08f1cbcffbe593dcbe820be9b44228cf8f923d826c8ffe1eb28fc31c8d193d17",
+            "score_keys": {
+              "task-0": "0",
+              "task-1": "1000000",
+              "task-2": "1000000"
+            },
+            "aggregate_key": "666667",
+            "observed_at": 2,
+            "guard_passed": true,
+            "process_keys": {},
+            "process_complete": true
+          },
+          {
+            "id": "D",
+            "identity": "0e9a40842cd2242f3f053b9f0ff1d864964a11e0:sha256:9bb5612df8481f6de22e631b8bbf1b5f8b002be97623bf275beff8e2eb0537c9",
+            "score_keys": {
+              "task-0": "700000",
+              "task-1": "700000",
+              "task-2": "700000"
+            },
+            "aggregate_key": "700000",
+            "observed_at": 3,
+            "guard_passed": true,
+            "process_keys": {},
+            "process_complete": true
+          }
+        ]
+      },
+      "expected": {
+        "eligible_ids": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "process_eligible_ids": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "fronts": [
+          {
+            "task_id": "task-0",
+            "channel": "outcome",
+            "candidate_ids": [
+              "A",
+              "B"
+            ],
+            "informative": true
+          },
+          {
+            "task_id": "task-1",
+            "channel": "outcome",
+            "candidate_ids": [
+              "A",
+              "C"
+            ],
+            "informative": true
+          },
+          {
+            "task_id": "task-2",
+            "channel": "outcome",
+            "candidate_ids": [
+              "B",
+              "C"
+            ],
+            "informative": true
+          }
+        ],
+        "representatives": {
+          "A": "A",
+          "B": "B",
+          "C": "C",
+          "D": "D"
+        },
+        "pruned_ids": [
+          "A",
+          "D"
+        ],
+        "parent_probabilities": {
+          "B": 0.5,
+          "C": 0.5
+        },
+        "pending_ids": [],
+        "ineligible_ids": []
+      }
+    },
+    {
+      "name": "constant-champion-fallback",
+      "size": 2,
+      "process": false,
+      "champion": "B",
+      "process_fraction": 0.25,
+      "candidates": [
+        {
+          "id": "A",
+          "scores": [
+            0,
+            0
+          ],
+          "observed_at": 0
+        },
+        {
+          "id": "B",
+          "scores": [
+            0,
+            0
+          ],
+          "observed_at": 1
+        }
+      ],
+      "input": {
+        "task_ids": [
+          "task-0",
+          "task-1"
+        ],
+        "weights": {
+          "task-0": 0.5,
+          "task-1": 0.5
+        },
+        "champion": "B",
+        "process_fraction": 0.25,
+        "tie_order": [
+          "A",
+          "B"
+        ],
+        "candidates": [
+          {
+            "id": "A",
+            "identity": "b809fc2d012aeec93cc96f36fa0b92ccd3d70b3e:sha256:80a3d3262ad8088bdcc32b9a983fb013a7a3e6b64bace56ec696f847794bd696",
+            "score_keys": {
+              "task-0": "0",
+              "task-1": "0"
+            },
+            "aggregate_key": "0",
+            "observed_at": 0,
+            "guard_passed": true,
+            "process_keys": {},
+            "process_complete": true
+          },
+          {
+            "id": "B",
+            "identity": "ad3b7ffd82401078fab26238b36c9b51c27fb990:sha256:7d43d19ffd557c8f6c2b2f53dad04e6a39ab128e2f3f831b6ffcf032c0ac44bd",
+            "score_keys": {
+              "task-0": "0",
+              "task-1": "0"
+            },
+            "aggregate_key": "0",
+            "observed_at": 1,
+            "guard_passed": true,
+            "process_keys": {},
+            "process_complete": true
+          }
+        ]
+      },
+      "expected": {
+        "eligible_ids": [
+          "A",
+          "B"
+        ],
+        "process_eligible_ids": [
+          "A",
+          "B"
+        ],
+        "fronts": [
+          {
+            "task_id": "task-0",
+            "channel": "outcome",
+            "candidate_ids": [
+              "A",
+              "B"
+            ],
+            "informative": false
+          },
+          {
+            "task_id": "task-1",
+            "channel": "outcome",
+            "candidate_ids": [
+              "A",
+              "B"
+            ],
+            "informative": false
+          }
+        ],
+        "representatives": {
+          "A": "A",
+          "B": "B"
+        },
+        "pruned_ids": [],
+        "parent_probabilities": {
+          "B": 1
+        },
+        "pending_ids": [],
+        "ineligible_ids": []
+      }
+    },
+    {
+      "name": "quantized-tie-without-champion",
+      "size": 2,
+      "process": false,
+      "champion": "outside",
+      "process_fraction": 0.25,
+      "candidates": [
+        {
+          "id": "A",
+          "scores": [
+            0.5,
+            0.5
+          ],
+          "observed_at": 0
+        },
+        {
+          "id": "B",
+          "scores": [
+            0.5000001,
+            0.5000001
+          ],
+          "observed_at": 1
+        }
+      ],
+      "input": {
+        "task_ids": [
+          "task-0",
+          "task-1"
+        ],
+        "weights": {
+          "task-0": 0.5,
+          "task-1": 0.5
+        },
+        "champion": "outside",
+        "process_fraction": 0.25,
+        "tie_order": [
+          "A",
+          "B"
+        ],
+        "candidates": [
+          {
+            "id": "A",
+            "identity": "b809fc2d012aeec93cc96f36fa0b92ccd3d70b3e:sha256:80a3d3262ad8088bdcc32b9a983fb013a7a3e6b64bace56ec696f847794bd696",
+            "score_keys": {
+              "task-0": "500000",
+              "task-1": "500000"
+            },
+            "aggregate_key": "500000",
+            "observed_at": 0,
+            "guard_passed": true,
+            "process_keys": {},
+            "process_complete": true
+          },
+          {
+            "id": "B",
+            "identity": "ad3b7ffd82401078fab26238b36c9b51c27fb990:sha256:7d43d19ffd557c8f6c2b2f53dad04e6a39ab128e2f3f831b6ffcf032c0ac44bd",
+            "score_keys": {
+              "task-0": "500000",
+              "task-1": "500000"
+            },
+            "aggregate_key": "500000",
+            "observed_at": 1,
+            "guard_passed": true,
+            "process_keys": {},
+            "process_complete": true
+          }
+        ]
+      },
+      "expected": {
+        "eligible_ids": [
+          "A",
+          "B"
+        ],
+        "process_eligible_ids": [
+          "A",
+          "B"
+        ],
+        "fronts": [
+          {
+            "task_id": "task-0",
+            "channel": "outcome",
+            "candidate_ids": [
+              "A",
+              "B"
+            ],
+            "informative": false
+          },
+          {
+            "task_id": "task-1",
+            "channel": "outcome",
+            "candidate_ids": [
+              "A",
+              "B"
+            ],
+            "informative": false
+          }
+        ],
+        "representatives": {
+          "A": "A",
+          "B": "B"
+        },
+        "pruned_ids": [],
+        "parent_probabilities": {
+          "A": 1
+        },
+        "pending_ids": [],
+        "ineligible_ids": []
+      }
+    },
+    {
+      "name": "guard-rejection-and-zero-weight",
+      "size": 2,
+      "process": false,
+      "champion": "A",
+      "process_fraction": 0.25,
+      "candidates": [
+        {
+          "id": "A",
+          "scores": [
+            1,
+            0
+          ],
+          "observed_at": 0
+        },
+        {
+          "id": "B",
+          "scores": [
+            0,
+            1
+          ],
+          "observed_at": 1
+        }
+      ],
+      "guard": 1,
+      "input": {
+        "task_ids": [
+          "task-0",
+          "task-1"
+        ],
+        "weights": {
+          "task-0": 1,
+          "task-1": 0
+        },
+        "champion": "A",
+        "process_fraction": 0.25,
+        "tie_order": [
+          "A",
+          "B"
+        ],
+        "candidates": [
+          {
+            "id": "A",
+            "identity": "b809fc2d012aeec93cc96f36fa0b92ccd3d70b3e:sha256:80a3d3262ad8088bdcc32b9a983fb013a7a3e6b64bace56ec696f847794bd696",
+            "score_keys": {
+              "task-0": "1000000",
+              "task-1": "0"
+            },
+            "aggregate_key": "1000000",
+            "observed_at": 0,
+            "guard_passed": false,
+            "process_keys": {},
+            "process_complete": true
+          },
+          {
+            "id": "B",
+            "identity": "ad3b7ffd82401078fab26238b36c9b51c27fb990:sha256:7d43d19ffd557c8f6c2b2f53dad04e6a39ab128e2f3f831b6ffcf032c0ac44bd",
+            "score_keys": {
+              "task-0": "0",
+              "task-1": "1000000"
+            },
+            "aggregate_key": "0",
+            "observed_at": 1,
+            "guard_passed": true,
+            "process_keys": {},
+            "process_complete": true
+          }
+        ]
+      },
+      "expected": {
+        "eligible_ids": [
+          "B"
+        ],
+        "process_eligible_ids": [
+          "B"
+        ],
+        "fronts": [
+          {
+            "task_id": "task-0",
+            "channel": "outcome",
+            "candidate_ids": [
+              "B"
+            ],
+            "informative": false
+          },
+          {
+            "task_id": "task-1",
+            "channel": "outcome",
+            "candidate_ids": [
+              "B"
+            ],
+            "informative": false
+          }
+        ],
+        "representatives": {
+          "B": "B"
+        },
+        "pruned_ids": [],
+        "parent_probabilities": {
+          "B": 1
+        },
+        "pending_ids": [],
+        "ineligible_ids": [
+          "A"
+        ]
+      }
+    },
+    {
+      "name": "same-target-earliest-observation",
+      "size": 2,
+      "process": false,
+      "champion": "A",
+      "process_fraction": 0.25,
+      "candidates": [
+        {
+          "id": "A",
+          "scores": [
+            0,
+            0
+          ],
+          "observed_at": 0,
+          "tree": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "id": "B",
+          "scores": [
+            1,
+            1
+          ],
+          "observed_at": 1,
+          "tree": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "id": "C",
+          "scores": [
+            0.5,
+            0.5
+          ],
+          "observed_at": 2
+        }
+      ],
+      "input": {
+        "task_ids": [
+          "task-0",
+          "task-1"
+        ],
+        "weights": {
+          "task-0": 0.5,
+          "task-1": 0.5
+        },
+        "champion": "A",
+        "process_fraction": 0.25,
+        "tie_order": [
+          "A",
+          "B",
+          "C"
+        ],
+        "candidates": [
+          {
+            "id": "A",
+            "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:sha256:f038b41aa4142c7c3f11389e72800373ccd6f8b07a539f0caa87f415133799e1",
+            "score_keys": {
+              "task-0": "0",
+              "task-1": "0"
+            },
+            "aggregate_key": "0",
+            "observed_at": 0,
+            "guard_passed": true,
+            "process_keys": {},
+            "process_complete": true
+          },
+          {
+            "id": "B",
+            "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:sha256:f038b41aa4142c7c3f11389e72800373ccd6f8b07a539f0caa87f415133799e1",
+            "score_keys": {
+              "task-0": "1000000",
+              "task-1": "1000000"
+            },
+            "aggregate_key": "1000000",
+            "observed_at": 1,
+            "guard_passed": true,
+            "process_keys": {},
+            "process_complete": true
+          },
+          {
+            "id": "C",
+            "identity": "3a0bc2c1718fed43d25fdbb8830097643dc026b5:sha256:08f1cbcffbe593dcbe820be9b44228cf8f923d826c8ffe1eb28fc31c8d193d17",
+            "score_keys": {
+              "task-0": "500000",
+              "task-1": "500000"
+            },
+            "aggregate_key": "500000",
+            "observed_at": 2,
+            "guard_passed": true,
+            "process_keys": {},
+            "process_complete": true
+          }
+        ]
+      },
+      "expected": {
+        "eligible_ids": [
+          "A",
+          "C"
+        ],
+        "process_eligible_ids": [
+          "A",
+          "C"
+        ],
+        "fronts": [
+          {
+            "task_id": "task-0",
+            "channel": "outcome",
+            "candidate_ids": [
+              "C"
+            ],
+            "informative": true
+          },
+          {
+            "task_id": "task-1",
+            "channel": "outcome",
+            "candidate_ids": [
+              "C"
+            ],
+            "informative": true
+          }
+        ],
+        "representatives": {
+          "A": "A",
+          "B": "A",
+          "C": "C"
+        },
+        "pruned_ids": [
+          "A"
+        ],
+        "parent_probabilities": {
+          "C": 1
+        },
+        "pending_ids": [],
+        "ineligible_ids": []
+      }
+    },
+    {
+      "name": "partial-outcome-is-pending",
+      "size": 2,
+      "process": false,
+      "champion": "A",
+      "process_fraction": 0.25,
+      "candidates": [
+        {
+          "id": "A",
+          "scores": [
+            1,
+            null
+          ],
+          "observed_at": 0
+        },
+        {
+          "id": "B",
+          "scores": [
+            0,
+            1
+          ],
+          "observed_at": 1
+        }
+      ],
+      "input": {
+        "task_ids": [
+          "task-0",
+          "task-1"
+        ],
+        "weights": {
+          "task-0": 0.5,
+          "task-1": 0.5
+        },
+        "champion": "A",
+        "process_fraction": 0.25,
+        "tie_order": [
+          "A",
+          "B"
+        ],
+        "candidates": [
+          {
+            "id": "A",
+            "identity": "b809fc2d012aeec93cc96f36fa0b92ccd3d70b3e:sha256:80a3d3262ad8088bdcc32b9a983fb013a7a3e6b64bace56ec696f847794bd696",
+            "score_keys": {
+              "task-0": "1000000"
+            },
+            "aggregate_key": null,
+            "observed_at": 0,
+            "guard_passed": false,
+            "process_keys": {},
+            "process_complete": false
+          },
+          {
+            "id": "B",
+            "identity": "ad3b7ffd82401078fab26238b36c9b51c27fb990:sha256:7d43d19ffd557c8f6c2b2f53dad04e6a39ab128e2f3f831b6ffcf032c0ac44bd",
+            "score_keys": {
+              "task-0": "0",
+              "task-1": "1000000"
+            },
+            "aggregate_key": "500000",
+            "observed_at": 1,
+            "guard_passed": true,
+            "process_keys": {},
+            "process_complete": true
+          }
+        ]
+      },
+      "expected": {
+        "eligible_ids": [
+          "B"
+        ],
+        "process_eligible_ids": [
+          "B"
+        ],
+        "fronts": [
+          {
+            "task_id": "task-0",
+            "channel": "outcome",
+            "candidate_ids": [
+              "B"
+            ],
+            "informative": false
+          },
+          {
+            "task_id": "task-1",
+            "channel": "outcome",
+            "candidate_ids": [
+              "B"
+            ],
+            "informative": false
+          }
+        ],
+        "representatives": {
+          "B": "B"
+        },
+        "pruned_ids": [],
+        "parent_probabilities": {
+          "B": 1
+        },
+        "pending_ids": [
+          "A"
+        ],
+        "ineligible_ids": []
+      }
+    },
+    {
+      "name": "outcome-process-mixture",
+      "size": 2,
+      "process": true,
+      "champion": "A",
+      "process_fraction": 0.25,
+      "candidates": [
+        {
+          "id": "A",
+          "scores": [
+            1,
+            0
+          ],
+          "observed_at": 0,
+          "process_scores": [
+            0,
+            1
+          ]
+        },
+        {
+          "id": "B",
+          "scores": [
+            0,
+            1
+          ],
+          "observed_at": 1,
+          "process_scores": [
+            1,
+            0
+          ]
+        },
+        {
+          "id": "C",
+          "scores": [
+            0.6,
+            0.6
+          ],
+          "observed_at": 2,
+          "process_scores": [
+            null,
+            null
+          ]
+        }
+      ],
+      "input": {
+        "task_ids": [
+          "task-0",
+          "task-1"
+        ],
+        "weights": {
+          "task-0": 0.5,
+          "task-1": 0.5
+        },
+        "champion": "A",
+        "process_fraction": 0.25,
+        "tie_order": [
+          "A",
+          "B",
+          "C"
+        ],
+        "candidates": [
+          {
+            "id": "A",
+            "identity": "b809fc2d012aeec93cc96f36fa0b92ccd3d70b3e:sha256:80a3d3262ad8088bdcc32b9a983fb013a7a3e6b64bace56ec696f847794bd696",
+            "score_keys": {
+              "task-0": "1000000",
+              "task-1": "0"
+            },
+            "aggregate_key": "500000",
+            "observed_at": 0,
+            "guard_passed": true,
+            "process_keys": {
+              "task-0": "0",
+              "task-1": "1000000"
+            },
+            "process_complete": true
+          },
+          {
+            "id": "B",
+            "identity": "ad3b7ffd82401078fab26238b36c9b51c27fb990:sha256:7d43d19ffd557c8f6c2b2f53dad04e6a39ab128e2f3f831b6ffcf032c0ac44bd",
+            "score_keys": {
+              "task-0": "0",
+              "task-1": "1000000"
+            },
+            "aggregate_key": "500000",
+            "observed_at": 1,
+            "guard_passed": true,
+            "process_keys": {
+              "task-0": "1000000",
+              "task-1": "0"
+            },
+            "process_complete": true
+          },
+          {
+            "id": "C",
+            "identity": "3a0bc2c1718fed43d25fdbb8830097643dc026b5:sha256:08f1cbcffbe593dcbe820be9b44228cf8f923d826c8ffe1eb28fc31c8d193d17",
+            "score_keys": {
+              "task-0": "600000",
+              "task-1": "600000"
+            },
+            "aggregate_key": "600000",
+            "observed_at": 2,
+            "guard_passed": true,
+            "process_keys": {},
+            "process_complete": false
+          }
+        ]
+      },
+      "expected": {
+        "eligible_ids": [
+          "A",
+          "B",
+          "C"
+        ],
+        "process_eligible_ids": [
+          "A",
+          "B"
+        ],
+        "fronts": [
+          {
+            "task_id": "task-0",
+            "channel": "outcome",
+            "candidate_ids": [
+              "A"
+            ],
+            "informative": true
+          },
+          {
+            "task_id": "task-1",
+            "channel": "outcome",
+            "candidate_ids": [
+              "B"
+            ],
+            "informative": true
+          },
+          {
+            "task_id": "task-0",
+            "channel": "process",
+            "candidate_ids": [
+              "B"
+            ],
+            "informative": true
+          },
+          {
+            "task_id": "task-1",
+            "channel": "process",
+            "candidate_ids": [
+              "A"
+            ],
+            "informative": true
+          }
+        ],
+        "representatives": {
+          "A": "A",
+          "B": "B",
+          "C": "C"
+        },
+        "pruned_ids": [
+          "C"
+        ],
+        "parent_probabilities": {
+          "A": 0.5,
+          "B": 0.5
+        },
+        "pending_ids": [
+          "C"
+        ],
+        "ineligible_ids": []
+      }
+    },
+    {
+      "name": "process-only-informative-channel",
+      "size": 2,
+      "process": true,
+      "champion": "A",
+      "process_fraction": 0.25,
+      "candidates": [
+        {
+          "id": "A",
+          "scores": [
+            1,
+            1
+          ],
+          "observed_at": 0,
+          "process_scores": [
+            1,
+            0
+          ]
+        },
+        {
+          "id": "B",
+          "scores": [
+            1,
+            1
+          ],
+          "observed_at": 1,
+          "process_scores": [
+            0,
+            1
+          ]
+        }
+      ],
+      "input": {
+        "task_ids": [
+          "task-0",
+          "task-1"
+        ],
+        "weights": {
+          "task-0": 0.5,
+          "task-1": 0.5
+        },
+        "champion": "A",
+        "process_fraction": 0.25,
+        "tie_order": [
+          "A",
+          "B"
+        ],
+        "candidates": [
+          {
+            "id": "A",
+            "identity": "b809fc2d012aeec93cc96f36fa0b92ccd3d70b3e:sha256:80a3d3262ad8088bdcc32b9a983fb013a7a3e6b64bace56ec696f847794bd696",
+            "score_keys": {
+              "task-0": "1000000",
+              "task-1": "1000000"
+            },
+            "aggregate_key": "1000000",
+            "observed_at": 0,
+            "guard_passed": true,
+            "process_keys": {
+              "task-0": "1000000",
+              "task-1": "0"
+            },
+            "process_complete": true
+          },
+          {
+            "id": "B",
+            "identity": "ad3b7ffd82401078fab26238b36c9b51c27fb990:sha256:7d43d19ffd557c8f6c2b2f53dad04e6a39ab128e2f3f831b6ffcf032c0ac44bd",
+            "score_keys": {
+              "task-0": "1000000",
+              "task-1": "1000000"
+            },
+            "aggregate_key": "1000000",
+            "observed_at": 1,
+            "guard_passed": true,
+            "process_keys": {
+              "task-0": "0",
+              "task-1": "1000000"
+            },
+            "process_complete": true
+          }
+        ]
+      },
+      "expected": {
+        "eligible_ids": [
+          "A",
+          "B"
+        ],
+        "process_eligible_ids": [
+          "A",
+          "B"
+        ],
+        "fronts": [
+          {
+            "task_id": "task-0",
+            "channel": "outcome",
+            "candidate_ids": [
+              "A",
+              "B"
+            ],
+            "informative": false
+          },
+          {
+            "task_id": "task-1",
+            "channel": "outcome",
+            "candidate_ids": [
+              "A",
+              "B"
+            ],
+            "informative": false
+          },
+          {
+            "task_id": "task-0",
+            "channel": "process",
+            "candidate_ids": [
+              "A"
+            ],
+            "informative": true
+          },
+          {
+            "task_id": "task-1",
+            "channel": "process",
+            "candidate_ids": [
+              "B"
+            ],
+            "informative": true
+          }
+        ],
+        "representatives": {
+          "A": "A",
+          "B": "B"
+        },
+        "pruned_ids": [],
+        "parent_probabilities": {
+          "A": 0.5,
+          "B": 0.5
+        },
+        "pending_ids": [],
+        "ineligible_ids": []
+      }
+    },
+    {
+      "name": "guard-only-difference-does-not-create-parent-mass",
+      "size": 2,
+      "process": false,
+      "champion": "B",
+      "process_fraction": 0.25,
+      "candidates": [
+        {
+          "id": "A",
+          "scores": [
+            0.5,
+            1
+          ],
+          "observed_at": 0
+        },
+        {
+          "id": "B",
+          "scores": [
+            0.5,
+            1
+          ],
+          "observed_at": 1
+        }
+      ],
+      "guard": 1,
+      "input": {
+        "task_ids": [
+          "task-0",
+          "task-1"
+        ],
+        "weights": {
+          "task-0": 1,
+          "task-1": 0
+        },
+        "champion": "B",
+        "process_fraction": 0.25,
+        "tie_order": [
+          "A",
+          "B"
+        ],
+        "candidates": [
+          {
+            "id": "A",
+            "identity": "b809fc2d012aeec93cc96f36fa0b92ccd3d70b3e:sha256:80a3d3262ad8088bdcc32b9a983fb013a7a3e6b64bace56ec696f847794bd696",
+            "score_keys": {
+              "task-0": "500000",
+              "task-1": "1000000"
+            },
+            "aggregate_key": "500000",
+            "observed_at": 0,
+            "guard_passed": true,
+            "process_keys": {},
+            "process_complete": true
+          },
+          {
+            "id": "B",
+            "identity": "ad3b7ffd82401078fab26238b36c9b51c27fb990:sha256:7d43d19ffd557c8f6c2b2f53dad04e6a39ab128e2f3f831b6ffcf032c0ac44bd",
+            "score_keys": {
+              "task-0": "500000",
+              "task-1": "1000000"
+            },
+            "aggregate_key": "500000",
+            "observed_at": 1,
+            "guard_passed": true,
+            "process_keys": {},
+            "process_complete": true
+          }
+        ]
+      },
+      "expected": {
+        "eligible_ids": [
+          "A",
+          "B"
+        ],
+        "process_eligible_ids": [
+          "A",
+          "B"
+        ],
+        "fronts": [
+          {
+            "task_id": "task-0",
+            "channel": "outcome",
+            "candidate_ids": [
+              "A",
+              "B"
+            ],
+            "informative": false
+          },
+          {
+            "task_id": "task-1",
+            "channel": "outcome",
+            "candidate_ids": [
+              "A",
+              "B"
+            ],
+            "informative": false
+          }
+        ],
+        "representatives": {
+          "A": "A",
+          "B": "B"
+        },
+        "pruned_ids": [],
+        "parent_probabilities": {
+          "B": 1
+        },
+        "pending_ids": [],
+        "ineligible_ids": []
+      }
+    },
+    {
+      "name": "frozen-case-locale-tie",
+      "size": 2,
+      "process": false,
+      "champion": "outside",
+      "process_fraction": 0.25,
+      "candidates": [
+        {
+          "id": "a",
+          "scores": [
+            0.5,
+            0.5
+          ],
+          "observed_at": 0
+        },
+        {
+          "id": "Z",
+          "scores": [
+            0.5,
+            0.5
+          ],
+          "observed_at": 0
+        },
+        {
+          "id": "A",
+          "scores": [
+            0.5,
+            0.5
+          ],
+          "observed_at": 0
+        }
+      ],
+      "input": {
+        "task_ids": [
+          "task-0",
+          "task-1"
+        ],
+        "weights": {
+          "task-0": 0.5,
+          "task-1": 0.5
+        },
+        "champion": "outside",
+        "process_fraction": 0.25,
+        "tie_order": [
+          "a",
+          "A",
+          "Z"
+        ],
+        "candidates": [
+          {
+            "id": "a",
+            "identity": "b3ea8dea4841ae76f5181c34139aa23a1ad99cd8:sha256:4d022e0596695161ffa2a5b8625eaedc571dadbff019bf29cfbd63fa6b633e63",
+            "score_keys": {
+              "task-0": "500000",
+              "task-1": "500000"
+            },
+            "aggregate_key": "500000",
+            "observed_at": 0,
+            "guard_passed": true,
+            "process_keys": {},
+            "process_complete": true
+          },
+          {
+            "id": "Z",
+            "identity": "c6701510a98d0039700d3305fad6938fa431df38:sha256:092e9236d90d669e3149d632f40a690a37094d80ae3a07fedd9073ae19acfde2",
+            "score_keys": {
+              "task-0": "500000",
+              "task-1": "500000"
+            },
+            "aggregate_key": "500000",
+            "observed_at": 0,
+            "guard_passed": true,
+            "process_keys": {},
+            "process_complete": true
+          },
+          {
+            "id": "A",
+            "identity": "b809fc2d012aeec93cc96f36fa0b92ccd3d70b3e:sha256:80a3d3262ad8088bdcc32b9a983fb013a7a3e6b64bace56ec696f847794bd696",
+            "score_keys": {
+              "task-0": "500000",
+              "task-1": "500000"
+            },
+            "aggregate_key": "500000",
+            "observed_at": 0,
+            "guard_passed": true,
+            "process_keys": {},
+            "process_complete": true
+          }
+        ]
+      },
+      "expected": {
+        "eligible_ids": [
+          "A",
+          "Z",
+          "a"
+        ],
+        "process_eligible_ids": [
+          "A",
+          "Z",
+          "a"
+        ],
+        "fronts": [
+          {
+            "task_id": "task-0",
+            "channel": "outcome",
+            "candidate_ids": [
+              "A",
+              "Z",
+              "a"
+            ],
+            "informative": false
+          },
+          {
+            "task_id": "task-1",
+            "channel": "outcome",
+            "candidate_ids": [
+              "A",
+              "Z",
+              "a"
+            ],
+            "informative": false
+          }
+        ],
+        "representatives": {
+          "a": "a",
+          "A": "A",
+          "Z": "Z"
+        },
+        "pruned_ids": [],
+        "parent_probabilities": {
+          "a": 1
+        },
+        "pending_ids": [],
+        "ineligible_ids": []
+      }
+    }
+  ],
+  "bridge": [
+    {
+      "name": "bridge-quota",
+      "size": 8,
+      "seed": 19,
+      "ratio": 0.5,
+      "max_candidates": 2,
+      "round_index": 0,
+      "budget": 100,
+      "guards": [],
+      "cached": [],
+      "nominees": [
+        {
+          "candidate_id": "A",
+          "family_id": "family-0",
+          "scope_id": "scope-0",
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ]
+        },
+        {
+          "candidate_id": "B",
+          "family_id": "family-1",
+          "scope_id": "scope-1",
+          "task_ids": [
+            "task-2",
+            "task-3"
+          ]
+        },
+        {
+          "candidate_id": "C",
+          "family_id": "family-2",
+          "scope_id": "scope-2",
+          "task_ids": [
+            "task-4",
+            "task-5"
+          ]
+        }
+      ],
+      "input": {
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-4",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-5",
+            "stratum": "family-1",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-6",
+            "stratum": "family-2",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-7",
+            "stratum": "family-3",
+            "estimated_cost": 1
+          }
+        ],
+        "seed": "19",
+        "ratio": 0.5,
+        "round_index": 0,
+        "max_candidates": 2,
+        "ordered_nominees": [
+          {
+            "candidate_id": "A",
+            "scope_id": "scope-0",
+            "task_ids": [
+              "task-0",
+              "task-1"
+            ]
+          },
+          {
+            "candidate_id": "B",
+            "scope_id": "scope-1",
+            "task_ids": [
+              "task-2",
+              "task-3"
+            ]
+          },
+          {
+            "candidate_id": "C",
+            "scope_id": "scope-2",
+            "task_ids": [
+              "task-4",
+              "task-5"
+            ]
+          }
+        ],
+        "guards": [],
+        "budget": 100,
+        "cached": []
+      },
+      "expected": {
+        "plan": {
+          "task_ids": [
+            "task-0",
+            "task-1",
+            "task-2",
+            "task-3"
+          ],
+          "participant_ids": [
+            "A",
+            "B",
+            "champion"
+          ]
+        },
+        "skipped": [
+          "C"
+        ],
+        "exclusions": [
+          {
+            "candidate_id": "C",
+            "scope_id": "scope-2",
+            "reason": "group-quota"
+          }
+        ],
+        "quotes": [
+          {
+            "ids": [
+              "A",
+              "B",
+              "champion"
+            ],
+            "tasks": [
+              "task-0",
+              "task-1",
+              "task-2",
+              "task-3"
+            ],
+            "affordable": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "bridge-rotation",
+      "size": 8,
+      "seed": 19,
+      "ratio": 0.5,
+      "max_candidates": 2,
+      "round_index": 1,
+      "budget": 100,
+      "guards": [],
+      "cached": [],
+      "nominees": [
+        {
+          "candidate_id": "A",
+          "family_id": "family-0",
+          "scope_id": "scope-0",
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ]
+        },
+        {
+          "candidate_id": "B",
+          "family_id": "family-1",
+          "scope_id": "scope-1",
+          "task_ids": [
+            "task-2",
+            "task-3"
+          ]
+        },
+        {
+          "candidate_id": "C",
+          "family_id": "family-2",
+          "scope_id": "scope-2",
+          "task_ids": [
+            "task-4",
+            "task-5"
+          ]
+        }
+      ],
+      "input": {
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-4",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-5",
+            "stratum": "family-1",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-6",
+            "stratum": "family-2",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-7",
+            "stratum": "family-3",
+            "estimated_cost": 1
+          }
+        ],
+        "seed": "19",
+        "ratio": 0.5,
+        "round_index": 1,
+        "max_candidates": 2,
+        "ordered_nominees": [
+          {
+            "candidate_id": "A",
+            "scope_id": "scope-0",
+            "task_ids": [
+              "task-0",
+              "task-1"
+            ]
+          },
+          {
+            "candidate_id": "B",
+            "scope_id": "scope-1",
+            "task_ids": [
+              "task-2",
+              "task-3"
+            ]
+          },
+          {
+            "candidate_id": "C",
+            "scope_id": "scope-2",
+            "task_ids": [
+              "task-4",
+              "task-5"
+            ]
+          }
+        ],
+        "guards": [],
+        "budget": 100,
+        "cached": []
+      },
+      "expected": {
+        "plan": {
+          "task_ids": [
+            "task-2",
+            "task-3",
+            "task-4",
+            "task-5"
+          ],
+          "participant_ids": [
+            "B",
+            "C",
+            "champion"
+          ]
+        },
+        "skipped": [
+          "A"
+        ],
+        "exclusions": [
+          {
+            "candidate_id": "A",
+            "scope_id": "scope-0",
+            "reason": "group-quota"
+          }
+        ],
+        "quotes": [
+          {
+            "ids": [
+              "B",
+              "C",
+              "champion"
+            ],
+            "tasks": [
+              "task-2",
+              "task-3",
+              "task-4",
+              "task-5"
+            ],
+            "affordable": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "bridge-capacity-before-budget",
+      "size": 8,
+      "seed": 19,
+      "ratio": 0.25,
+      "max_candidates": 2,
+      "round_index": 0,
+      "budget": 100,
+      "guards": [
+        "task-7"
+      ],
+      "cached": [],
+      "nominees": [
+        {
+          "candidate_id": "A",
+          "family_id": "family-0",
+          "scope_id": "scope-0",
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ]
+        },
+        {
+          "candidate_id": "B",
+          "family_id": "family-1",
+          "scope_id": "scope-1",
+          "task_ids": [
+            "task-2",
+            "task-3"
+          ]
+        },
+        {
+          "candidate_id": "C",
+          "family_id": "family-2",
+          "scope_id": "scope-2",
+          "task_ids": [
+            "task-4",
+            "task-5"
+          ]
+        }
+      ],
+      "input": {
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-4",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-5",
+            "stratum": "family-1",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-6",
+            "stratum": "family-2",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-7",
+            "stratum": "family-3",
+            "estimated_cost": 1
+          }
+        ],
+        "seed": "19",
+        "ratio": 0.25,
+        "round_index": 0,
+        "max_candidates": 2,
+        "ordered_nominees": [
+          {
+            "candidate_id": "A",
+            "scope_id": "scope-0",
+            "task_ids": [
+              "task-0",
+              "task-1"
+            ]
+          },
+          {
+            "candidate_id": "B",
+            "scope_id": "scope-1",
+            "task_ids": [
+              "task-2",
+              "task-3"
+            ]
+          },
+          {
+            "candidate_id": "C",
+            "scope_id": "scope-2",
+            "task_ids": [
+              "task-4",
+              "task-5"
+            ]
+          }
+        ],
+        "guards": [
+          "task-7"
+        ],
+        "budget": 100,
+        "cached": []
+      },
+      "expected": {
+        "plan": null,
+        "skipped": [
+          "A",
+          "B",
+          "C"
+        ],
+        "exclusions": [
+          {
+            "candidate_id": "C",
+            "scope_id": "scope-2",
+            "reason": "group-quota"
+          },
+          {
+            "candidate_id": "B",
+            "scope_id": "scope-1",
+            "reason": "bridge-capacity"
+          },
+          {
+            "candidate_id": "A",
+            "scope_id": "scope-0",
+            "reason": "bridge-capacity"
+          }
+        ],
+        "quotes": []
+      }
+    },
+    {
+      "name": "bridge-budget-shrinks-group",
+      "size": 8,
+      "seed": 19,
+      "ratio": 0.5,
+      "max_candidates": 2,
+      "round_index": 0,
+      "budget": 8,
+      "guards": [],
+      "cached": [],
+      "nominees": [
+        {
+          "candidate_id": "A",
+          "family_id": "family-0",
+          "scope_id": "scope-0",
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ]
+        },
+        {
+          "candidate_id": "B",
+          "family_id": "family-1",
+          "scope_id": "scope-1",
+          "task_ids": [
+            "task-2",
+            "task-3"
+          ]
+        },
+        {
+          "candidate_id": "C",
+          "family_id": "family-2",
+          "scope_id": "scope-2",
+          "task_ids": [
+            "task-4",
+            "task-5"
+          ]
+        }
+      ],
+      "input": {
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-4",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-5",
+            "stratum": "family-1",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-6",
+            "stratum": "family-2",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-7",
+            "stratum": "family-3",
+            "estimated_cost": 1
+          }
+        ],
+        "seed": "19",
+        "ratio": 0.5,
+        "round_index": 0,
+        "max_candidates": 2,
+        "ordered_nominees": [
+          {
+            "candidate_id": "A",
+            "scope_id": "scope-0",
+            "task_ids": [
+              "task-0",
+              "task-1"
+            ]
+          },
+          {
+            "candidate_id": "B",
+            "scope_id": "scope-1",
+            "task_ids": [
+              "task-2",
+              "task-3"
+            ]
+          },
+          {
+            "candidate_id": "C",
+            "scope_id": "scope-2",
+            "task_ids": [
+              "task-4",
+              "task-5"
+            ]
+          }
+        ],
+        "guards": [],
+        "budget": 8,
+        "cached": []
+      },
+      "expected": {
+        "plan": {
+          "task_ids": [
+            "task-0",
+            "task-1",
+            "task-2",
+            "task-5"
+          ],
+          "participant_ids": [
+            "A",
+            "champion"
+          ]
+        },
+        "skipped": [
+          "B",
+          "C"
+        ],
+        "exclusions": [
+          {
+            "candidate_id": "C",
+            "scope_id": "scope-2",
+            "reason": "group-quota"
+          },
+          {
+            "candidate_id": "B",
+            "scope_id": "scope-1",
+            "reason": "bridge-budget"
+          }
+        ],
+        "quotes": [
+          {
+            "ids": [
+              "A",
+              "B",
+              "champion"
+            ],
+            "tasks": [
+              "task-0",
+              "task-1",
+              "task-2",
+              "task-3"
+            ],
+            "affordable": false
+          },
+          {
+            "ids": [
+              "A",
+              "champion"
+            ],
+            "tasks": [
+              "task-0",
+              "task-1",
+              "task-5",
+              "task-2"
+            ],
+            "affordable": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "bridge-budget-exhausted",
+      "size": 8,
+      "seed": 19,
+      "ratio": 0.5,
+      "max_candidates": 2,
+      "round_index": 0,
+      "budget": 0,
+      "guards": [],
+      "cached": [],
+      "nominees": [
+        {
+          "candidate_id": "A",
+          "family_id": "family-0",
+          "scope_id": "scope-0",
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ]
+        },
+        {
+          "candidate_id": "B",
+          "family_id": "family-1",
+          "scope_id": "scope-1",
+          "task_ids": [
+            "task-2",
+            "task-3"
+          ]
+        },
+        {
+          "candidate_id": "C",
+          "family_id": "family-2",
+          "scope_id": "scope-2",
+          "task_ids": [
+            "task-4",
+            "task-5"
+          ]
+        }
+      ],
+      "input": {
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-4",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-5",
+            "stratum": "family-1",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-6",
+            "stratum": "family-2",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-7",
+            "stratum": "family-3",
+            "estimated_cost": 1
+          }
+        ],
+        "seed": "19",
+        "ratio": 0.5,
+        "round_index": 0,
+        "max_candidates": 2,
+        "ordered_nominees": [
+          {
+            "candidate_id": "A",
+            "scope_id": "scope-0",
+            "task_ids": [
+              "task-0",
+              "task-1"
+            ]
+          },
+          {
+            "candidate_id": "B",
+            "scope_id": "scope-1",
+            "task_ids": [
+              "task-2",
+              "task-3"
+            ]
+          },
+          {
+            "candidate_id": "C",
+            "scope_id": "scope-2",
+            "task_ids": [
+              "task-4",
+              "task-5"
+            ]
+          }
+        ],
+        "guards": [],
+        "budget": 0,
+        "cached": []
+      },
+      "expected": {
+        "plan": null,
+        "skipped": [
+          "A",
+          "B",
+          "C"
+        ],
+        "exclusions": [
+          {
+            "candidate_id": "C",
+            "scope_id": "scope-2",
+            "reason": "group-quota"
+          },
+          {
+            "candidate_id": "B",
+            "scope_id": "scope-1",
+            "reason": "bridge-budget"
+          },
+          {
+            "candidate_id": "A",
+            "scope_id": "scope-0",
+            "reason": "bridge-budget"
+          }
+        ],
+        "quotes": [
+          {
+            "ids": [
+              "A",
+              "B",
+              "champion"
+            ],
+            "tasks": [
+              "task-0",
+              "task-1",
+              "task-2",
+              "task-3"
+            ],
+            "affordable": false
+          },
+          {
+            "ids": [
+              "A",
+              "champion"
+            ],
+            "tasks": [
+              "task-0",
+              "task-1",
+              "task-5",
+              "task-2"
+            ],
+            "affordable": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "bridge-disabled-quota",
+      "size": 8,
+      "seed": 19,
+      "ratio": 0.5,
+      "max_candidates": 0,
+      "round_index": 0,
+      "budget": 100,
+      "guards": [],
+      "cached": [],
+      "nominees": [
+        {
+          "candidate_id": "A",
+          "family_id": "family-0",
+          "scope_id": "scope-0",
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ]
+        },
+        {
+          "candidate_id": "B",
+          "family_id": "family-1",
+          "scope_id": "scope-1",
+          "task_ids": [
+            "task-2",
+            "task-3"
+          ]
+        },
+        {
+          "candidate_id": "C",
+          "family_id": "family-2",
+          "scope_id": "scope-2",
+          "task_ids": [
+            "task-4",
+            "task-5"
+          ]
+        }
+      ],
+      "input": {
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-4",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-5",
+            "stratum": "family-1",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-6",
+            "stratum": "family-2",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-7",
+            "stratum": "family-3",
+            "estimated_cost": 1
+          }
+        ],
+        "seed": "19",
+        "ratio": 0.5,
+        "round_index": 0,
+        "max_candidates": 0,
+        "ordered_nominees": [
+          {
+            "candidate_id": "A",
+            "scope_id": "scope-0",
+            "task_ids": [
+              "task-0",
+              "task-1"
+            ]
+          },
+          {
+            "candidate_id": "B",
+            "scope_id": "scope-1",
+            "task_ids": [
+              "task-2",
+              "task-3"
+            ]
+          },
+          {
+            "candidate_id": "C",
+            "scope_id": "scope-2",
+            "task_ids": [
+              "task-4",
+              "task-5"
+            ]
+          }
+        ],
+        "guards": [],
+        "budget": 100,
+        "cached": []
+      },
+      "expected": {
+        "plan": null,
+        "skipped": [
+          "A",
+          "B",
+          "C"
+        ],
+        "exclusions": [
+          {
+            "candidate_id": "A",
+            "scope_id": "scope-0",
+            "reason": "bridge-disabled"
+          },
+          {
+            "candidate_id": "B",
+            "scope_id": "scope-1",
+            "reason": "bridge-disabled"
+          },
+          {
+            "candidate_id": "C",
+            "scope_id": "scope-2",
+            "reason": "bridge-disabled"
+          }
+        ],
+        "quotes": []
+      }
+    },
+    {
+      "name": "bridge-disabled-capacity",
+      "size": 8,
+      "seed": 19,
+      "ratio": 0,
+      "max_candidates": 2,
+      "round_index": 0,
+      "budget": 100,
+      "guards": [],
+      "cached": [],
+      "nominees": [
+        {
+          "candidate_id": "A",
+          "family_id": "family-0",
+          "scope_id": "scope-0",
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ]
+        },
+        {
+          "candidate_id": "B",
+          "family_id": "family-1",
+          "scope_id": "scope-1",
+          "task_ids": [
+            "task-2",
+            "task-3"
+          ]
+        },
+        {
+          "candidate_id": "C",
+          "family_id": "family-2",
+          "scope_id": "scope-2",
+          "task_ids": [
+            "task-4",
+            "task-5"
+          ]
+        }
+      ],
+      "input": {
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-4",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-5",
+            "stratum": "family-1",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-6",
+            "stratum": "family-2",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-7",
+            "stratum": "family-3",
+            "estimated_cost": 1
+          }
+        ],
+        "seed": "19",
+        "ratio": 0,
+        "round_index": 0,
+        "max_candidates": 2,
+        "ordered_nominees": [
+          {
+            "candidate_id": "A",
+            "scope_id": "scope-0",
+            "task_ids": [
+              "task-0",
+              "task-1"
+            ]
+          },
+          {
+            "candidate_id": "B",
+            "scope_id": "scope-1",
+            "task_ids": [
+              "task-2",
+              "task-3"
+            ]
+          },
+          {
+            "candidate_id": "C",
+            "scope_id": "scope-2",
+            "task_ids": [
+              "task-4",
+              "task-5"
+            ]
+          }
+        ],
+        "guards": [],
+        "budget": 100,
+        "cached": []
+      },
+      "expected": {
+        "plan": null,
+        "skipped": [
+          "A",
+          "B",
+          "C"
+        ],
+        "exclusions": [
+          {
+            "candidate_id": "C",
+            "scope_id": "scope-2",
+            "reason": "group-quota"
+          },
+          {
+            "candidate_id": "A",
+            "scope_id": "scope-0",
+            "reason": "bridge-disabled"
+          },
+          {
+            "candidate_id": "B",
+            "scope_id": "scope-1",
+            "reason": "bridge-disabled"
+          }
+        ],
+        "quotes": []
+      }
+    },
+    {
+      "name": "bridge-reuse-quote",
+      "size": 8,
+      "seed": 19,
+      "ratio": 0.5,
+      "max_candidates": 2,
+      "round_index": 0,
+      "budget": 10,
+      "guards": [],
+      "cached": [
+        "A:task-0",
+        "B:task-2"
+      ],
+      "nominees": [
+        {
+          "candidate_id": "A",
+          "family_id": "family-0",
+          "scope_id": "scope-0",
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ]
+        },
+        {
+          "candidate_id": "B",
+          "family_id": "family-1",
+          "scope_id": "scope-1",
+          "task_ids": [
+            "task-2",
+            "task-3"
+          ]
+        },
+        {
+          "candidate_id": "C",
+          "family_id": "family-2",
+          "scope_id": "scope-2",
+          "task_ids": [
+            "task-4",
+            "task-5"
+          ]
+        }
+      ],
+      "input": {
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-4",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-5",
+            "stratum": "family-1",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-6",
+            "stratum": "family-2",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-7",
+            "stratum": "family-3",
+            "estimated_cost": 1
+          }
+        ],
+        "seed": "19",
+        "ratio": 0.5,
+        "round_index": 0,
+        "max_candidates": 2,
+        "ordered_nominees": [
+          {
+            "candidate_id": "A",
+            "scope_id": "scope-0",
+            "task_ids": [
+              "task-0",
+              "task-1"
+            ]
+          },
+          {
+            "candidate_id": "B",
+            "scope_id": "scope-1",
+            "task_ids": [
+              "task-2",
+              "task-3"
+            ]
+          },
+          {
+            "candidate_id": "C",
+            "scope_id": "scope-2",
+            "task_ids": [
+              "task-4",
+              "task-5"
+            ]
+          }
+        ],
+        "guards": [],
+        "budget": 10,
+        "cached": [
+          "A:task-0",
+          "B:task-2"
+        ]
+      },
+      "expected": {
+        "plan": {
+          "task_ids": [
+            "task-0",
+            "task-1",
+            "task-2",
+            "task-3"
+          ],
+          "participant_ids": [
+            "A",
+            "B",
+            "champion"
+          ]
+        },
+        "skipped": [
+          "C"
+        ],
+        "exclusions": [
+          {
+            "candidate_id": "C",
+            "scope_id": "scope-2",
+            "reason": "group-quota"
+          }
+        ],
+        "quotes": [
+          {
+            "ids": [
+              "A",
+              "B",
+              "champion"
+            ],
+            "tasks": [
+              "task-0",
+              "task-1",
+              "task-2",
+              "task-3"
+            ],
+            "affordable": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "bridge-empty",
+      "size": 8,
+      "seed": 19,
+      "ratio": 0.5,
+      "max_candidates": 2,
+      "round_index": 0,
+      "budget": 100,
+      "guards": [],
+      "cached": [],
+      "nominees": [],
+      "input": {
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-4",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-5",
+            "stratum": "family-1",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-6",
+            "stratum": "family-2",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-7",
+            "stratum": "family-3",
+            "estimated_cost": 1
+          }
+        ],
+        "seed": "19",
+        "ratio": 0.5,
+        "round_index": 0,
+        "max_candidates": 2,
+        "ordered_nominees": [],
+        "guards": [],
+        "budget": 100,
+        "cached": []
+      },
+      "expected": {
+        "plan": null,
+        "skipped": [],
+        "exclusions": [],
+        "quotes": []
+      }
+    },
+    {
+      "name": "bridge-frozen-unicode-family-order",
+      "size": 8,
+      "seed": 19,
+      "ratio": 0.5,
+      "max_candidates": 2,
+      "round_index": 0,
+      "budget": 100,
+      "guards": [],
+      "cached": [],
+      "nominees": [
+        {
+          "candidate_id": "A",
+          "family_id": "é",
+          "scope_id": "scope-0",
+          "task_ids": [
+            "task-0",
+            "task-1"
+          ]
+        },
+        {
+          "candidate_id": "B",
+          "family_id": "z",
+          "scope_id": "scope-1",
+          "task_ids": [
+            "task-2",
+            "task-3"
+          ]
+        },
+        {
+          "candidate_id": "C",
+          "family_id": "ä",
+          "scope_id": "scope-2",
+          "task_ids": [
+            "task-4",
+            "task-5"
+          ]
+        }
+      ],
+      "input": {
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-4",
+            "stratum": "family-0",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-5",
+            "stratum": "family-1",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-6",
+            "stratum": "family-2",
+            "estimated_cost": 1
+          },
+          {
+            "id": "task-7",
+            "stratum": "family-3",
+            "estimated_cost": 1
+          }
+        ],
+        "seed": "19",
+        "ratio": 0.5,
+        "round_index": 0,
+        "max_candidates": 2,
+        "ordered_nominees": [
+          {
+            "candidate_id": "C",
+            "scope_id": "scope-2",
+            "task_ids": [
+              "task-4",
+              "task-5"
+            ]
+          },
+          {
+            "candidate_id": "A",
+            "scope_id": "scope-0",
+            "task_ids": [
+              "task-0",
+              "task-1"
+            ]
+          },
+          {
+            "candidate_id": "B",
+            "scope_id": "scope-1",
+            "task_ids": [
+              "task-2",
+              "task-3"
+            ]
+          }
+        ],
+        "guards": [],
+        "budget": 100,
+        "cached": []
+      },
+      "expected": {
+        "plan": {
+          "task_ids": [
+            "task-0",
+            "task-1",
+            "task-4",
+            "task-5"
+          ],
+          "participant_ids": [
+            "A",
+            "C",
+            "champion"
+          ]
+        },
+        "skipped": [
+          "B"
+        ],
+        "exclusions": [
+          {
+            "candidate_id": "B",
+            "scope_id": "scope-1",
+            "reason": "group-quota"
+          }
+        ],
+        "quotes": [
+          {
+            "ids": [
+              "C",
+              "A",
+              "champion"
+            ],
+            "tasks": [
+              "task-0",
+              "task-1",
+              "task-4",
+              "task-5"
+            ],
+            "affordable": true
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 export interface CandidateView {
   id: string
   scores: Record<string, number>
+  content_digest?: string
 }
 export interface SearchView {
   seed_tasks: string[]

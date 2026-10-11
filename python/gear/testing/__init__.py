@@ -33,15 +33,21 @@ def toy_round(algorithm: SearchAlgorithm, *, max_steps: int = 100) -> dict:
             elif operation.kind == "evaluate_seed":
                 if operation.candidate not in {c.id for c in view.candidates}:
                     raise ValueError("Unknown candidate")
+                candidate = next(c for c in view.candidates if c.id == operation.candidate)
+                missing = tuple(t for t in operation.tasks if t not in candidate.scores)
+                if len(missing) > view.remaining_evaluations:
+                    raise ValueError("Algorithm exceeded the toy evaluation budget")
                 view = replace(
                     view,
                     candidates=tuple(
-                        Candidate(c.id, {**c.scores, **{task: 1.0 for task in operation.tasks}})
+                        Candidate(
+                            c.id, {**c.scores, **{task: 1.0 for task in missing}}, c.content_digest
+                        )
                         if c.id == operation.candidate
                         else c
                         for c in view.candidates
                     ),
-                    remaining_evaluations=view.remaining_evaluations - len(operation.tasks),
+                    remaining_evaluations=view.remaining_evaluations - len(missing),
                 )
             elif operation.kind == "nominate":
                 nominee = operation.candidate

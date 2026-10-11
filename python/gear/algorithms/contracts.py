@@ -11,6 +11,7 @@ from typing import Any, Literal, Protocol
 class Candidate:
     id: str
     scores: Mapping[str, float]
+    content_digest: str | None = None
 
 
 @dataclass(frozen=True)

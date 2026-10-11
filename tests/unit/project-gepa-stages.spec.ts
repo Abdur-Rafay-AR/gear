@@ -1,0 +1,155 @@
+import { execFileSync } from 'node:child_process'
+import { resolve } from 'node:path'
+import { describe, expect, it } from 'vitest'
+import type { AlgorithmDecision, AlgorithmWorker } from '../../src/domain/algorithm.js'
+import { algorithmProtocol } from '../../src/domain/algorithm-protocol.js'
+import { canonicalDigest } from '../../src/domain/canonical.js'
+import type { ProjectProvider, TrialResult } from '../../src/ports/project.js'
+import type { RunStore } from '../../src/ports/run-store.js'
+import { type ProjectRun, ProjectRuntime, type RunPlan } from '../../src/runtime/project.js'
+
+function fixture(interruptBridge = false) {
+  let saved: ProjectRun
+  let interrupted = false
+  const results = new Map<string, TrialResult>()
+  const generations = new Map<string, Record<string, string>>()
+  const calls: string[] = []
+  const steps: number[] = []
+  const store: RunStore = {
+    async read<T>() {
+      return structuredClone(saved) as T
+    },
+    async write(_id, value) {
+      saved = structuredClone(value) as ProjectRun
+    },
+    async locked(_id, action) {
+      return action()
+    },
+    async cancelRequested() {
+      return false
+    },
+    async requestCancel() {},
+  }
+  const provider: ProjectProvider = {
+    identity: 'staged-fixture-provider',
+    capabilities: { meteredAttempts: true, recovery: true, isolatedMeta: true, isolatedTarget: true },
+    async evaluate(input) {
+      calls.push(input.operationId)
+      const result: TrialResult = {
+        status: 'completed',
+        physicalAttempts: 1,
+        output: input.target.id === 'initial' ? 'wrong' : 'correct',
+      }
+      results.set(input.operationId, result)
+      if (interruptBridge && !interrupted && saved.algorithmState.stage === 'global') {
+        interrupted = true
+        throw new Error('fixture-worker-disconnected-after-bridge-result')
+      }
+      return result
+    },
+    async inspectEvaluation(id) {
+      return results.get(id)
+    },
+    async generate(input) {
+      const files = { 'AGENTS.md': input.operationId }
+      generations.set(input.operationId, files)
+      return files
+    },
+    async inspectGeneration(id) {
+      return generations.get(id)
+    },
+    async cancel() {},
+  }
+  const algorithm: AlgorithmWorker = {
+    identity: 'python-staged-fixture-v1',
+    async step(view, state, context) {
+      expect(JSON.stringify(view)).not.toContain('PRIVATE-HOLDOUT')
+      expect(view.seed_tasks.every((t) => t.startsWith('seed-'))).toBe(true)
+      expect(view.candidates.every((c) => typeof c.content_digest === 'string')).toBe(true)
+      steps.push(context.stepId)
+      const input = { view, state }
+      const request = {
+        protocol_version: 1,
+        request_id: `step-${context.stepId}`,
+        run_id: context.runId,
+        step_id: context.stepId,
+        capabilities: algorithmProtocol.capabilities,
+        input_digest: canonicalDigest(input),
+        input,
+      }
+      const raw = execFileSync(
+        process.env.GEAR_TRAINING_TEST_PYTHON ?? 'python3',
+        ['-m', 'gear._protocol.worker', 'gear.algorithms:StagedGEPA'],
+        {
+          cwd: resolve(import.meta.dirname, '../..'),
+          env: { PYTHONPATH: 'python', PYTHONDONTWRITEBYTECODE: '1' },
+          input: `${JSON.stringify(request)}\n`,
+          encoding: 'utf8',
+          stdio: ['pipe', 'pipe', 'pipe'],
+        },
+      )
+      const response = JSON.parse(raw)
+      expect(response.input_digest).toBe(request.input_digest)
+      return response.decision as AlgorithmDecision
+    },
+  }
+  const plan: RunPlan = {
+    kind: 'refine',
+    providerIdentity: provider.identity,
+    algorithmIdentity: algorithm.identity,
+    target: { id: 'initial', files: { 'AGENTS.md': 'initial' }, digest: canonicalDigest('initial') },
+    validation: 'holdout',
+    maxEvaluations: 60,
+    maxCandidates: 2,
+    split: 'seed',
+    taskIds: Array.from({ length: 10 }, (_, i) => `seed-${i}`),
+    benchmark: {
+      version: 1,
+      sourceDigest: 'fixture-source',
+      digest: 'fixture-benchmark',
+      metric: { name: 'pass_rate', direction: 'maximize', range: [0, 1], missing: 'invalid' },
+      tasks: Array.from({ length: 12 }, (_, i) => ({
+        id: i < 10 ? `seed-${i}` : `PRIVATE-HOLDOUT-${i}`,
+        instruction: i < 10 ? 'Produce correct' : 'PRIVATE-HOLDOUT',
+        family: `family-${i % 2}`,
+        split: i < 10 ? ('seed' as const) : ('held_out' as const),
+        scorer: { kind: 'text' as const, expected: 'correct', normalization: 'exact' as const },
+        fixtures: { positive: 'correct', negative: 'wrong' },
+      })),
+    },
+  }
+  const runtime = () => new ProjectRuntime(store, provider, algorithm, async () => {})
+  return { plan, runtime, calls, steps, saved: () => saved, generations }
+}
+
+describe('Python staged GEPA through the durable TypeScript runtime', () => {
+  it('completes local, bridge, global and held-out using the public worker protocol', async () => {
+    const f = fixture()
+    const run = await f.runtime().start(f.plan, new AbortController().signal)
+    expect(run.status).toBe('complete')
+    expect(run.gate?.accepted).toBe(true)
+    expect(run.decisions.some((d) => d.decision.reason.includes('bridge participants'))).toBe(true)
+    expect(run.decisions.some((d) => d.decision.reason.includes('global seed'))).toBe(true)
+    expect(run.trials.filter((t) => t.candidate === run.nominee && t.split === 'seed')).toHaveLength(10)
+    expect(f.calls.length).toBeLessThanOrEqual(f.plan.maxEvaluations)
+    expect(new Set(f.calls).size).toBe(f.calls.length)
+    expect(new Set(f.steps).size).toBe(f.steps.length)
+    const before = [...f.calls]
+    expect(await f.runtime().resume(run.id, new AbortController().signal)).toEqual(run)
+    expect(f.calls).toEqual(before)
+  })
+  it('replays a committed bridge decision after disconnect without resampling or resubmitting', async () => {
+    const f = fixture(true)
+    await expect(f.runtime().start(f.plan, new AbortController().signal)).rejects.toThrow('fixture-worker-disconnected')
+    const pending = f.saved().decisions.find((d) => !d.done)!
+    const frozen = structuredClone(pending.decision)
+    expect(pending.decision.state.stage).toBe('global')
+    const run = await f.runtime().resume(f.saved().id, new AbortController().signal)
+    expect(run.gate?.accepted).toBe(true)
+    expect(run.decisions[pending.step]!.decision).toEqual(frozen)
+    expect(new Set(f.steps).size).toBe(f.steps.length)
+    expect(new Set(f.calls).size).toBe(f.calls.length)
+    expect(f.generations.size).toBe(2)
+    expect(run.operations.every((op) => op.status === 'complete')).toBe(true)
+  })
+})

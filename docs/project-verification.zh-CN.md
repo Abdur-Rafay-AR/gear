@@ -6,9 +6,9 @@
 
 | 检查 | 结果与边界 |
 | --- | --- |
-| TypeScript 全量回归 | `140c5da` 的远端 CI：101 个测试文件通过，1320 项通过、36 项跳过；无模型环境项单独验证 |
-| 项目定向回归 | Python scope 迁移后：6 个文件、61 项通过，覆盖运行时合同及 10 组历史采样固定 fixture |
-| Python 全量回归 | 298 项：294 项通过，4 项按环境跳过 |
+| TypeScript 全量回归 | `53f30ad` 的远端 CI：102 个测试文件通过，1331 项通过、36 项跳过；无模型环境项单独验证 |
+| 项目定向回归 | Python staged recipe 迁移后：8 个文件、84 项通过，含固定 fixture、真实 worker 协议闭环及 bridge 恢复 |
+| Python 全量回归 | staged recipe 迁移后本地 316 项：312 项通过，4 项按环境跳过 |
 | Python 公共 API | Ruff lint/format、Mypy strict 通过 |
 | TS 质量 | typecheck、Biome、协议生成一致性、202 个模块依赖/循环检查通过 |
 | CI/发布规则 | 14 项规则测试通过；dev 代码变更启用完整回归 |
@@ -18,7 +18,7 @@
 | DSH 固定 carrier | rc.2 的有效 Skill 与完整 Harness 两组原生加载、prompt assembly、Skill 读取检查通过 |
 | DSH/Pi 原生行为 | 发布用 runner 在真实 Docker 中各完成一次 Luna 调用；插件/extension 指定输出，经可信评分器得 1；运行后 inspect 一致 |
 
-`140c5da` 的 [远端 CI](https://github.com/rsi-gear/gear/actions/runs/38113613109) 已全部通过：Quality 全量、真实容器 verifier 的 4 项测试、独立项目 tgz/wheel、外部搜索 API、Linux/macOS sandbox、CPU 训练及 Hitch 合同。Python 此次远端仍为 298 项（294 通过、4 跳过）；后续 scope 迁移新增 8 项 Python 测试，本地全部通过，原公共 API 的 7 项也通过。平台模型测试是显式启用项，不把跳过记为通过。未运行 GPU 训练，也未用自动化代替人工易用性测试。
+`53f30ad` 的 [远端 CI](https://github.com/rsi-gear/gear/actions/runs/38114322730) 已全部通过：Quality 全量、真实容器 verifier 的 4 项测试、独立项目 tgz/wheel、外部搜索 API、Linux/macOS sandbox、CPU 训练及 Hitch 合同。该提交的远端 Python 为 306 项（302 通过、4 跳过）；后续 staged recipe 的本地验证单独记录如下，不把前次 CI 当作新代码验证。平台模型测试是显式启用项，不把跳过记为通过。未运行 GPU 训练，也未用自动化代替人工易用性测试。
 
 ## 推送后修复
 
@@ -37,7 +37,17 @@
 
 本地验证：项目合同 61 项通过；新增 Python 8 项及已有公共 API 7 项通过；Ruff lint/format、Mypy strict、typecheck、Biome、边界与协议检查通过。独立 tgz/wheel 的六组模板、两种 Target、CPU loop/恢复、SDK 检查通过，并新增从安装后的 wheel 运行 `GEPA(task_sampler=ScopeSampler())`。本次为纯离线策略迁移，没有新增模型测试。
 
-默认 recipe 未切换。适配器只消费选题结果，完整加权阶段、动态 scope 生命周期、历史难度证据构建、archive/bridge 和通用 objective 仍待迁移。fixture 不比较或重写历史身份；此结果不代表整个历史 GEPA 等价。
+默认 recipe 未切换，`ScopeSampler` 只消费选题结果。后续加权局部阶段及 bridge 见下一节；动态 scope 生命周期、历史难度证据构建和通用 objective 仍待完整迁移。fixture 不比较或重写历史身份；此结果不代表整个历史 GEPA 等价。
+
+## Python frontier / bridge 与分阶段 recipe
+
+公开 `scope_frontier` 迁入逐题前沿、相同 Target 代表、联合冗余删除、outcome/process 概率混合、pending 与 guard 拒绝分类；`select_bridge` 迁入题族轮换、并集容量、分层补充、整组预算报价和排除原因。`test-contracts/gepa-stages-v1.json` 固定了旧实现（源提交 `53f30ad`）的 10 组 frontier 和 10 组 bridge 输出；输入包括已验证 profile 比较键和显式冻结的 locale 顺序，不把 Python 的默认排序当成旧 locale 排序。
+
+可选 `StagedGEPA` 在公开 Python 合同内运行：完整 seed 前沿父代 → 按题族生成 → 局部加权提名 → 同范围 bridge → global seed → runtime 最终 gate。它预检整组开销、保留后续扩展预算、按终态 receipt 消耗无效生成额度，拒绝把不完整 bridge 当作可比排名。新状态标识 `staged-gepa-v1` 与旧 recipe 隔离；默认 `algorithm: gepa` 未切换。当前适配器是 pass-rate 流程，不宣称完整多 scope archive、process/objective、adaptive scopes 或 regression proposals 迁移完成。
+
+验证结果：84 项项目合同通过；Python 全量 316 项中 312 通过、4 跳过；Ruff lint/format、Mypy strict、typecheck、Biome、202 模块边界及协议检查通过。真实 Python worker 经 TypeScript runtime 完成 local/bridge/global/held-out 离线闭环；另在 bridge provider 已返回结果后模拟断线，以新 runtime 对象恢复，原 decision 不变、生成和物理提交均无重复。独立 tgz/wheel 检查新增安装后的 `StagedGEPA` toy round，六组模板、两种 Target、CPU loop 与 SDK 仍通过；真实 macOS worker sandbox 检查再次通过。本轮没有新增模型测试。
+
+为重复 Target 选择传递可选只读 `Candidate.content_digest`，不向 Python 暴露源码或 held-out。同时修正 CPU toy 执行器：已有有效零分原样复用，重复请求不覆盖观察或扣减预算；独立回归已覆盖。没有修改历史身份、数据或 run 日志。
 
 ## Luna 项目闭环
 

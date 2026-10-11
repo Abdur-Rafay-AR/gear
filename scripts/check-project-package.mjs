@@ -97,6 +97,10 @@ try {
   ])
   run(installed, [
     '-c',
+    "from gear.algorithms import StagedGEPA; from gear.algorithms.gepa.scopes import ScopeConfig, TaskSetLimit; from gear.testing import toy_round; assert toy_round(StagedGEPA(scope_config=ScopeConfig(bridge=TaskSetLimit(1))))['nominee'] == 'candidate-1'",
+  ])
+  run(installed, [
+    '-c',
     `from gear import Project; assert Project(${JSON.stringify(join(temp, 'pi-json'))}, command=(${JSON.stringify(process.execPath)},${JSON.stringify(cli)})).check()['ok']`,
   ])
   console.log(

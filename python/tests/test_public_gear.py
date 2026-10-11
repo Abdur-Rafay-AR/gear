@@ -41,6 +41,17 @@ class PublicGearTests(unittest.TestCase):
         self.assertEqual(result["nominee"], "initial")
         self.assertFalse(any(op.kind == "generate" for d in result["decisions"] for op in d.operations))
 
+    def test_toy_reuses_observed_zero_without_resampling_or_recharging(self):
+        observed = []
+        class ReuseBaseline:
+            def step(self, view, state):
+                if not state:
+                    return Decision({'done': True}, (Operation('evaluate_seed', candidate='initial', tasks=('sum',)),), 'Reuse the observed seed')
+                observed.append((dict(view.candidates[0].scores), view.remaining_evaluations))
+                return Decision(state, (Operation('stop'),), 'Finished')
+        toy_round(ReuseBaseline())
+        self.assertEqual(observed, [({'sum': 0.0, 'case': 1.0}, 20)])
+
     def test_invalid_generation_consumes_candidate_attempt_and_can_nominate_baseline(self):
         from gear.algorithms import Candidate, SearchView
         view = SearchView(("seed",), (Candidate("initial", {"seed": 0}),), "initial", 1, 10, "fixed",

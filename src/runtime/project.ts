@@ -261,6 +261,7 @@ export class ProjectRuntime {
       seed_tasks: seed,
       candidates: run.candidates.map((c) => ({
         id: c.id,
+        content_digest: c.digest,
         scores: Object.fromEntries(
           run.trials
             .filter((t) => t.candidate === c.id && t.split === 'seed' && t.score !== null)

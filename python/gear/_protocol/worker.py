@@ -35,7 +35,9 @@ def main():
     if digest(payload) != request["input_digest"]:
         raise ValueError("protocol-input-digest")
     view = payload["view"]
-    candidates = tuple(Candidate(c["id"], dict(c["scores"])) for c in view["candidates"])
+    candidates = tuple(
+        Candidate(c["id"], dict(c["scores"]), c.get("content_digest")) for c in view["candidates"]
+    )
     projection = SearchView(
         tuple(view["seed_tasks"]),
         candidates,
