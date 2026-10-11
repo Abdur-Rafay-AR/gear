@@ -215,6 +215,21 @@ build-only mode does not call a model. Additionally setting
 executes both extensions through the built artifacts using `gpt-5.6-luna`.
 The carrier test does not certify a complete Harbor verifier or project provider.
 
+The Hitch execution CI also checks durable submission receipts, response loss,
+read-only cancellation lookup, and a real Gear process killed after daemon
+acceptance. Run the build first, then use the same `HITCH_CONTRACT_ROOT` with
+`npx vitest run tests/integration/project-hitch-operation.spec.ts`.
+
+`GEAR_TEST_HARBOR_ISOLATION=required GEAR_HARBOR_EXECUTABLE=/absolute/harbor
+GEAR_HARBOR_TEST_IMAGE=python:3.12-slim npx vitest run
+ tests/integration/project-harbor-isolation.spec.ts` checks Harbor's separate
+verifier lifecycle with a deterministic oracle fixture. The image must be a
+Dockerfile FROM-compatible reference and provide Python 3 and a POSIX shell.
+This test plants forged reward files and a background writer; it requires the
+verifier to grade both positive and negative artifacts using private resources.
+The Harbor verifier isolation CI runs this against Harbor 0.21.0. It makes no
+model calls and does not certify shared-container verification.
+
 The generated template verifiers and frozen input mount contract run in a real
 Docker container with `GEAR_VERIFIER_TEST_IMAGE=python:3.12-slim npx vitest run
 tests/integration/project-verifier.spec.ts`. This gate does not use model credentials.

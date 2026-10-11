@@ -318,7 +318,7 @@ export class HitchEvaluationClient {
     signal: AbortSignal,
     intent: Readonly<EvaluationSubmissionIntent>,
   ): Promise<EvaluationReservation> {
-    const parameters = this.submissionParameters(intent)
+    this.submissionParameters(intent)
     try {
       return await this.reserveDaemonEvaluation(round, intent, signal)
     } catch (submissionError) {
@@ -327,34 +327,52 @@ export class HitchEvaluationClient {
       // even though the original evaluation still exists. Locate its frozen key
       // through the public read-only CLI so it can still be cancelled.
       signal.throwIfAborted()
-      const rootArgs = parameters.root.length === 0 ? [] : ['--root', parameters.root]
-      const listed = await this.run([...rootArgs, 'eval', 'list', '--json'], this.repositoryPath, signal)
-      if (listed.exitCode !== 0) throw submissionError
-      const list = record(JSON.parse(listed.stdout), 'Hitch evaluation list')
-      if (list.schema_version !== '1' || !Array.isArray(list.evals)) throw submissionError
-      for (const value of list.evals) {
-        const entry = record(value, 'Hitch listed evaluation')
-        const evalId = string(entry.eval_id, 'Hitch listed eval_id')
-        if (!/^eval_[0-9a-f]{32}$/u.test(evalId)) throw submissionError
-        const inspection = await this.inspectEvaluation(
-          evalId,
-          this.repositoryPath,
-          signal,
-          'hitch_eval_recovery_inspect_failed',
-          parameters.root,
-        )
-        if (inspection.submission === undefined) continue
-        const submission = record(inspection.submission, 'Hitch persisted submission')
-        if (
-          submission.schema_version === '1' &&
-          submission.eval_id === evalId &&
-          submission.idempotency_key_hash === sha256(intent.idempotencyKey)
-        ) {
-          return { provider: 'hitch-cli', evalId }
-        }
-      }
+      const found = await this.lookupReservation(intent, signal)
+      if (found) return found
       throw submissionError
     }
+  }
+
+  /** Find a possibly accepted intent without creating or restarting any evaluation. */
+  async lookupReservation(
+    intent: Readonly<EvaluationSubmissionIntent>,
+    signal: AbortSignal,
+  ): Promise<EvaluationReservation | undefined> {
+    signal.throwIfAborted()
+    const parameters = this.submissionParameters(intent)
+    const rootArgs = parameters.root.length === 0 ? [] : ['--root', parameters.root]
+    const listed = await this.run([...rootArgs, 'eval', 'list', '--json'], this.repositoryPath, signal)
+    if (listed.exitCode !== 0)
+      throw new HitchEvaluationError(
+        'Could not inspect pending Hitch submissions',
+        'hitch_eval_recovery_inspect_failed',
+      )
+    const list = record(JSON.parse(listed.stdout), 'Hitch evaluation list')
+    if (list.schema_version !== '1' || !Array.isArray(list.evals))
+      throw new HitchEvaluationError('Invalid Hitch evaluation listing', 'invalid_hitch_result')
+    for (const value of list.evals) {
+      const entry = record(value, 'Hitch listed evaluation')
+      const evalId = string(entry.eval_id, 'Hitch listed eval_id')
+      if (!/^eval_[0-9a-f]{32}$/u.test(evalId))
+        throw new HitchEvaluationError('Invalid Hitch evaluation ID', 'invalid_hitch_result')
+      const inspection = await this.inspectEvaluation(
+        evalId,
+        this.repositoryPath,
+        signal,
+        'hitch_eval_recovery_inspect_failed',
+        parameters.root,
+      )
+      if (inspection.submission === undefined) continue
+      const submission = record(inspection.submission, 'Hitch persisted submission')
+      if (
+        submission.schema_version === '1' &&
+        submission.eval_id === evalId &&
+        submission.idempotency_key_hash === sha256(intent.idempotencyKey)
+      ) {
+        return { provider: 'hitch-cli', evalId }
+      }
+    }
+    return undefined
   }
 
   async cancelReservation(

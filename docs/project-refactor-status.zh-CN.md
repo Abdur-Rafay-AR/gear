@@ -11,7 +11,7 @@
 | M1b 多 Target | DSH/Pi 原生布局、统一 mutation policy、扩展加载与 Luna 行为评分、相同任务闭环 | 最终默认算法切换后重跑发布产物上的两种 Target 旅程 |
 | M2 Python 作者 | 公开策略、完整算法协议、toy/离线 CLI、源码封存、同步/异步 SDK、受限 worker；基础 wheel/CPU training；完整 payload 类型生成和双语言结构校验、响应关联及拒绝合同 | 完整身份/取消错误码与最终发布旅程仍需审计；独立 OneShot 的完整回合及安装后 toy 已补证 |
 | M3 默认算法 | scope、frontier、bridge、archive/父代分配与 epoch 准入固定样例；StagedGEPA v4 接入多父代配额、多 scope 父代、持久化 catalog、周期准备、等价去重与准备阶段恢复；完整执行版本难度、诊断元数据与冻结采样截止点；诊断/假设/workplan/回执纯策略及生成引用冻结；独立诊断端口、请求/token 预留结算、seed 评分日志来源认证和预算耗尽收尾；诊断后工作计划、范围限定交付、冻结恢复与增删改边界执行 | 原生 DSH/Pi 的模型请求前硬限制与可信实际用量采集；原始 verifier、重复槽位与 objective 证据认证；真实模型消费审计与生成计量；历史证据修订与跨运行 archive 生命周期、regression proposals、process/objective；完整 shadow/replay、差异说明和默认切换 |
-| M4 执行层 | baseline/修复/提交状态、Hitch wire/transport/执行合同已拆，提交/恢复/取消复用独立 execution client 与最小上下文；capabilities 辅助职责已拆；训练唯一实现 | service/evaluator/capabilities 的剩余编排拆分、根 types 分域、provider 能力归拢、存储原语与训练公共类型边界审计 |
+| M4 执行层 | baseline/修复/提交状态、Hitch wire/transport/执行合同已拆，提交/恢复/取消复用独立 execution client 与最小上下文；持久化操作凭据和真实 SIGKILL 恢复/取消通过；capabilities 辅助职责已拆；训练唯一实现 | service/evaluator/capabilities 的剩余编排拆分、根 types 分域、provider 能力归拢、存储原语与训练公共类型边界审计 |
 | M5 收尾 | 新入口、双语言入门、发布包与 CI 检查；兼容转发保留 | schema/help/样例一致性；配置迁移 dry-run/字段映射；迁移回退演练；旧入口收拢至 compat；完成下表全部验收 |
 
 ## 验收状态
@@ -34,7 +34,7 @@
 | P6 | 部分 | 唯一 training 实现与旧入口转发通过；匹配旧 runtime 的活跃任务恢复演练仍待补齐 |
 | P7 | 已验证当前原生 runner | Pi extension 与 DSH plugin 的可观察行为修改分别经 Luna 和可信评分器验证 |
 | C1 | 已验证当前合同 | 预留、未知提交、断线、取消、原子决策及最终 gate 已有故障注入；后续新阶段继续使用同一 runtime |
-| C2 | 已验证当前边界 | seed 投影与 operator/meta 视图；真实 OS 拒绝凭据、私有文件和网络；真实容器隔离 verifier |
+| C2 | 已验证当前边界 | seed 投影与 operator/meta 视图；真实 OS 拒绝凭据、私有文件和网络；真实容器隔离 verifier；Harbor 0.21.0 separate verifier 拒绝预写假分数与后台改分，shared 模式未认证 |
 | C3 | 部分 | gate 16 组、scope 10 组、frontier/bridge 20 组、archive 11 组与 55 份父代分配、epoch 准入 13 组、历史采样元数据 10 组、完整父代批次 55 份及诊断/提案交付 10 组固定比较通过；完整历史决策序列/预算等价尚未完成 |
 | C4 | 部分 | 历史身份 fixtures 原样校验，不改旧数据；完整配置迁移、匹配 runtime 继续与回退演练待补 |
 | Q1 | 部分 | 新层依赖、运行时环、lint/typecheck 和外部包消费检查通过；完整 wire payload 类型由 schema 生成并在两端结构校验；公共导出约束与遗留模块边界还需收尾 |

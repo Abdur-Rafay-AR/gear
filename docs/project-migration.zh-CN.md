@@ -73,3 +73,5 @@ Harbor 导入新增完整资源快照合同 v1：原始 task.toml、运行环境
 Hitch 的提交、reservation 恢复、观察、取消、rerun 及运行身份检查现统一由 `adapters/hitch/evaluation-client.ts` 的 `HitchEvaluationClient` 执行。它只要求 `HitchExecutionContext` 的五项执行坐标，不需要伪造完整的历史 `RefinementRound`。旧 `HitchCliEvaluator` 继承同一客户端并保留诊断/轨迹读取与缓存，原公开类名、options 类型及方法调用保持兼容；旧执行实现已从 facade 移除，没有维护第二套提交逻辑。
 
 新客户端加入当前 Hitch 实现身份闭包，源码和正式构建身份相同；历史固定身份与摘要规则不变。此拆分是新项目 Harbor provider 的接入基础。DSH/Pi Target 的 carrier 已把固定构建资源、唯一的 native 依赖锁和 Target 文件封存为独立 Git 工程；提交身份不含本机路径或凭据。Hitch 使用专属检出目录，恢复发现目录变动时拒绝而不覆盖。Git 对象写入由公共存储原语复用，拆分前的 Target 父子提交固定值保持不变。原生执行配置、持久化 provider 操作绑定与共享项目 Harbor 回合仍未完成，不能据此标记 Harbor 真实闭环完成。
+
+持久化操作基础现由 `HitchEvaluationOperations` 提供：提交前保存冻结输入与原 key，恢复沿用原 reservation，取消通过只读查找处理响应丢失。取消不能确认远端状态时保留 pending；它不启动新执行，也不释放尚未确认的预算。SIGKILL 后的真实 daemon 恢复/取消已验证，但项目 provider 尚未接线。Harbor 0.21.0 的 separate verifier 已通过伪造评分和后台写入负例；shared 模式未获同等隔离认证，不能自动改写已有任务配置或把静态导入成功当作执行准入。

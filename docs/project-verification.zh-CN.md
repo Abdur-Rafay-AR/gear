@@ -263,3 +263,19 @@ typecheck、Biome、217 个模块边界、协议生成一致性通过；独立�
 离线项目全量 308 项通过；随后补充取消用例，carrier 单文件 17 项复验通过。typecheck、Biome、220 模块边界、协议生成一致性、真实 tgz/wheel 发布包旅程通过，发布检查新增全部 carrier 资源的存在性断言。Python 算法没有改动，未重跑独立 Python 全量；发布包的 Python/CPU 旅程已运行。README 与原用户工作区未修改。
 
 这一步完成构建载体与原生加载合同，尚未完成新项目 Harbor provider 的 durable operation / reservation 绑定、原生 profile、真实 verifier 的隔离负例及完整 evaluate/refine/resume 回合。没有据此开启 `harborVerification` 或改变项目默认执行后端。
+
+## Hitch 操作恢复与 Harbor 独立 verifier 隔离
+
+`5c404e4` 的 [carrier CI](https://github.com/rsi-gear/gear/actions/runs/38132555740) 全部通过；远端 dev 仍为 `9a1281dba7495ea454c637d1bbad4e1605f52db6`。
+
+新增 `HitchEvaluationOperations` 为已经由项目预留预算的单次操作保存执行凭据，不维护另一套搜索状态或预算。冻结的输入、提交意图及校验摘要在远端调用前原子落盘；响应丢失后恢复原 idempotency key。watch 不持有文件锁，另一个操作者可以取消。取消先保存停止意图，已知从未提交的操作直接终止；提交结果不明时只通过只读 lookup 查找原评测，尚未找到便返回 pending，绝不通过重放提交完成取消。原评测返回的迟到结果不能覆盖取消状态。
+
+11 项离线操作测试覆盖新实例恢复、响应丢失、并发、输入冲突、取消墓碑、watch 期间取消、未知提交、未提交即中止、证据身份和存储损坏。真实 Hitch CLI/HTTP/daemon 使用 CI 固定的 `90d4cc3a5d98df53b02e57b54762e16ac1c6d942`：恢复、取消、Gear 子进程在 daemon 接受后遭 SIGKILL 三种情形均保持一次实际调度并释放原执行资源，3 项通过；此合同仅替换昂贵的 Harbor executor，不宣称模型或 verifier 已执行。原 rerun 的 3 项合同也通过。
+
+真实 Harbor 0.21.0 的两项独立 verifier 测试通过：固定 oracle 候选写入假 `reward.json`、优先级更高的 `reward.txt`，并留下持续写满分的后台进程；Harbor 停止候选环境、清理评分目录，再在独立 verifier 环境恢复声明产物，最终负例为 0、正例为 0.75，均保留私有评分标记 17。候选看不到私有答案，冻结任务摘要不变。测试先修正了两处 fixture 错误：Dockerfile FROM 不能直接使用本地 image ID；声明 artifact 在 verifier 中恢复到原始 `/app/answer.json`，不是日志目录。修正后两项完整重跑通过。本地基础镜像为 `gear-native-refactor:local`，对应 `sha256:c906a4aaa662ecd1e7a819b4fb0442e9f9a60eba63b74883e5fa4913c9a23e53`。
+
+CI 新增固定 Harbor 0.21.0 的独立隔离测试任务，Hitch 合同任务新增上述持久化及进程终止恢复测试。该隔离证据只覆盖明确使用 separate verifier 的生命周期，不认证 shared-container verifier；未据此启用项目的 `harborVerification` 能力。
+
+最后一次本地定向回归 23 个文件、463 项全部通过，覆盖项目、Target、Hitch、wrapper 和当前实现身份。当前执行实现摘要随代码更新，历史身份 fixtures 未修改。typecheck、Biome、221 模块边界、协议生成和 14 项 CI/发布规则检查通过，独立 tgz/wheel 旅程通过。本轮没有模型调用或 Python 算法修改，未重跑独立 Python 全量；发布包的 Python/CPU 旅程已运行。README 和原用户工作区未修改。
+
+未完成：将执行凭据接入实际项目 Harbor provider、原生 profile、可信原始 verifier metrics 与实际执行条件认证，以及完整 evaluate/refine/resume 回合；完整 GEPA 与收尾事项仍见阶段状态表。
