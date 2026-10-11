@@ -17,7 +17,7 @@ import type { ProjectProvider } from '../ports/project.js'
 import { type ProjectRun, ProjectRuntime, type RunPlan } from '../runtime/project.js'
 import { loadBenchmark } from './benchmark.js'
 import { environment } from './environment.js'
-import { type ProjectConfig, readProject } from './project-config.js'
+import { type ProjectConfig, readProject, resolveProjectAlgorithm } from './project-config.js'
 import { projectReport } from './project-report.js'
 import { projectRuntimeIdentity } from './runtime-identity.js'
 import { targetFiles, validateTargetFiles } from './target-files.js'
@@ -105,18 +105,20 @@ export class ProjectApplication {
   }
   async run(
     kind: 'evaluate' | 'refine',
-    options: { split?: Split; limit?: number; rounds?: number; view?: 'operator' | 'meta' },
+    options: {
+      split?: Split
+      limit?: number
+      rounds?: number
+      view?: 'operator' | 'meta'
+      algorithm?: ProjectConfig['algorithm']
+    },
     signal: AbortSignal,
   ) {
     const config = await readProject(this.root),
       benchmark = await loadBenchmark(config.benchmark, config.validation.mode)
     const files = await targetFiles(config.target.path, targetAdapter(config.target.adapter))
-    const runtime = await this.runtime(
-      config.target.adapter,
-      config.target.profile,
-      config.meta.profile,
-      config.algorithm,
-    )
+    const algorithm = resolveProjectAlgorithm(options.algorithm ?? config.algorithm, this.root)
+    const runtime = await this.runtime(config.target.adapter, config.target.profile, config.meta.profile, algorithm)
     const split = options.split ?? 'seed'
     if (options.view === 'meta' && split !== 'seed')
       invalid('Meta evaluation is limited to seed; the runtime owns the final gate', 'split')
@@ -131,7 +133,7 @@ export class ProjectApplication {
         adapter: config.target.adapter,
         targetProfile: config.target.profile,
         metaProfile: config.meta.profile,
-        algorithm: config.algorithm,
+        algorithm,
       },
       benchmark,
       target: { id: 'initial', files, digest: canonicalDigest(files) },

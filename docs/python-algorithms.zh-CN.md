@@ -30,7 +30,31 @@ if __name__ == "__main__":
     print(toy_round(build_algorithm()))
 ```
 
-保存为 `algorithm/policy.py`，在 gear.yaml 写 `algorithm: {source: ./algorithm, entrypoint: policy:build_algorithm}`。使用 `python -m gear toy` 或直接执行该文件做 CPU toy round，不需要 Node、模型、GPU 或项目数据。
+保存为 `algorithm/policy.py`，先运行下面任一离线检查；Python 命令不需要 Node、模型、GPU 或项目数据，Node 命令转发到相同检查器：
+
+```sh
+python -m gear algorithm test policy:build_algorithm --source ./algorithm
+gear algorithm test policy:choose_parent --source ./algorithm --kind parent
+```
+
+`--kind auto` 默认把可无参调用的入口当作算法 factory，其余入口当作父代策略。需要区分带默认参数的函数时显式指定 `algorithm` 或 `parent`。检查器在固定 CPU toy 中验证相同输入的决策重放、输入不被修改、seed 范围、候选分配、完整 seed 提名和操作数量。它不执行真实 Target，不证明搜索收益或覆盖所有输入。作者打印内容走 stderr，JSON 结果独占 stdout。Python 中也可直接调用 `gear.testing.check_algorithm(instance)`；`toy_round` 保留为较轻的模拟执行器。
+
+对后续所有运行使用该 factory，在 gear.yaml 写 `algorithm: {source: ./algorithm, entrypoint: policy:build_algorithm}`。只对一次运行改策略，可直接传 Python 对象：
+
+```python
+from gear import Project
+from gear.algorithms import GEPA
+from algorithm.policy import choose_parent
+
+project = Project.open(".")
+result = project.refine(algorithm=GEPA(parent_policy=choose_parent), rounds=1)
+```
+
+SDK 把可导入的顶层函数/类、dataclass 配置及其静态本地 Python imports 封存到 `.gear/algorithm-sources/<digest>`，再交给原有受限 worker；不使用 pickle，不修改 gear.yaml。编辑作者源码产生新 bundle，已运行的 bundle 保留；篡改已封存源码会拒绝继续。脚本内定义策略时，把执行 SDK 的部分放入 `if __name__ == "__main__":`，避免 worker 导入时再次启动项目。
+
+闭包、lambda、交互式定义和任意有状态构造器、含 `init=False` 字段的 dataclass 不能自动封存。动态导入或需要自定义构造的算法使用显式源码目录和无参 factory：`project.refine(algorithm=AlgorithmSource("./algorithm", "policy:build_algorithm"))`，其中 `AlgorithmSource` 来自 `gear.algorithms`。目录只收集 `.py` 文件，限制为 256 个文件/1 MiB，不接受符号链接或覆盖 Gear 命名空间。第三方依赖由受管 Python 环境提供并纳入已有运行身份；源码 bundle 不代替依赖安装。分发包中的 `examples/python-algorithm/policy.py` 展示单策略修改，`one_shot.py` 展示独立的完整 `SearchAlgorithm`；两者均通过安装后的 wheel 和 npm CLI 检查。
+
+`Project` 提供 `acheck/aevaluate/arefine/areport/aresume/acancel/acompile/aexport/aconfig`，例如 `result = await project.arefine(algorithm=GEPA(), rounds=1)`。异步接口等待子进程时不阻塞事件循环，使用相同应用服务和结构化错误。取消 Python 等待会回收本地 CLI 进程；已提交的外部任务仍按持久化记录核对，需显式 `acancel(run_id)` 或 `aresume(run_id)`，不会因客户端消失而重发。`gear.refine.arefine` 和 `Benchmark.acheck/acompile` 也提供相同异步入口。
 
 需要按题族抽样时，可显式换用 `ScopeSampler`：
 

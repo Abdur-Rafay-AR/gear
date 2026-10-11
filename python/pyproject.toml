@@ -31,4 +31,4 @@ extend-exclude = ["gear/training", "gear_training", "gear/_protocol/generated.py
 python_version = "3.10"
 strict = true
 follow_imports = "silent"
-files = ["gear/algorithms", "gear/project.py"]
+files = ["gear/algorithms", "gear/project.py", "gear/testing", "gear/benchmark", "gear/refine"]

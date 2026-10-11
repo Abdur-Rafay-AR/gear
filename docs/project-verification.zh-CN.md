@@ -6,11 +6,11 @@
 
 | 检查 | 结果与边界 |
 | --- | --- |
-| TypeScript 全量回归 | `53f30ad` 的远端 CI：102 个测试文件通过，1331 项通过、36 项跳过；无模型环境项单独验证 |
-| 项目定向回归 | Python staged recipe 迁移后：8 个文件、84 项通过，含固定 fixture、真实 worker 协议闭环及 bridge 恢复 |
-| Python 全量回归 | staged recipe 迁移后本地 316 项：312 项通过，4 项按环境跳过 |
+| TypeScript 全量回归 | `697a63d` 的远端 CI：104 个测试文件通过、7 个按环境跳过；无模型环境项单独验证 |
+| 项目定向回归 | 作者接口补齐后：9 个文件、87 项通过，含固定 fixture、真实 worker 协议闭环、bridge 恢复与 CLI 作者流程 |
+| Python 全量回归 | 作者接口补齐后本地 330 项：326 项通过，4 项按环境跳过 |
 | Python 公共 API | Ruff lint/format、Mypy strict 通过 |
-| TS 质量 | typecheck、Biome、协议生成一致性、202 个模块依赖/循环检查通过 |
+| TS 质量 | typecheck、Biome、协议生成一致性、203 个模块依赖/循环检查通过 |
 | CI/发布规则 | 14 项规则测试通过；dev 代码变更启用完整回归 |
 | 独立 tgz/wheel | 六组 Target/模板组合；check/compile；共享应用 evaluate/refine/report/resume/export；SDK；无 GPU CPU loop 及恢复通过 |
 | Python 真实 sandbox | macOS 实测拒绝工作目录之外的私有测试文件、宿主凭据环境变量和已监听的 loopback 端口 |
@@ -18,7 +18,7 @@
 | DSH 固定 carrier | rc.2 的有效 Skill 与完整 Harness 两组原生加载、prompt assembly、Skill 读取检查通过 |
 | DSH/Pi 原生行为 | 发布用 runner 在真实 Docker 中各完成一次 Luna 调用；插件/extension 指定输出，经可信评分器得 1；运行后 inspect 一致 |
 
-`53f30ad` 的 [远端 CI](https://github.com/rsi-gear/gear/actions/runs/38114322730) 已全部通过：Quality 全量、真实容器 verifier 的 4 项测试、独立项目 tgz/wheel、外部搜索 API、Linux/macOS sandbox、CPU 训练及 Hitch 合同。该提交的远端 Python 为 306 项（302 通过、4 跳过）；后续 staged recipe 的本地验证单独记录如下，不把前次 CI 当作新代码验证。平台模型测试是显式启用项，不把跳过记为通过。未运行 GPU 训练，也未用自动化代替人工易用性测试。
+`697a63d` 的 [远端 CI](https://github.com/rsi-gear/gear/actions/runs/38116355997) 已全部通过：Quality 全量、真实容器 verifier、独立项目 tgz/wheel、外部搜索 API、Linux/macOS sandbox、CPU 训练及 Hitch 合同。该提交远端 Python 为 316 项（312 通过、4 跳过）；后续作者接口的本地验证单独记录如下，不把前次 CI 当作新代码验证。平台模型测试是显式启用项，不把跳过记为通过。未运行 GPU 训练，也未用自动化代替人工易用性测试。
 
 ## 推送后修复
 
@@ -48,6 +48,14 @@
 验证结果：84 项项目合同通过；Python 全量 316 项中 312 通过、4 跳过；Ruff lint/format、Mypy strict、typecheck、Biome、202 模块边界及协议检查通过。真实 Python worker 经 TypeScript runtime 完成 local/bridge/global/held-out 离线闭环；另在 bridge provider 已返回结果后模拟断线，以新 runtime 对象恢复，原 decision 不变、生成和物理提交均无重复。独立 tgz/wheel 检查新增安装后的 `StagedGEPA` toy round，六组模板、两种 Target、CPU loop 与 SDK 仍通过；真实 macOS worker sandbox 检查再次通过。本轮没有新增模型测试。
 
 为重复 Target 选择传递可选只读 `Candidate.content_digest`，不向 Python 暴露源码或 held-out。同时修正 CPU toy 执行器：已有有效零分原样复用，重复请求不覆盖观察或扣减预算；独立回归已覆盖。没有修改历史身份、数据或 run 日志。
+
+## Python 作者 SDK 与离线合同入口
+
+已补齐 `Project.open`、九个异步方法、`refine(algorithm=...)` 与双 CLI `algorithm test`。算法对象封存为普通 Python 源码，哈希目录保留旧版本；闭包、非构造状态和符号链接被拒绝，复杂构造可显式提供 `AlgorithmSource`。单次覆盖只进入 run binding，不修改 gear.yaml。取消异步客户端会回收本地 CLI，外部操作仍遵循显式 cancel/resume 和原有预留记录。
+
+14 项 Python 作者测试验证本地依赖封存、直接脚本/包导入、源码变更、篡改拒绝、嵌套配置、输入不可变、重放一致、完整 seed 提名、非阻塞调用与取消回收。3 项新 TypeScript 测试验证 CLI 转发、参数合同、可读结果、冻结运行配置与终态恢复。全量 Python 330 项中 326 通过、4 跳过；项目 87 项通过；Ruff、23 个公共模块的 Mypy strict、typecheck、Biome、203 模块边界及协议检查通过。
+
+真实 macOS sandbox 两项通过：既有凭据/文件/网络隔离，及 SDK 封存策略的实际执行。修改原作者文件后仍使用冻结策略，修改已封存文件后拒绝执行。独立 tgz/wheel 检查通过，新增从安装包运行单文件父代、GEPA factory 和独立 `OneShot` 算法；Python 与 Node CLI 决策摘要一致；同步/异步 SDK 和源码封存均通过。此轮没有新增模型调用。完整历史 GEPA 等价、迁移与人工验收仍未完成。
 
 ## Luna 项目闭环
 

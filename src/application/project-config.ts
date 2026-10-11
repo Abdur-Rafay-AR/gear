@@ -13,6 +13,15 @@ export interface ProjectConfig {
   validation: { mode: 'holdout' | 'research' }
   budget: { rounds: number; max_evaluations: number }
 }
+export function resolveProjectAlgorithm(input: unknown, root: string): ProjectConfig['algorithm'] {
+  if (input === undefined || input === 'gepa') return 'gepa'
+  const custom = record(input, 'algorithm')
+  keys(custom, ['source', 'entrypoint'], 'algorithm')
+  const entrypoint = string(custom.entrypoint, 'algorithm.entrypoint')
+  if (!/^[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*:[A-Za-z_]\w*$/u.test(entrypoint))
+    invalid('Use module:factory', 'algorithm.entrypoint')
+  return { source: resolve(root, string(custom.source, 'algorithm.source')), entrypoint }
+}
 export async function readProject(root: string): Promise<ProjectConfig> {
   const path = resolve(root, 'gear.yaml')
   const input = record(load(await readFile(path, 'utf8')), path)
@@ -29,15 +38,7 @@ export async function readProject(root: string): Promise<ProjectConfig> {
   if (!['dsh', 'pi'].includes(String(target.adapter))) invalid('Select dsh or pi', 'target.adapter')
   if (!['holdout', 'research'].includes(String(validation.mode)))
     invalid('Select holdout or research', 'validation.mode')
-  let algorithm: ProjectConfig['algorithm'] = 'gepa'
-  if (input.algorithm !== undefined && input.algorithm !== 'gepa') {
-    const custom = record(input.algorithm, 'algorithm')
-    keys(custom, ['source', 'entrypoint'], 'algorithm')
-    const entrypoint = string(custom.entrypoint, 'algorithm.entrypoint')
-    if (!/^[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*:[A-Za-z_]\w*$/u.test(entrypoint))
-      invalid('Use module:factory', 'algorithm.entrypoint')
-    algorithm = { source: resolve(root, string(custom.source, 'algorithm.source')), entrypoint }
-  }
+  const algorithm = resolveProjectAlgorithm(input.algorithm, root)
   if (input.objective !== undefined) {
     const objective = record(input.objective, 'objective')
     keys(objective, ['metric'], 'objective')

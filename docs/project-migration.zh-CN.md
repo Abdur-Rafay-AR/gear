@@ -25,3 +25,5 @@ Python 已提供历史 shared/local/cross 采样的纯函数与可选 `ScopeSamp
 随后新增可选 `StagedGEPA`：完整 seed 前沿父代策略、按题族批量生成、局部加权提名、共同 bridge 评测、global seed 扩展和最终 gate 已通过 Python worker 与共享 runtime 的离线闭环及断线恢复。frontier/bridge 的策略核有另外 20 组旧实现固定 fixture；前沿消费已经验证的比较键，不自行维护证据或 archive journal。当前 recipe 仍仅支持 pass-rate，不等同于历史全部 GEPA 能力；历史多 scope 等价/epoch 生命周期、process/objective 执行、regression proposal 仍待迁移。旧 locale 排序只在显式冻结顺序下比较，新 recipe 采用固定 UTF-16 顺序。
 
 `Candidate.content_digest` 是可选的只读 Target 内容身份，用于阻止相同代码在父代抽样中重复占位。旧的两参数 Python `Candidate(id, scores)` 和缺少该字段的 worker 输入继续可用；没有身份时不会推测内容相同。runtime 和算法源码身份正常变化，活跃旧 run 仍需匹配的冻结版本。CPU toy 也已对齐有效零分复用：重复请求已有观察不覆盖评分、不重复扣减预算。
+
+作者路径新增 `Project.open`、同步/异步 SDK、`refine(algorithm=...)` 和 `gear algorithm test` / `python -m gear algorithm test`。`Project(path)`、原来的 gear.yaml factory 和 `toy_round` 继续有效。单次算法覆盖只写入新 run binding；对象经普通 Python 源码封存交给原 worker，不能借此恢复采用不同身份的旧 run。源码变更应开新 run，已封存目录不可覆盖。异步取消本地客户端不等于取消 provider 任务，后者仍需显式核对和取消。CPU testkit 已集中为唯一 toy 执行实现，Benchmark facade 通过公开 Project 方法调用，不再依赖私有 `_request`。

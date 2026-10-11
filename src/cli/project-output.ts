@@ -44,6 +44,13 @@ export function renderProjectResult(value: unknown): string {
     )
     if (Array.isArray(result.changes))
       lines.push(`Changed files: ${result.changes.map((file: { path: string }) => file.path).join(', ') || 'none'}`)
+  } else if (result.ok === true && result.scope === 'cpu-toy-contract') {
+    lines.push(`Algorithm offline contract passed: ${result.entrypoint}`)
+    lines.push(`Steps: ${result.steps}; nominee: ${result.nominee ?? 'none'}`)
+    lines.push(
+      'Checks: deterministic replay, immutable input, seed scope, candidate allocation and bounded operations.',
+    )
+    lines.push('This CPU toy check does not execute a Target or establish search quality.')
   } else if (Array.isArray(result.checks)) {
     lines.push(result.ready ? 'Environment ready for a smoke evaluation.' : 'Environment needs attention.')
     for (const check of result.checks as Array<{ name: string; ready: boolean; detail: string }>)

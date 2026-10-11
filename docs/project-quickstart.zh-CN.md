@@ -71,11 +71,15 @@ Python SDK 与 CLI 调用同一个应用服务：
 
 ```python
 from gear import Project
-p = Project("my-benchmark")
+p = Project.open("my-benchmark")
 p.check()
 p.evaluate(limit=1)
 result = p.refine(rounds=1)
 p.report(result["run_id"])
 ```
+
+异步调用使用 `await p.acheck()`、`await p.arefine(rounds=1)` 等同名 `a` 前缀方法，共用持久化运行状态。取消本地等待会回收 CLI 进程；已提交任务仍需用 run ID 显式 resume/cancel 核对。
+
+作者可以先用 `python -m gear algorithm test policy:build_algorithm --source ./algorithm` 验证离线合同；`gear algorithm test` 调用同一检查器。`p.refine(algorithm=GEPA(parent_policy=choose_parent), rounds=1)` 支持为本次运行传入可导入的顶层策略函数，自动封存 Python 源码而不改 gear.yaml；复杂构造使用 `gear.algorithms.AlgorithmSource`。这些 CPU 检查不代替真实 Target 验证，完整示例和限制见下方算法文档。
 
 算法修改见 [Python 算法入口](python-algorithms.zh-CN.md)，版本边界与回退见 [迁移说明](project-migration.zh-CN.md)。

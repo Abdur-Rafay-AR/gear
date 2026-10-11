@@ -21,7 +21,7 @@ export async function environment(): Promise<Environment> {
   >
   return { python: config.python, profiles }
 }
-async function supportedPython(): Promise<string> {
+export async function supportedPython(): Promise<string> {
   for (const command of process.env.GEAR_PYTHON
     ? [process.env.GEAR_PYTHON]
     : ['python3.12', 'python3.11', 'python3.13', 'python3']) {

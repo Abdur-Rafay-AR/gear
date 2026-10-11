@@ -4,7 +4,7 @@ import math
 import struct
 
 
-def _normalized(value):
+def _normalized(value: object) -> list[object]:
     if value is None:
         return ["null"]
     if isinstance(value, bool):
@@ -23,6 +23,6 @@ def _normalized(value):
     raise ValueError("canonical value must be JSON data")
 
 
-def digest(value):
+def digest(value: object) -> str:
     text = json.dumps(_normalized(value), ensure_ascii=False, separators=(",", ":"))
     return "sha256:" + hashlib.sha256(b"gear-canonical-v1\0" + text.encode("utf-8")).hexdigest()

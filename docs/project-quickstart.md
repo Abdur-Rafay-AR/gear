@@ -27,11 +27,15 @@ Python uses the same application service:
 
 ```python
 from gear import Project
-p = Project("my-benchmark")
+p = Project.open("my-benchmark")
 p.check()
 result = p.refine(rounds=1)
 p.report(result["run_id"])
 ```
+
+Async callers use `await p.acheck()` and `await p.arefine(rounds=1)`, with corresponding async report/resume/cancel/compile/export/config methods. Cancelling a client wait reaps its local CLI process; reconcile submitted work with explicit resume/cancel using the run ID.
+
+Algorithm authors can run `python -m gear algorithm test policy:build_algorithm --source ./algorithm` without a model, Node or GPU. `gear algorithm test` runs the same CPU contract checks. For a single run, `p.refine(algorithm=GEPA(parent_policy=choose_parent), rounds=1)` accepts an imported top-level policy function. Import `GEPA` from `gear.algorithms`; source is frozen for that run without editing gear.yaml. Complex factories use `AlgorithmSource("./algorithm", "policy:build_algorithm")`. See the algorithm guide for source limits and complete examples; the toy check does not establish real Target behavior or search quality.
 
 See the [detailed Chinese guide](project-quickstart.zh-CN.md), [algorithm map](python-algorithms.zh-CN.md), and [migration boundaries](project-migration.zh-CN.md).
 

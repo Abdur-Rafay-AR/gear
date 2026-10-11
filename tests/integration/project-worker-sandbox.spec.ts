@@ -1,12 +1,63 @@
+import { execFile } from 'node:child_process'
 import { mkdir, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises'
 import { type AddressInfo, createServer } from 'node:net'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
+import { promisify } from 'node:util'
 import { describe, expect, it } from 'vitest'
 import { createPythonWorker } from '../../src/adapters/python/worker.js'
 
 // Exercise real OS isolation explicitly, alongside the existing platform suite.
 describe.skipIf(process.env.GEAR_TEST_PROJECT_SANDBOX !== 'required')('managed Python isolation', () => {
+  it('executes an SDK-frozen policy and rejects changed admitted source', async () => {
+    const root = await realpath(await mkdtemp(join(tmpdir(), 'gear-frozen-policy-')))
+    const python = process.env.GEAR_TRAINING_TEST_PYTHON ?? '/usr/bin/python3'
+    try {
+      await writeFile(
+        join(root, 'policy.py'),
+        `from gear.algorithms import GEPA
+def parent(view): return view.candidates[-1].id
+`,
+      )
+      const result = await promisify(execFile)(
+        python,
+        [
+          '-c',
+          `import json
+from pathlib import Path
+from gear.algorithms import GEPA
+from gear.algorithms.source import freeze_algorithm
+from policy import parent
+frozen = freeze_algorithm(GEPA(parent_policy=parent), Path('sealed'))
+print(json.dumps({'source':str(Path(frozen.source).resolve()), 'entrypoint':frozen.entrypoint}))
+`,
+        ],
+        { cwd: root, env: { ...process.env, PYTHONPATH: resolve(import.meta.dirname, '../../python') } },
+      )
+      const frozen = JSON.parse(result.stdout) as { source: string; entrypoint: string }
+      const worker = await createPythonWorker(python, frozen)
+      const view = {
+        seed_tasks: ['seed'],
+        candidates: [
+          { id: 'initial', scores: { seed: 0 } },
+          { id: 'other', scores: { seed: 0 } },
+        ],
+        champion: 'initial',
+        max_candidates: 2,
+        remaining_evaluations: 10,
+        random_seed: 'frozen',
+        completed: {},
+      }
+      const run = () => worker.step(view, {}, { runId: 'frozen-author', stepId: 0 }, new AbortController().signal)
+      expect((await run()).state.parent).toBe('other')
+      await writeFile(join(root, 'policy.py'), 'raise AssertionError("original source is no longer needed")\n')
+      expect((await run()).state.parent).toBe('other')
+      await writeFile(join(frozen.source, 'policy.py'), 'raise AssertionError("tampered frozen source")\n')
+      await expect(run()).rejects.toThrow('Algorithm source changed')
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
+  }, 45_000)
   it('cannot read an unrelated project, host credentials, or loopback, even outside the caller cwd', async () => {
     const root = await realpath(await mkdtemp(join(tmpdir(), 'gear-python-isolation-')))
     const listener = createServer((socket) => socket.end())

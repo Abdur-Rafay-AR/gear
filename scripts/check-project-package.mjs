@@ -103,8 +103,52 @@ try {
     '-c',
     `from gear import Project; assert Project(${JSON.stringify(join(temp, 'pi-json'))}, command=(${JSON.stringify(process.execPath)},${JSON.stringify(cli)})).check()['ok']`,
   ])
+  const examples = join(temp, 'node_modules/rsi-gear/examples/python-algorithm')
+  for (const entrypoint of ['policy:champion_parent', 'policy:build_algorithm', 'one_shot:build_algorithm']) {
+    const args = ['algorithm', 'test', entrypoint, '--source', examples]
+    const checked = JSON.parse(run(installed, ['-m', 'gear', ...args]))
+    assert.equal(checked.ok, true)
+    assert.equal(checked.nominee, entrypoint.startsWith('one_shot:') ? 'one-shot' : 'candidate-1')
+    const forwarded = JSON.parse(run(process.execPath, [cli, ...args, '--json'], temp, { GEAR_PYTHON: installed }))
+    assert.deepEqual(forwarded, checked)
+    assert.match(
+      run(process.execPath, [cli, ...args], temp, { GEAR_PYTHON: installed }),
+      /Algorithm offline contract passed/,
+    )
+  }
+  const frozen = JSON.parse(
+    run(installed, [
+      '-c',
+      `
+import json, sys
+from pathlib import Path
+from gear.algorithms import GEPA
+from gear.algorithms.source import freeze_algorithm
+sys.path.insert(0, ${JSON.stringify(examples)})
+from policy import champion_parent
+source = freeze_algorithm(GEPA(parent_policy=champion_parent), Path('frozen'))
+print(json.dumps({'source':str(Path(source.source).resolve()), 'entrypoint':source.entrypoint}))
+`,
+    ]),
+  )
+  assert.equal(
+    JSON.parse(run(installed, ['-m', 'gear', 'algorithm', 'test', frozen.entrypoint, '--source', frozen.source])).ok,
+    true,
+  )
+  run(installed, [
+    '-c',
+    `
+import asyncio
+from gear import Project
+from gear.benchmark import Benchmark
+p = Project.open(${JSON.stringify(join(temp, 'pi-json'))}, command=(${JSON.stringify(process.execPath)}, ${JSON.stringify(cli)}))
+assert asyncio.run(p.acheck()) == p.check()
+assert asyncio.run(Benchmark(p).acheck())['ok']
+assert asyncio.run(p.acompile()) == Benchmark(p).compile()
+`,
+  ])
   console.log(
-    'Published tgz and wheel: six templates, both Target layouts, evaluate/refine/report/resume/export, CPU imports and Python SDK passed (offline fixture provider).',
+    'Published tgz and wheel: six templates, both Target layouts, evaluate/refine/report/resume/export, CPU imports, sync/async SDK, source freezing and both algorithm author CLIs passed (offline fixture provider).',
   )
 } finally {
   await rm(temp, { recursive: true, force: true })

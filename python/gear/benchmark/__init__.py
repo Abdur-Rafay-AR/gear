@@ -11,4 +11,10 @@ class Benchmark:
         return self.project.check()
 
     def compile(self) -> dict[str, object]:
-        return self.project._request("benchmark", "compile")
+        return self.project.compile()
+
+    async def acheck(self) -> dict[str, object]:
+        return await self.project.acheck()
+
+    async def acompile(self) -> dict[str, object]:
+        return await self.project.acompile()

@@ -2,15 +2,16 @@
 import { realpathSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { testProjectAlgorithm } from '../application/algorithm-test.js'
 import { doctor, setup } from '../application/environment.js'
 import { ProjectApplication, targetAdapter } from '../application/project.js'
-import { readProject } from '../application/project-config.js'
+import { readProject, resolveProjectAlgorithm } from '../application/project-config.js'
 import { initProject } from '../application/project-init.js'
 import { GearError, invalid } from '../domain/errors.js'
 import { renderProjectError, renderProjectResult } from './project-output.js'
 
 const usage =
-  'gear setup | doctor | init DIRECTORY [--adapter dsh|pi] [--template text|json|file] [--from tasks.csv|tasks.jsonl] | benchmark check|compile | evaluate [--split seed|held_out] [--limit N] | refine [--rounds N] | report [RUN_ID] | resume|cancel|export RUN_ID | config explain'
+  'gear setup | doctor | init DIRECTORY [--adapter dsh|pi] [--template text|json|file] [--from tasks.csv|tasks.jsonl] | benchmark check|compile | algorithm test MODULE:FACTORY [--source DIRECTORY] [--kind auto|algorithm|parent] | evaluate [--split seed|held_out] [--limit N] | refine [--rounds N] [--algorithm-source DIRECTORY --algorithm-entrypoint MODULE:FACTORY] | report [RUN_ID] | resume|cancel|export RUN_ID | config explain'
 export async function projectCommand(argv: string[], cwd = process.cwd()): Promise<unknown> {
   const args = argv.filter((arg) => arg !== '--json')
   if (!args.length || args[0] === '--help' || args[0] === 'help') return { usage }
@@ -25,13 +26,15 @@ export async function projectCommand(argv: string[], cwd = process.cwd()): Promi
     } else positional.push(arg)
   }
   const [command, sub, ...extra] = positional
-  if (extra.length) invalid('Unexpected positional arguments')
+  if (extra.length && !(command === 'algorithm' && sub === 'test' && extra.length === 1))
+    invalid('Unexpected positional arguments')
   const allowed: Record<string, string[]> = {
     init: ['--adapter', '--template', '--from', '--target-profile', '--meta-profile'],
     setup: ['--profiles', '--native', '--model'],
     evaluate: ['--split', '--limit', '--view'],
-    refine: ['--rounds', '--view'],
+    refine: ['--rounds', '--view', '--algorithm-source', '--algorithm-entrypoint'],
     benchmark: ['--view'],
+    algorithm: ['--source', '--kind'],
     report: ['--view'],
     resume: ['--view'],
   }
@@ -47,6 +50,10 @@ export async function projectCommand(argv: string[], cwd = process.cwd()): Promi
   const view = options.get('--view') ?? 'operator'
   if (view !== 'operator' && view !== 'meta') invalid('--view must be operator or meta')
   const app = new ProjectApplication(cwd)
+  if (command === 'algorithm' && sub === 'test') {
+    if (!extra[0]) invalid('algorithm test requires module:factory or module:parent_policy')
+    return testProjectAlgorithm(extra[0], resolve(cwd, options.get('--source') ?? '.'), options.get('--kind'))
+  }
   if (command === 'init') {
     if (!sub) invalid('init requires a directory')
     const adapter = options.get('--adapter') ?? 'dsh',
@@ -94,9 +101,20 @@ export async function projectCommand(argv: string[], cwd = process.cwd()): Promi
     if (split !== 'seed' && split !== 'held_out') invalid('split must be seed or held_out')
     const limit = positive('--limit'),
       rounds = positive('--rounds')
+    const source = options.get('--algorithm-source'),
+      entrypoint = options.get('--algorithm-entrypoint')
+    if ((source === undefined) !== (entrypoint === undefined))
+      invalid('--algorithm-source and --algorithm-entrypoint must be supplied together')
+    const algorithm = source === undefined ? undefined : resolveProjectAlgorithm({ source, entrypoint }, cwd)
     return app.run(
       command,
-      { split, view, ...(limit === undefined ? {} : { limit }), ...(rounds === undefined ? {} : { rounds }) },
+      {
+        split,
+        view,
+        ...(limit === undefined ? {} : { limit }),
+        ...(rounds === undefined ? {} : { rounds }),
+        ...(algorithm === undefined ? {} : { algorithm }),
+      },
       new AbortController().signal,
     )
   }
