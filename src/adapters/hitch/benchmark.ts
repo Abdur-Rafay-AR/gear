@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import type { BenchmarkSpec, Split } from '../../domain/benchmark.js'
+import { writeHarborTask } from './harbor-files.js'
 
 const verifier = `import json, pathlib
 spec = json.loads(pathlib.Path('/tests/scorer.json').read_text())
@@ -35,6 +36,10 @@ export async function compileHarbor(spec: BenchmarkSpec, destination: string, sp
   await mkdir(destination, { recursive: true, mode: 0o700 })
   for (const task of spec.tasks.filter((item) => item.split === split)) {
     const root = join(destination, task.id)
+    if (task.harbor) {
+      await writeHarborTask(task.harbor, root)
+      continue
+    }
     await mkdir(join(root, 'environment'), { recursive: true })
     await mkdir(join(root, 'tests'), { recursive: true, mode: 0o700 })
     const path = task.scorer.kind === 'file' ? task.scorer.path : '/app/answer.txt'

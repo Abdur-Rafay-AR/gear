@@ -9,14 +9,14 @@
 | 检查 | 结果与边界 |
 | --- | --- |
 | TypeScript 全量回归 | `697a63d` 的远端 CI：104 个测试文件通过、7 个按环境跳过；无模型环境项单独验证 |
-| 项目定向回归 | 工作计划执行接入后：16 个文件、262 项通过，含跨语言结构正反例、诊断计量/认证/恢复、修改边界、固定 GEPA fixture、真实 worker 闭环与恢复、作者 CLI |
+| 项目定向回归 | Harbor 导入接入后：17 个文件、292 项通过，含跨语言结构正反例、诊断计量/认证/恢复、修改边界、固定 GEPA fixture、真实 worker 闭环与恢复、作者 CLI |
 | Python 全量回归 | 工作计划阶段接入后本地 371 项：367 项通过，4 项按环境跳过 |
 | Python 公共 API | Ruff lint/format、Mypy strict 通过 |
-| TS 质量 | typecheck、Biome、协议生成一致性、211 个模块依赖/循环检查通过 |
+| TS 质量 | typecheck、Biome、协议生成一致性、216 个模块依赖/循环检查通过 |
 | CI/发布规则 | 14 项规则测试通过；dev 代码变更启用完整回归 |
-| 独立 tgz/wheel | 六组 Target/模板组合；check/compile；共享应用 evaluate/refine/report/resume/export；独立诊断、安装后 StagedGEPA 工作计划与终态恢复；SDK；无 GPU CPU loop 及恢复通过 |
+| 独立 tgz/wheel | 六组 Target/模板组合与两个 Harbor 导入；check/compile；共享应用 evaluate/refine/report/resume/export；独立诊断、安装后 StagedGEPA 工作计划与终态恢复；SDK；无 GPU CPU loop 及恢复通过 |
 | Python 真实 sandbox | macOS 实测拒绝工作目录之外的私有测试文件、宿主凭据环境变量和已监听的 loopback 端口 |
-| Harbor verifier | 三种模板在真实 Docker 容器运行正反例；不安全软链接输出被拒绝；第四项验证输入附件的冻结内容、独立挂载和 inspect 一致性 |
+| Harbor verifier | 三种模板在真实 Docker 容器运行正反例；不安全软链接输出被拒绝；第四项验证输入附件的冻结内容、独立挂载和 inspect 一致性；第五项运行导入的自定义 verifier，使用原二进制资源并保留 0/0.75 reward |
 | DSH 固定 carrier | rc.2 的有效 Skill 与完整 Harness 两组原生加载、prompt assembly、Skill 读取检查通过 |
 | DSH/Pi 原生行为 | 发布用 runner 在真实 Docker 中各完成一次 Luna 调用；插件/extension 指定输出，经可信评分器得 1；运行后 inspect 一致 |
 
@@ -39,6 +39,20 @@
 `f3efe44` 的 [完整 payload schema CI](https://github.com/rsi-gear/gear/actions/runs/38125680393) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。独立诊断端口属于后续新增代码，验证如下。
 
 `4645fef` 的 [独立诊断账本 CI](https://github.com/rsi-gear/gear/actions/runs/38127378206) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。工作计划实际执行的新改动另列如下。
+
+`fdfe049` 的 [工作计划执行 CI](https://github.com/rsi-gear/gear/actions/runs/38128539732) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。下列 Harbor 变更的本地结果独立记录，不能用此前 CI 代替。
+
+## Harbor 资源导入与可信 verifier 评分
+
+新增 `--template harbor --from DIRECTORY --manifest CSV_OR_JSONL`，要求明确的 task/family/split，支持显式 research。完整保存原 task.toml、instruction、environment、tests、solution、二进制文件、普通权限与空目录；不改写为标准模板。资源、权限、分区和所选 metric 进入新身份；拒绝链接、路径逃逸、大小写冲突和超限资源。重复编译核对完整目录，发现额外文件或权限漂移时拒绝覆盖。
+
+静态 `check` 将 verifier 自测与 Target 执行标为 `not_run`，不读取资源内容到 Meta 检查输出。公共 provider 的 Harbor 能力在 baseline 前准入；输入资源只交给可信 runner，算法与 Meta 仍只见 seed 投影。实际内置 Docker provider 尚不具备该能力，原生 Harbor 执行仍是未完成项。
+
+可信 verifier 返回 operation/task 身份和原始 metrics。当前所选有界 reward 支持零和小数；错配、缺失或越界证据标记 invalid，已发生的尝试仍结算，不缓存无效结果。缓存复用核对原 operation；未知结果保留预留、不再次提交。报告区分 mean reward 与 pass rate，新 gate 策略身份为 `paired-mean-reward-v1`。配置的显式 objective 不匹配时拒绝，历史二元 gate 不改。运行输入/返回值使用独立副本，防止 provider 意外修改冻结对象。
+
+30 项新 Harbor 合同覆盖两种 Target 的导入、源目录删除后的导出等价、JSONL/CSV/research、字节/权限/空目录身份、坏资源和目录漂移、能力准入、有效零/小数、无效证据、缓存和断线恢复、对象隔离与 objective 拒绝。项目全量 292 项通过。真实 Docker 的 5 项 verifier 测试全部通过，其中新项执行导入 verifier 并读取其二进制私有资源，验证 0 和 0.75 分。该检查没有运行模型或证明完整 Harbor Target 隔离。
+
+独立 tgz/wheel 通过六组模板/Target 和两个 Harbor 导入，安装后执行可信离线 provider 的 refine/report/resume，原有 metered diagnosis、StagedGEPA、CPU training、SDK 与双作者 CLI 继续通过。本轮未修改 Python 算法或调用模型；Python 371 项记录沿用前一阶段，不记为本轮重跑。首次本地项目测试因未指定 Python 解释器有一项失败，指定受支持解释器后全部通过；首次新测试的错误字段断言已修正。默认 Python 镜像本机不存在，真实 verifier 改用已存在的固定 native 镜像执行，未跳过该检查。
 
 ## 诊断后的工作计划与实际修改边界
 
@@ -206,7 +220,7 @@ Pi Meta 返回了相同文件，因此相同代码/题目/重复槽位使用同�
 
 已交付：可读 CLI 与 JSON/SDK/Skill 路由、CSV/JSONL 与输入附件导入、版本化文本/JSON/文件模板、Python 策略和完整算法入口、受 sandbox 约束的 worker、统一 gear.training 与兼容转发、DSH/Pi mutation policy、Git Target 快照、操作预留与恢复、证据复用、Meta 报告隔离、固定 native runner、独立发布包验证和 CI 门禁。DSH 与独立 Skill 的组件装配已共用；旧存储的历史格式校验抽到 compat，持久化 IO 保持独立。旧 service 的 baseline、证据投影、生成状态、修复和提交状态已拆出；Hitch 的 transport 与结果/轨迹/verifier 解码按职责拆分，并纳入实现身份。
 
-仍属于后续迁移/验收：历史 failure-cluster GEPA 的 adaptive scopes、archive/bridge、regression proposals 与通用 objective 尚未全部迁入 Python；旧 service/evaluator/capabilities 的其余实现继续保留；任意 Harbor verifier 的直接导入仍走原入口；设计规范 U1 的五人易用性测试尚未开展。因此本分支不能被描述为规范 M0–M5 全部验收完成。详见 [迁移边界](project-migration.zh-CN.md)。
+仍属于后续迁移/验收：历史 failure-cluster GEPA 的 adaptive scopes、archive/bridge、regression proposals 与通用 objective 尚未全部迁入 Python；旧 service/evaluator/capabilities 的其余实现继续保留；任意 Harbor 运行环境的原生 evaluate/refine 仍走原入口；设计规范 U1 的五人易用性测试尚未开展。因此本分支不能被描述为规范 M0–M5 全部验收完成。详见 [迁移边界](project-migration.zh-CN.md)。
 
 ## 复现入口
 

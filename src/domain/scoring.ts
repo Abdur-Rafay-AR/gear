@@ -19,6 +19,7 @@ function equal(expected: unknown, actual: unknown): boolean {
 }
 /** Malformed task output is a valid failure; a missing execution result is invalid. */
 export function scoreOutput(scorer: Scorer, output: string | undefined): Score {
+  if (scorer.kind === 'harbor') return { valid: false, reason: 'external-verifier-required' }
   if (output === undefined) return { valid: false, reason: 'missing-output' }
   if (scorer.kind === 'json') {
     try {

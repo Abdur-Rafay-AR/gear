@@ -21,6 +21,7 @@ export function renderProjectResult(value: unknown): string {
       partitions: Array<{
         split: string
         passRate: number | null
+        meanScore: number | null
         valid: number
         planned: number
         validZero: number
@@ -31,7 +32,15 @@ export function renderProjectResult(value: unknown): string {
       lines.push(`\n${candidate.id}`)
       for (const score of candidate.partitions) {
         if (!score.planned) continue
-        const rate = score.passRate === null ? 'unavailable' : `${(score.passRate * 100).toFixed(1)}%`
+        const metric = result.metric as { name?: string } | undefined
+        const rate =
+          metric?.name === 'reward'
+            ? score.meanScore === null
+              ? 'unavailable'
+              : `reward ${score.meanScore}`
+            : score.passRate === null
+              ? 'unavailable'
+              : `${(score.passRate * 100).toFixed(1)}%`
         lines.push(
           `  ${score.split}: ${rate}; valid ${score.valid}/${score.planned}, zero ${score.validZero}, invalid ${score.invalid}, missing ${score.missing}`,
         )
@@ -68,7 +77,12 @@ export function renderProjectResult(value: unknown): string {
     for (const check of result.checks as Array<{ name: string; ready: boolean; detail: string }>)
       lines.push(`${check.ready ? 'OK' : 'Required'} ${check.name}: ${check.detail}`)
   } else if (result.ok === true && Array.isArray(result.tasks)) {
-    lines.push('Benchmark static checks and scorer fixtures passed. Target execution has not run.')
+    const checks = result.checks as { verifierFixtures?: string }
+    lines.push(
+      checks.verifierFixtures === 'not_run'
+        ? 'Benchmark static checks passed. Harbor verifier self-tests and Target execution have not run.'
+        : 'Benchmark static checks and scorer fixtures passed. Target execution has not run.',
+    )
     for (const task of result.tasks as Array<{
       id: string
       split: string
@@ -77,9 +91,13 @@ export function renderProjectResult(value: unknown): string {
       fixtures: unknown
     }>)
       lines.push(
-        `\n${task.id} [${task.split}]\n  ${task.instruction}\n  Scorer: ${JSON.stringify(task.scorer)}\n  Fixtures: ${JSON.stringify(task.fixtures)}`,
+        `\n${task.id} [${task.split}]\n  ${task.instruction}\n  Scorer: ${JSON.stringify(task.scorer)}\n  Fixtures: ${task.fixtures ? JSON.stringify(task.fixtures) : 'not supplied'}`,
       )
-    lines.push('\nNext: gear evaluate --split seed --limit 1')
+    lines.push(
+      checks.verifierFixtures === 'not_run'
+        ? '\nNext: gear benchmark compile (export for a Harbor-capable runner)'
+        : '\nNext: gear evaluate --split seed --limit 1',
+    )
   } else {
     for (const [key, item] of Object.entries(result)) {
       if (key === 'next_action') continue

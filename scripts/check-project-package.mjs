@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
-import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
@@ -44,6 +44,39 @@ try {
         /^sha256:/,
       )
     }
+    const source = JSON.parse(
+      run(process.execPath, [cli, 'benchmark', 'compile', '--json'], join(temp, `${adapter}-text`)),
+    ).root
+    const manifest = join(temp, `${adapter}-harbor.csv`)
+    await writeFile(
+      manifest,
+      'id,path,family,split\nseed,seed/sum-01,addition,seed\nheld,held_out/word-01,case,held_out\n',
+    )
+    const imported = join(temp, `${adapter}-harbor`)
+    run(process.execPath, [
+      cli,
+      'init',
+      imported,
+      '--adapter',
+      adapter,
+      '--template',
+      'harbor',
+      '--from',
+      source,
+      '--manifest',
+      manifest,
+    ])
+    const checked = JSON.parse(run(process.execPath, [cli, 'benchmark', 'check', '--json'], imported))
+    assert.deepEqual(checked.checks, { static: 'passed', verifierFixtures: 'not_run', runtime: 'not_run' })
+    assert.match(
+      run(process.execPath, [cli, 'benchmark', 'check'], imported),
+      /Harbor verifier self-tests and Target execution have not run/,
+    )
+    const exported = JSON.parse(run(process.execPath, [cli, 'benchmark', 'compile', '--json'], imported)).root
+    assert.deepEqual(
+      await readFile(join(exported, 'seed/seed/tests/verify.py')),
+      await readFile(join(source, 'seed/sum-01/tests/verify.py')),
+    )
   }
   await writeFile(
     join(temp, 'journey.mjs'),
@@ -65,6 +98,22 @@ try {
       assert.deepEqual(await app.resume(report.run_id,new AbortController().signal),report)
       assert.equal((await app.report(report.run_id)).status,'complete')
       await app.export(report.run_id)
+
+      const harborProvider={...provider,capabilities:{...provider.capabilities,harborVerification:true},
+        async evaluate(input){
+          assert.ok(input.task.harbor.files.some(f=>f.path==='tests/verify.py'))
+          const result={status:'completed',physicalAttempts:1,output:'1',verification:{operationId:input.operationId,
+            taskDigest:input.task.harbor.digest,metrics:{reward:input.target.id==='initial'?0:0.75}}}
+          results.set(input.operationId,result);return result
+        }}
+      const harbor=new ProjectApplication(new URL('./'+adapter+'-harbor',import.meta.url).pathname,{provider:harborProvider,algorithm})
+      const harborReport=await harbor.run('refine',{rounds:1},new AbortController().signal)
+      assert.equal(harborReport.gate.policy,'paired-mean-reward-v1')
+      assert.equal(harborReport.gate.accepted,true)
+      assert.equal(harborReport.candidates[0].partitions[0].validZero,1)
+      assert.equal(harborReport.candidates[1].partitions[0].meanScore,0.75)
+      assert.equal(harborReport.candidates[1].partitions[0].passRate,null)
+      assert.deepEqual(await harbor.resume(harborReport.run_id,new AbortController().signal),harborReport)
 
       const config=new URL('./'+adapter+'-text/gear.yaml',import.meta.url)
       const yaml=await readFile(config,'utf8')
@@ -218,7 +267,7 @@ assert asyncio.run(p.acompile()) == Benchmark(p).compile()
 `,
   ])
   console.log(
-    'Published tgz and wheel: six templates, both Target layouts, evaluate/refine/report/resume/export, metered diagnosis and StagedGEPA workplans, CPU imports, sync/async SDK, source freezing and both algorithm author CLIs passed (offline fixture provider).',
+    'Published tgz and wheel: six template/Target combinations, two Harbor imports with verifier rewards, evaluate/refine/report/resume/export, metered diagnosis and StagedGEPA workplans, CPU imports, sync/async SDK, source freezing and both algorithm author CLIs passed (offline fixture provider).',
   )
 } finally {
   await rm(temp, { recursive: true, force: true })

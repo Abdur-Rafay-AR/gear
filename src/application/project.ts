@@ -17,7 +17,7 @@ import type { ProjectProvider } from '../ports/project.js'
 import { type ProjectRun, ProjectRuntime, type RunPlan } from '../runtime/project.js'
 import { loadBenchmark } from './benchmark.js'
 import { environment } from './environment.js'
-import { type ProjectConfig, readProject, resolveProjectAlgorithm } from './project-config.js'
+import { type ProjectConfig, readProject, resolveProjectAlgorithm, validateProjectObjective } from './project-config.js'
 import { projectReport } from './project-report.js'
 import { projectRuntimeIdentity } from './runtime-identity.js'
 import { targetFiles, validateTargetFiles } from './target-files.js'
@@ -39,11 +39,16 @@ export class ProjectApplication {
     const config = await readProject(this.root),
       benchmark = await loadBenchmark(config.benchmark, config.validation.mode)
     const adapter = targetAdapter(config.target.adapter)
+    validateProjectObjective(config, benchmark)
     await targetFiles(config.target.path, adapter)
     return {
       ok: true,
       digest: benchmark.digest,
-      checks: { static: 'passed', verifierFixtures: 'passed', runtime: 'not_run' },
+      checks: {
+        static: 'passed',
+        verifierFixtures: benchmark.tasks.some((t) => t.harbor) ? 'not_run' : 'passed',
+        runtime: 'not_run',
+      },
       tasks: benchmark.tasks
         .filter((task) => view === 'operator' || task.split === 'seed')
         .map((task) => ({
@@ -52,6 +57,16 @@ export class ProjectApplication {
           instruction: task.instruction,
           scorer: task.scorer,
           fixtures: task.fixtures,
+          ...(task.harbor
+            ? {
+                resources: {
+                  digest: task.harbor.digest,
+                  files: task.harbor.files.length,
+                  directories: task.harbor.directories.length,
+                },
+                verifierCheck: 'not_run',
+              }
+            : {}),
           inputs: task.inputs?.map(({ path, digest }) => ({ path, digest })) ?? [],
         })),
       target: adapter.describe(),
@@ -61,6 +76,7 @@ export class ProjectApplication {
     const config = await readProject(this.root),
       spec = await loadBenchmark(config.benchmark, config.validation.mode)
     const root = join(this.root, '.gear/benchmarks', spec.digest.slice(7))
+    validateProjectObjective(config, spec)
     for (const split of ['seed', 'held_out'] as const) await compileHarbor(spec, join(root, split), split)
     await atomicJSON(join(root, 'manifest.json'), spec)
     return { root, digest: spec.digest }
@@ -117,6 +133,7 @@ export class ProjectApplication {
     const config = await readProject(this.root),
       benchmark = await loadBenchmark(config.benchmark, config.validation.mode)
     const files = await targetFiles(config.target.path, targetAdapter(config.target.adapter))
+    validateProjectObjective(config, benchmark)
     const algorithm = resolveProjectAlgorithm(options.algorithm ?? config.algorithm, this.root)
     const runtime = await this.runtime(config.target.adapter, config.target.profile, config.meta.profile, algorithm)
     const split = options.split ?? 'seed'

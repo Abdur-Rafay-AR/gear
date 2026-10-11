@@ -11,7 +11,7 @@ import { GearError, invalid } from '../domain/errors.js'
 import { renderProjectError, renderProjectResult } from './project-output.js'
 
 const usage =
-  'gear setup | doctor | init DIRECTORY [--adapter dsh|pi] [--template text|json|file] [--from tasks.csv|tasks.jsonl] | benchmark check|compile | algorithm test MODULE:FACTORY [--source DIRECTORY] [--kind auto|algorithm|parent] | evaluate [--split seed|held_out] [--limit N] | refine [--rounds N] [--algorithm-source DIRECTORY --algorithm-entrypoint MODULE:FACTORY] | report [RUN_ID] | resume|cancel|export RUN_ID | config explain'
+  'gear setup | doctor | init DIRECTORY [--adapter dsh|pi] [--template text|json|file|harbor] [--from SOURCE] [--manifest SPLITS.csv|SPLITS.jsonl] [--validation holdout|research] | benchmark check|compile | algorithm test MODULE:FACTORY [--source DIRECTORY] [--kind auto|algorithm|parent] | evaluate [--split seed|held_out] [--limit N] | refine [--rounds N] [--algorithm-source DIRECTORY --algorithm-entrypoint MODULE:FACTORY] | report [RUN_ID] | resume|cancel|export RUN_ID | config explain'
 export async function projectCommand(argv: string[], cwd = process.cwd()): Promise<unknown> {
   const args = argv.filter((arg) => arg !== '--json')
   if (!args.length || args[0] === '--help' || args[0] === 'help') return { usage }
@@ -29,7 +29,7 @@ export async function projectCommand(argv: string[], cwd = process.cwd()): Promi
   if (extra.length && !(command === 'algorithm' && sub === 'test' && extra.length === 1))
     invalid('Unexpected positional arguments')
   const allowed: Record<string, string[]> = {
-    init: ['--adapter', '--template', '--from', '--target-profile', '--meta-profile'],
+    init: ['--adapter', '--template', '--from', '--manifest', '--validation', '--target-profile', '--meta-profile'],
     setup: ['--profiles', '--native', '--model'],
     evaluate: ['--split', '--limit', '--view'],
     refine: ['--rounds', '--view', '--algorithm-source', '--algorithm-entrypoint'],
@@ -59,10 +59,14 @@ export async function projectCommand(argv: string[], cwd = process.cwd()): Promi
     const adapter = options.get('--adapter') ?? 'dsh',
       template = options.get('--template') ?? 'text'
     if (adapter !== 'dsh' && adapter !== 'pi') invalid('adapter must be dsh or pi')
-    if (template !== 'text' && template !== 'json' && template !== 'file')
-      invalid('template must be text, json or file')
+    if (template !== 'text' && template !== 'json' && template !== 'file' && template !== 'harbor')
+      invalid('template must be text, json, file or harbor')
+    const validation = options.get('--validation') ?? 'holdout'
+    if (validation !== 'holdout' && validation !== 'research') invalid('validation must be holdout or research')
     return initProject(resolve(cwd, sub), targetAdapter(adapter), template, {
       ...(options.has('--from') ? { source: resolve(cwd, options.get('--from')!) } : {}),
+      ...(options.has('--manifest') ? { manifest: resolve(cwd, options.get('--manifest')!) } : {}),
+      validation,
       ...(options.has('--target-profile') ? { targetProfile: options.get('--target-profile')! } : {}),
       ...(options.has('--meta-profile') ? { metaProfile: options.get('--meta-profile')! } : {}),
     })

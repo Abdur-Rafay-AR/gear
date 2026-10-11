@@ -17,6 +17,7 @@ export type {
   DiagnosisUsage,
 } from './domain/diagnosis.js'
 export { GearError, GenerationFailed } from './domain/errors.js'
+export type { HarborFile, HarborTask, HarborVerification } from './domain/harbor.js'
 export { MutationValidationError } from './domain/harness.js'
 export type { WorkplanDelivery } from './domain/workplan.js'
 export type { DiagnosisProvider, DiagnosisRecovery } from './ports/diagnosis.js'

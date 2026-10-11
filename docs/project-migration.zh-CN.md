@@ -63,3 +63,9 @@ Python 已提供历史 shared/local/cross 采样的纯函数与可选 `ScopeSamp
 `Operation` 末尾增加可空 `workplan`，schema 生成其完整结构，协议能力增加 `generation_workplan: certified-boundary-v1`。父代/dossier/引用/假设/路径由运行层核对后冻结交付；Meta 只获得所分配范围的 seed 文本与摘录。新增、修改和删除均受已认证路径约束；越界记为无效候选并保留成本，恢复只 inspect 原生成。作者的 scope/cluster 标识为计划标签，不能绕过证据认证。
 
 `GenerationBudget()` 现在允许所有值为 None；显式正 deadline 或非负 token/request 仍保留声明语义，但当前运行层一律拒绝实际生成携带这些未能可靠执行的限制。真实消费审计和原生生成计量仍未完成，工作计划交付身份不充当“已读”证明。纯策略固定样例原样保留，新运行使用新的实现身份。
+
+Harbor 导入新增完整资源快照合同 v1：原始 task.toml、运行环境、verifier、solution、二进制资源、普通权限和空目录保留；清单显式绑定任务、family、分区与所选 metric。CSV/JSONL 的原解析规则移至共用 source 模块，移除重复实现。`check` 不运行任意 verifier，也不伪造模板正反例；编译导出保持完整内容，已有导出发生内容或权限漂移时拒绝覆盖。
+
+公共执行端口新增可选 `harborVerification`，运行层在 baseline 前做能力准入，冻结任务资源交给可信隔离 runner。原始 metrics 和评分有效性写入 trial，绑定 operation/task 身份；重用时核对原操作身份，未知提交保留预留且不重发。当前有界 mean reward 使用新策略身份 `paired-mean-reward-v1`，标准模板继续使用原 `paired-pass-rate-v1`；显式 objective 必须与 benchmark 匹配。输入和返回值使用独立副本，provider 对对象的修改不影响冻结任务和 Target。该合同没有迁写历史身份，也不实现通用 objective 或重复槽位计划。
+
+内置 Docker project provider 仍不具备任意 Harbor 环境和 verifier 执行能力；新 CLI 的导入、check/compile、可信 provider 评分/恢复合同已实现，实际原生 Harbor evaluate/refine 接入仍待完成。真实容器 verifier 检查与安装包内离线 provider 旅程分别验证，不将它们描述成真实模型的完整 Harbor 闭环。

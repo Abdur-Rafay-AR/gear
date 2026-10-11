@@ -46,6 +46,13 @@ export function projectReport(run: ProjectRun, view: 'operator' | 'meta' = 'oper
             invalid: selected.length - valid.length,
             missing: Math.max(0, planned - selected.length),
             passRate:
+              run.plan.benchmark.metric.name === 'pass_rate' &&
+              planned > 0 &&
+              selected.length === planned &&
+              valid.length === planned
+                ? valid.reduce((sum, t) => sum + t.score!, 0) / valid.length
+                : null,
+            meanScore:
               planned > 0 && selected.length === planned && valid.length === planned
                 ? valid.reduce((sum, t) => sum + t.score!, 0) / valid.length
                 : null,
@@ -59,6 +66,7 @@ export function projectReport(run: ProjectRun, view: 'operator' | 'meta' = 'oper
     run_id: run.id,
     status: run.status,
     kind: run.plan.kind,
+    metric: run.plan.benchmark.metric,
     validation_mode: run.plan.validation === 'research' ? 'shared-set-research' : 'independent-held-out',
     ...(run.plan.validation === 'research'
       ? { notice: '同集优化，未做独立验证 / Shared-set optimization; no independent validation.' }
@@ -69,13 +77,27 @@ export function projectReport(run: ProjectRun, view: 'operator' | 'meta' = 'oper
     gate: !run.gate ? null : view === 'operator' ? run.gate : { mode: run.gate.mode, accepted: run.gate.accepted },
     candidates,
     failures: run.trials
-      .filter((t) => t.result.status !== 'completed' && (view === 'operator' || t.split === 'seed'))
+      .filter(
+        (t) =>
+          (t.result.status !== 'completed' || t.scoreDetails?.valid === false) &&
+          (view === 'operator' || t.split === 'seed'),
+      )
       .map((t) => ({
         candidate: t.candidate,
         task: t.taskId,
         split: t.split,
         status: t.result.status,
-        reason: t.result.reason,
+        ...(t.scoreDetails ? { scoringStatus: t.scoreDetails.valid ? 'valid' : 'invalid' } : {}),
+        reason: t.scoreDetails?.reason ?? t.result.reason,
+      })),
+    verifierMetrics: run.trials
+      .filter((t) => t.result.verification && (view === 'operator' || t.split === 'seed'))
+      .map((t) => ({
+        candidate: t.candidate,
+        task: t.taskId,
+        split: t.split,
+        verification: t.result.verification,
+        score: t.scoreDetails,
       })),
     physicalAttempts: run.trials.reduce((sum, t) => sum + (t.reusedFrom ? 0 : t.result.physicalAttempts), 0),
     reusedTrials: run.trials

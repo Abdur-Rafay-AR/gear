@@ -1,21 +1,23 @@
 import type { AlgorithmDecision, AlgorithmOperation, AlgorithmWorker, SearchView } from '../domain/algorithm.js'
-import { validateAlgorithmDecision } from '../domain/algorithm-protocol.js'
-import type { BenchmarkSpec, BenchmarkTask, Split } from '../domain/benchmark.js'
+import { validateAlgorithmDecision, validateJsonObject } from '../domain/algorithm-protocol.js'
+import type { BenchmarkSpec, BenchmarkTask, Score, Split } from '../domain/benchmark.js'
 import { canonicalDigest } from '../domain/canonical.js'
 import type { DiagnosisInput, DiagnosisResult, DiagnosisUsage } from '../domain/diagnosis.js'
 import { GearError, GenerationFailed } from '../domain/errors.js'
+import { harborScore } from '../domain/harbor.js'
 import { MutationValidationError } from '../domain/harness.js'
-import { type ProjectGate, passRateGate, passRatePromotion } from '../domain/promotion.js'
+import { type ProjectGate, pairedScoreGate, promotionFor } from '../domain/promotion.js'
 import { scoreOutput } from '../domain/scoring.js'
 import { prepareWorkplan, validateWorkplanMutation, type WorkplanDelivery } from '../domain/workplan.js'
 import type { EvidenceCache } from '../ports/evidence-cache.js'
 import type { ProjectProvider, TargetSnapshot, TrialResult } from '../ports/project.js'
 import type { RunStore } from '../ports/run-store.js'
 import { admitDiagnosis, executeDiagnosis, seedDiagnosis } from './project-diagnosis.js'
+import { admitHarbor } from './project-harbor.js'
 import { projectView } from './project-view.js'
 
 export interface RunPlan {
-  promotion?: typeof passRatePromotion
+  promotion?: ProjectGate['policy']
   runtimeIdentity?: string
   kind: 'evaluate' | 'refine'
   binding?: {
@@ -36,6 +38,7 @@ export interface RunPlan {
   taskIds: string[]
 }
 interface Trial {
+  scoreDetails?: Score
   taskId: string
   candidate: string
   split: Split
@@ -85,6 +88,7 @@ function fault(code: string, message: string, runId: string, operationId?: strin
   })
 }
 function validTrial(result: TrialResult): void {
+  validateJsonObject(result)
   if (
     !result ||
     !['completed', 'task-failed', 'scorer-failed', 'infrastructure-failed'].includes(result.status) ||
@@ -139,7 +143,7 @@ export class ProjectRuntime {
   ) {}
 
   async start(plan: RunPlan, signal: AbortSignal): Promise<ProjectRun> {
-    plan = { ...plan, promotion: passRatePromotion }
+    plan = structuredClone({ ...plan, promotion: promotionFor(plan.benchmark.metric.name) })
     if (this.identity) plan = { ...plan, runtimeIdentity: this.identity }
     const capabilities = this.provider.capabilities
     if (
@@ -152,6 +156,7 @@ export class ProjectRuntime {
     if (plan.providerIdentity !== this.provider.identity || plan.algorithmIdentity !== this.algorithm.identity)
       throw new Error('admission-identity-mismatch')
     admitDiagnosis(plan, this.provider)
+    admitHarbor(plan.benchmark, this.provider)
     if (
       !Number.isSafeInteger(plan.maxEvaluations) ||
       plan.maxEvaluations < 1 ||
@@ -203,8 +208,9 @@ export class ProjectRuntime {
       )
         fault('identity-mismatch', 'Frozen configuration, provider or algorithm changed', id)
       admitDiagnosis(run.plan, this.provider)
+      admitHarbor(run.plan.benchmark, this.provider)
       if (run.status !== 'running') return run
-      if (run.plan.promotion !== passRatePromotion)
+      if (run.plan.promotion !== promotionFor(run.plan.benchmark.metric.name))
         fault('identity-mismatch', 'Promotion policy changed; use the original runtime', id)
       if (run.plan.kind === 'evaluate') {
         for (const task of run.plan.benchmark.tasks.filter(
@@ -320,22 +326,31 @@ export class ProjectRuntime {
       run.operations.push(pending)
       await this.store.write(run.id, run)
       result = await this.provider.evaluate(
-        {
+        structuredClone({
           operationId: id,
           task: {
             id: task.id,
             instruction: task.instruction,
             ...(task.inputs ? { inputs: task.inputs } : {}),
+            ...(task.harbor ? { harbor: task.harbor } : {}),
             outputPath: task.scorer.kind === 'file' ? task.scorer.path : '/app/answer.txt',
           },
           target: run.candidates.find((c) => c.id === candidate)!,
-        },
+        }),
         signal,
       )
     }
     validTrial(result)
-    const score =
-      result.status === 'completed'
+    result = structuredClone(result)
+    const scoreDetails =
+      task.scorer.kind === 'harbor'
+        ? ['completed', 'task-failed'].includes(result.status)
+          ? harborScore(result.verification, cached?.operationId ?? id, task.scorer.taskDigest, task.scorer.metric)
+          : { valid: false, reason: result.status }
+        : undefined
+    const score = scoreDetails
+      ? (scoreDetails.value ?? null)
+      : result.status === 'completed'
         ? (scoreOutput(task.scorer, result.output).value ?? null)
         : result.status === 'task-failed'
           ? 0
@@ -346,6 +361,7 @@ export class ProjectRuntime {
       split: task.split,
       result,
       score,
+      ...(scoreDetails ? { scoreDetails } : {}),
       ...(cached ? { reusedFrom: { runId: cached.runId, operationId: cached.operationId } } : {}),
     })
     if (pending) pending.status = 'complete'
@@ -526,7 +542,7 @@ export class ProjectRuntime {
       // a custom algorithm nominates a worse candidate or the unchanged anchor.
       if (seedPair.after <= seedPair.before || mode === 'shared-set-research') {
         await this.checkCancellation(run, signal)
-        run.gate = passRateGate(seedPair, mode)
+        run.gate = pairedScoreGate(run.plan.promotion!, seedPair, mode)
         if (run.gate.accepted) run.champion = op.candidate
         await this.store.write(run.id, run)
         return
@@ -539,7 +555,7 @@ export class ProjectRuntime {
       await this.checkCancellation(run, signal)
       const before = this.completeScores(run, run.champion, tasks),
         after = this.completeScores(run, op.candidate, tasks)
-      run.gate = passRateGate(seedPair, mode, { before, after })
+      run.gate = pairedScoreGate(run.plan.promotion!, seedPair, mode, { before, after })
       if (run.gate.accepted) run.champion = op.candidate
       await this.store.write(run.id, run)
     }

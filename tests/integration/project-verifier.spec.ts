@@ -7,6 +7,7 @@ import { promisify } from 'node:util'
 import { describe, expect, it } from 'vitest'
 import { DockerProjectProvider } from '../../src/adapters/docker/provider.js'
 import { compileHarbor } from '../../src/adapters/hitch/benchmark.js'
+import { readHarborTask, writeHarborTask } from '../../src/adapters/hitch/harbor-files.js'
 import { piTarget } from '../../src/adapters/pi/target.js'
 import { loadBenchmark } from '../../src/application/benchmark.js'
 import { initProject } from '../../src/application/project-init.js'
@@ -16,6 +17,62 @@ const execute = promisify(execFile)
 const image = process.env.GEAR_VERIFIER_TEST_IMAGE
 // No model calls: run the generated Harbor verifier in a real isolated container.
 describe.skipIf(!image)('compiled template verifiers', () => {
+  it('executes an imported verifier with its original binary resources and fractional reward contract', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'gear-imported-verifier-'))
+    try {
+      const source = join(root, 'source'),
+        frozen = join(root, 'frozen'),
+        workspace = join(root, 'work'),
+        logs = join(root, 'logs')
+      for (const path of [join(source, 'tests'), join(source, 'environment'), workspace, logs])
+        await mkdir(path, { recursive: true })
+      await writeFile(join(source, 'task.toml'), 'version = "1.0"\n')
+      await writeFile(join(source, 'instruction.md'), 'Produce the required binary output')
+      await writeFile(join(source, 'environment/Dockerfile'), `FROM ${image}\nWORKDIR /app\n`)
+      await writeFile(join(source, 'tests/secret.bin'), Buffer.from([0, 255, 13, 128]))
+      await writeFile(join(source, 'tests/test.sh'), '#!/bin/sh\nset -eu\npython3 /tests/verify.py\n', { mode: 0o700 })
+      await writeFile(
+        join(source, 'tests/verify.py'),
+        `import json
+from pathlib import Path
+correct = Path('/app/answer.bin').read_bytes() == Path('/tests/secret.bin').read_bytes()
+Path('/logs/reward.json').write_text(json.dumps({'reward': 0.75 if correct else 0, 'count': 2}))
+`,
+      )
+      const snapshot = await readHarborTask(source)
+      await writeHarborTask(snapshot.task, frozen)
+      await rm(source, { recursive: true })
+      for (const [bytes, reward] of [
+        [Buffer.from([0, 255, 13, 128]), 0.75],
+        [Buffer.from('wrong'), 0],
+      ] as const) {
+        await writeFile(join(workspace, 'answer.bin'), bytes)
+        await execute(
+          'docker',
+          [
+            'run',
+            '--rm',
+            '--network',
+            'none',
+            '--read-only',
+            '--mount',
+            `type=bind,src=${workspace},dst=/app,readonly`,
+            '--mount',
+            `type=bind,src=${join(frozen, 'tests')},dst=/tests,readonly`,
+            '--mount',
+            `type=bind,src=${logs},dst=/logs`,
+            image!,
+            'sh',
+            '/tests/test.sh',
+          ],
+          { timeout: 60000 },
+        )
+        expect(JSON.parse(await readFile(join(logs, 'reward.json'), 'utf8'))).toEqual({ reward, count: 2 })
+      }
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
+  }, 90000)
   it.each(['text', 'json', 'file'] as const)(
     'scores %s positive and negative fixtures and rejects unsafe output',
     async (template) => {
@@ -57,8 +114,8 @@ describe.skipIf(!image)('compiled template verifiers', () => {
             { timeout: 60000 },
           )
         for (const [fixture, reward] of [
-          [task.fixtures.positive, '1'],
-          [task.fixtures.negative, '0'],
+          [task.fixtures!.positive, '1'],
+          [task.fixtures!.negative, '0'],
         ] as const) {
           await writeFile(output, fixture)
           await run()

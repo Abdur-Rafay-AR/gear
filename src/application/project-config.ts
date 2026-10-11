@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { load } from 'js-yaml'
+import type { BenchmarkSpec } from '../domain/benchmark.js'
 import { invalid } from '../domain/errors.js'
 import { keys, record, string } from './benchmark.js'
 
@@ -10,6 +11,7 @@ export interface ProjectConfig {
   target: { adapter: 'dsh' | 'pi'; path: string; profile: string }
   meta: { profile: string }
   algorithm: 'gepa' | { source: string; entrypoint: string }
+  objective?: { metric: 'pass_rate' | 'reward' }
   validation: { mode: 'holdout' | 'research' }
   budget: {
     rounds: number
@@ -57,10 +59,13 @@ export async function readProject(root: string): Promise<ProjectConfig> {
   if (!['holdout', 'research'].includes(String(validation.mode)))
     invalid('Select holdout or research', 'validation.mode')
   const algorithm = resolveProjectAlgorithm(input.algorithm, root)
+  let objective: ProjectConfig['objective']
   if (input.objective !== undefined) {
-    const objective = record(input.objective, 'objective')
-    keys(objective, ['metric'], 'objective')
-    if (objective.metric !== 'pass_rate') invalid('The initial template objective is pass_rate', 'objective.metric')
+    const value = record(input.objective, 'objective')
+    keys(value, ['metric'], 'objective')
+    if (value.metric !== 'pass_rate' && value.metric !== 'reward')
+      invalid('Supported project metrics: pass_rate, reward', 'objective.metric')
+    objective = { metric: value.metric }
   }
   for (const [key, value] of Object.entries(budget)) {
     if (key === 'diagnosis') continue
@@ -76,6 +81,7 @@ export async function readProject(root: string): Promise<ProjectConfig> {
     },
     meta: { profile: string(meta.profile, 'meta.profile') },
     algorithm,
+    ...(objective ? { objective } : {}),
     validation: { mode: validation.mode as 'holdout' | 'research' },
     budget: {
       rounds: budget.rounds as number,
@@ -83,4 +89,9 @@ export async function readProject(root: string): Promise<ProjectConfig> {
       ...(diagnosis ? { diagnosis } : {}),
     },
   }
+}
+
+export function validateProjectObjective(config: ProjectConfig, benchmark: BenchmarkSpec): void {
+  if (config.objective && config.objective.metric !== benchmark.metric.name)
+    invalid('Project objective must match the benchmark metric', 'objective.metric')
 }

@@ -46,3 +46,13 @@ Use `gear init my-benchmark --adapter pi --from /absolute/tasks.csv --template t
 The optional `inputs` column accepts a file path or a JSON object mapping destination names to source paths relative to the table directory. For example, `data.txt` is exposed as `/app/inputs/data.txt`; JSONL can use `"inputs": {"data.txt": "fixtures/data.txt"}`. Files must stay inside that directory, with no symlinks, at most 1 MiB each and 4 MiB per task. Frozen bytes participate in benchmark identity. Expected answers remain verifier resources.
 
 CLI output defaults to a readable summary. Add `--json` for the stable SDK/script response. Invalid candidate proposals consume their generation attempt and are recorded separately from invalid evaluation evidence; an interrupted submitted operation is inspected before any further work.
+
+## Importing existing Harbor tasks
+
+Use `gear init imported-benchmark --adapter pi --template harbor --from /absolute/harbor-tasks --manifest /absolute/splits.csv`. The CSV or JSONL manifest requires `id,family,split`; optional `path` selects a directory under the source (defaults to id), and `metric` defaults to `reward`. Keep each family in one split; use `--validation research` explicitly for seed-only data.
+
+The import copies complete Harbor v1.0 task resources, including environment, verifier, binary files, ordinary permissions and empty directories. It rejects links, escaping paths, Git internals and case collisions. Limits are 8 MiB/file, 32 MiB/task, 128 MiB/benchmark, and 4096 files plus 4096 directories/task. Resource changes affect identity. The imported project no longer depends on the source directory.
+
+`benchmark check` performs static checks and marks verifier self-tests and Target execution `not_run`. `benchmark compile` exports original task resources for Harbor/Hitch. The built-in Docker project provider does not yet execute arbitrary Harbor environments and rejects them before reserving evaluation budget. The legacy Harbor/Hitch route remains available.
+
+A trusted public `ProjectProvider` can implement `harborVerification`, isolating verifier resources and reward writes from Target/Meta. It returns raw numeric metrics bound to the operation and task snapshot. Selected metrics currently require `[0,1]`; zero and fractional rewards remain valid, while missing, mismatched or out-of-range evidence is invalid and uncached. Reports use mean reward; the paired gate requires seed improvement and no held-out regression. General weighted/minimize objectives remain outside this contract.

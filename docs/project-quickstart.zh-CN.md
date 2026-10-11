@@ -83,3 +83,28 @@ p.report(result["run_id"])
 作者可以先用 `python -m gear algorithm test policy:build_algorithm --source ./algorithm` 验证离线合同；`gear algorithm test` 调用同一检查器。`p.refine(algorithm=GEPA(parent_policy=choose_parent), rounds=1)` 支持为本次运行传入可导入的顶层策略函数，自动封存 Python 源码而不改 gear.yaml；复杂构造使用 `gear.algorithms.AlgorithmSource`。这些 CPU 检查不代替真实 Target 验证，完整示例和限制见下方算法文档。
 
 算法修改见 [Python 算法入口](python-algorithms.zh-CN.md)，版本边界与回退见 [迁移说明](project-migration.zh-CN.md)。
+
+## 导入已有 Harbor 任务
+
+已有 Harbor v1.0 任务可以作为完整资源目录导入。先准备明确的分区清单 `splits.csv`：
+
+```csv
+id,path,family,split
+seed-task,task-a,source-a,seed
+held-task,task-b,source-b,held_out
+```
+
+`path` 相对于原 Harbor 任务集目录；省略时等于 `id`。同一 family 不能跨分区。也支持相同字段的 JSONL，以及可选 `metric`（默认 `reward`）。只有 seed 时显式加 `--validation research`。
+
+```sh
+gear init imported-benchmark --adapter pi --template harbor --from /absolute/harbor-tasks --manifest /absolute/splits.csv
+cd imported-benchmark
+gear benchmark check
+gear benchmark compile
+```
+
+导入保留 task.toml、instruction、environment、tests、solution 和其他资源的原始字节、普通权限及空目录，不会转换成文本模板；项目不再依赖原目录。每文件最多 8 MiB、每题 32 MiB、整份资源 128 MiB，每题文件和目录分别最多 4096 个；拒绝路径逃逸、软/硬链接、Git 内部目录和大小写冲突。文件内容、权限、目录结构和分区均参与身份。
+
+`check` 只做静态检查，Harbor verifier 自测和 Target 执行标记为 `not_run`。`compile` 按 seed/held_out 导出保留原 verifier 的任务，供 Harbor/Hitch 使用。目前内置 Docker project provider 尚未接入任意 Harbor 运行环境，直接 evaluate/refine 会在评测预算预留前拒绝；完整原生执行接入仍在迁移中。原 `gear-refine` 的 Harbor/Hitch 路径继续可用。
+
+公共 `ProjectProvider` 可声明 `harborVerification` 并实现隔离执行。它必须保护 tests/solution 和 reward 写入权限，仅通过可信 verifier 通道返回绑定 operation/task 身份的原始数值 metrics；不能从模型输出构造得分。当前项目选择的 metric 必须在 `[0,1]` 内，保留零分与小数，缺失/越界/身份错误标为无效且不缓存。报告展示 mean reward，独立 gate 要求完整 seed 均值改善、held-out 不退步；这不是通用加权或 minimize objective 合同。
