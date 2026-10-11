@@ -36,7 +36,14 @@ def main():
         raise ValueError("protocol-input-digest")
     view = payload["view"]
     candidates = tuple(
-        Candidate(c["id"], dict(c["scores"]), c.get("content_digest")) for c in view["candidates"]
+        Candidate(
+            c["id"],
+            dict(c["scores"]),
+            c.get("content_digest"),
+            c.get("execution_digest"),
+            c.get("score_evidence", {}),
+        )
+        for c in view["candidates"]
     )
     projection = SearchView(
         tuple(view["seed_tasks"]),
@@ -47,6 +54,7 @@ def main():
         view["random_seed"],
         view["completed"],
         view.get("task_families", {}),
+        view.get("evidence_condition"),
     )
     with redirect_stdout(sys.stderr):
         algorithm = GEPA()

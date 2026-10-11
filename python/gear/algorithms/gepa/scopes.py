@@ -11,6 +11,7 @@ from dataclasses import dataclass, field, replace
 from fractions import Fraction
 
 from ..contracts import SearchView
+from .history import project_sampling_evidence
 from .scope_ordering import cross_order, representative_order, stratified
 from .scope_types import (
     BucketSampling,
@@ -187,7 +188,7 @@ class ScopeSampler:
     """Opt-in recipe adapter using observed pass scores and declared seed families.
 
     The largest failing family is selected (UTF-16 ID tie break). Costs default
-    to one; no historical difficulty or module features are invented. Advanced
+    to one; difficulty uses complete verified executions. Module features are not invented. Advanced
     policies can call create_scope with their admitted metadata directly.
     """
 
@@ -203,7 +204,7 @@ class ScopeSampler:
         ):
             raise ValueError("ScopeSampler requires pass scores between zero and one")
         groups: dict[str, list[str]] = {}
-        tasks = tuple(SamplingTask(t, view.task_families.get(t, "seed")) for t in view.seed_tasks)
+        tasks = project_sampling_evidence(view).tasks
         for task in tasks:
             if candidate.scores[task.id] < 1:
                 groups.setdefault(task.stratum, []).append(task.id)

@@ -12,6 +12,8 @@ class Candidate:
     id: str
     scores: Mapping[str, float]
     content_digest: str | None = None
+    execution_digest: str | None = None
+    score_evidence: Mapping[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -24,6 +26,7 @@ class SearchView:
     random_seed: str
     completed: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
     task_families: Mapping[str, str] = field(default_factory=dict)
+    evidence_condition: str | None = None
 
 
 @dataclass(frozen=True)

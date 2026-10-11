@@ -79,6 +79,12 @@ function fixture(interruptBridge = false, entrypoint = 'gear.algorithms:StagedGE
       expect(JSON.stringify(view)).not.toContain('PRIVATE-HOLDOUT')
       expect(view.seed_tasks.every((t) => t.startsWith('seed-'))).toBe(true)
       expect(view.candidates.every((c) => typeof c.content_digest === 'string')).toBe(true)
+      expect(view.evidence_condition).toMatch(/^sha256:/)
+      for (const candidate of view.candidates) {
+        expect(candidate.execution_digest).toMatch(/^sha256:/)
+        expect(Object.keys(candidate.score_evidence!)).toEqual(Object.keys(candidate.scores))
+        expect(Object.values(candidate.score_evidence!).every((ref) => ref.startsWith('sha256:'))).toBe(true)
+      }
       steps.push(context.stepId)
       const input = { view, state }
       const request = {
@@ -215,6 +221,10 @@ it('recovers a frozen periodic scope preparation without resampling parents or r
   const pending = f.saved().decisions.find((d) => !d.done)!
   const frozen = structuredClone(pending.decision)
   expect(frozen.state.stage).toBe('epoch-results')
+  const sampling = frozen.state.sampling_evidence as { cutoff_identity: string; tasks: Array<{ id: string }> }
+  expect(sampling.cutoff_identity).toMatch(/^sha256:/)
+  expect(sampling.tasks.map((t) => t.id)).toEqual(f.plan.taskIds)
+  expect(sampling).not.toHaveProperty('observations')
   const preparation = frozen.state.pending_epoch as { scope: { id: string }; admission: { participant_ids: string[] } }
   expect(preparation.admission.participant_ids).toContain('initial')
   expect(preparation.admission.participant_ids).toContain(frozen.state.parent)

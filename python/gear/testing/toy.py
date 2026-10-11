@@ -43,9 +43,7 @@ def toy_round(algorithm: SearchAlgorithm, *, max_steps: int = 100) -> dict[str, 
                 view = replace(
                     view,
                     candidates=tuple(
-                        Candidate(
-                            c.id, {**c.scores, **{task: 1.0 for task in missing}}, c.content_digest
-                        )
+                        replace(c, scores={**c.scores, **{task: 1.0 for task in missing}})
                         if c.id == operation.candidate
                         else c
                         for c in view.candidates

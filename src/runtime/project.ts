@@ -9,6 +9,7 @@ import { scoreOutput } from '../domain/scoring.js'
 import type { EvidenceCache } from '../ports/evidence-cache.js'
 import type { ProjectProvider, TargetSnapshot, TrialResult } from '../ports/project.js'
 import type { RunStore } from '../ports/run-store.js'
+import { projectView } from './project-view.js'
 
 export interface RunPlan {
   promotion?: typeof passRatePromotion
@@ -254,32 +255,7 @@ export class ProjectRuntime {
   }
 
   private view(run: ProjectRun): SearchView {
-    const seed = run.plan.benchmark.tasks.filter((t) => t.split === 'seed').map((t) => t.id)
-    const heldoutReserve =
-      run.plan.validation === 'holdout' ? run.plan.benchmark.tasks.filter((t) => t.split === 'held_out').length * 2 : 0
-    return {
-      seed_tasks: seed,
-      candidates: run.candidates.map((c) => ({
-        id: c.id,
-        content_digest: c.digest,
-        scores: Object.fromEntries(
-          run.trials
-            .filter((t) => t.candidate === c.id && t.split === 'seed' && t.score !== null)
-            .map((t) => [t.taskId, t.score!]),
-        ),
-      })),
-      champion: run.champion,
-      max_candidates: run.plan.maxCandidates,
-      random_seed: run.planDigest,
-      remaining_evaluations: Math.max(
-        0,
-        run.plan.maxEvaluations - run.operations.filter((o) => o.kind === 'evaluation').length - heldoutReserve,
-      ),
-      completed: structuredClone(run.completed ?? {}),
-      task_families: Object.fromEntries(
-        run.plan.benchmark.tasks.filter((t) => t.split === 'seed').map((t) => [t.id, t.family]),
-      ),
-    }
+    return projectView(run, this.evidenceCache !== undefined)
   }
 
   private async checkCancellation(run: ProjectRun, signal: AbortSignal): Promise<void> {

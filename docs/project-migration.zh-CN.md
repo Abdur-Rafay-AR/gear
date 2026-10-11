@@ -35,3 +35,7 @@ Python 已提供历史 shared/local/cross 采样的纯函数与可选 `ScopeSamp
 后续 `StagedGEPA` 已升级为明确的新状态 `staged-gepa-v2`：多 scope 父代、scope catalog、题族历史与每个 epoch 的共享输入进入原子 decision；周期准备通过原 runtime 评测，完整且满足 guard 后启用新 scope。默认稳定复用，`EpochPolicy(update_every_rounds=...)` 显式启用周期变化。v2 选择局部完整父代，先补齐 local baseline；旧版只从完整 seed 选择父代，并重新生成局部 scope。这个变化有新源码身份与状态版本，不能直接恢复 v1。原先的构造位置参数保持顺序，原 `parent_policy=fn` 覆盖保留完整 seed 合同。
 
 13 组旧实现固定 proposal 的 epoch 准入比较覆盖 cells/repair 预算、参与者剔除、缓存、周期边界和等价 scope；scope 采样另有独立固定样例。真实 Python worker 的准备阶段中断后恢复不重抽父代、不重复提交，终态 resume 一致。此处的 catalog 属于单 run 的算法计划状态，原始证据与预算仍由 runtime 拥有；跨 run 历史 archive、证据修订和完整历史诊断尚未迁完，不能宣称默认历史 GEPA 等价或切换完成。
+
+历史采样元数据现迁入 `gear.algorithms.gepa.history`，并接入 `ScopeSampler` / `StagedGEPA`。完整重复槽位才形成一个有效执行版本，难度按失败版本占比计算；无效、缺失和冲突有独立处理。题族/成功对照/子模式/修改路径来自已提交诊断。10 组固定样例来自未修改的旧 TypeScript，覆盖归一化阈值、minimize、重复证据和 objective 不隐式推导难度。
+
+新 worker 输入增加可选 `execution_digest`、`score_evidence` 和 `evidence_condition`。执行身份与 Target 内容身份分开：共享缓存别名去重，独立执行的相同内容分别保留。旧构造和缺少字段的自定义 view 继续可用；新 runtime 只传 seed 分数与不含原始内容的引用。运行内冻结采样截止点不重算历史摘要，也不接管原始证据日志。完整历史导入/修订、模型诊断和 process/objective 执行仍是后续迁移项。

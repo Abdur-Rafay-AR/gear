@@ -2,6 +2,8 @@ export interface CandidateView {
   id: string
   scores: Record<string, number>
   content_digest?: string
+  execution_digest?: string
+  score_evidence?: Record<string, string>
 }
 export interface SearchView {
   seed_tasks: string[]
@@ -12,6 +14,7 @@ export interface SearchView {
   random_seed: string
   completed: Record<string, Record<string, unknown>>
   task_families?: Record<string, string>
+  evidence_condition?: string
 }
 export interface AlgorithmOperation {
   kind: 'diagnose_seed' | 'generate' | 'evaluate_seed' | 'nominate' | 'stop'

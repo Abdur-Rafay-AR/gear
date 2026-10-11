@@ -9,10 +9,10 @@
 | 检查 | 结果与边界 |
 | --- | --- |
 | TypeScript 全量回归 | `697a63d` 的远端 CI：104 个测试文件通过、7 个按环境跳过；无模型环境项单独验证 |
-| 项目定向回归 | epoch 生命周期接入后：11 个文件、116 项通过，含固定 fixture、真实 worker 闭环、epoch/bridge 恢复与 CLI 作者流程 |
-| Python 全量回归 | epoch 生命周期接入后本地 341 项：337 项通过，4 项按环境跳过 |
+| 项目定向回归 | 历史采样投影接入后：12 个文件、128 项通过，含固定 fixture、真实 worker 闭环、采样截止点、epoch/bridge 恢复与 CLI 作者流程 |
+| Python 全量回归 | 历史采样投影接入后本地 348 项：344 项通过，4 项按环境跳过 |
 | Python 公共 API | Ruff lint/format、Mypy strict 通过 |
-| TS 质量 | typecheck、Biome、协议生成一致性、204 个模块依赖/循环检查通过 |
+| TS 质量 | typecheck、Biome、协议生成一致性、205 个模块依赖/循环检查通过 |
 | CI/发布规则 | 14 项规则测试通过；dev 代码变更启用完整回归 |
 | 独立 tgz/wheel | 六组 Target/模板组合；check/compile；共享应用 evaluate/refine/report/resume/export；SDK；无 GPU CPU loop 及恢复通过 |
 | Python 真实 sandbox | macOS 实测拒绝工作目录之外的私有测试文件、宿主凭据环境变量和已监听的 loopback 端口 |
@@ -27,6 +27,8 @@
 `5af4b27` 的 [Hitch 拆分与 OneShot CI](https://github.com/rsi-gear/gear/actions/runs/38118585504) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。随后 archive 迁移的本地验证单独记录如下。
 
 `ea7b02e` 的 [archive 与父代策略 CI](https://github.com/rsi-gear/gear/actions/runs/38119768715) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。下面的 epoch 集成属于其后新增代码，不用该 CI 代替新代码验证。
+
+`420c6f2` 的 [epoch 生命周期 CI](https://github.com/rsi-gear/gear/actions/runs/38120986517) 已全部通过，包含 Quality、CPU、Linux/macOS sandbox 与 Hitch 合同。以下历史采样投影有独立的本地验证，不把旧 CI 视为新增代码的验证。
 
 ## 推送后修复
 
@@ -90,6 +92,20 @@ Python 新增 seed-only archive 投影、`ParentInput` / `ParentPlan`、无可�
 本地项目 116 项通过；Python 全量 341 项中 337 通过、4 跳过；Ruff、31 个公共模块 Mypy strict、typecheck、Biome、204 模块边界与协议检查通过。macOS worker sandbox 两项通过。独立 tgz/wheel 通过，安装后的 wheel 可使用 `EpochPolicy` 配置 StagedGEPA，六组模板/Target、CPU training 恢复、SDK 和双算法 CLI 继续通过。没有新增模型测试，没有改写旧 run 身份、README 或原工作区。
 
 仍未完成：跨 run archive 与历史证据修订、历史难度/诊断的完整来源、process/objective、多父代批次、regression proposal、全序列 shadow/replay 与默认算法切换。此处完成了运行内周期准备及恢复，不代表 M3/M5 全部验收。
+
+## Python 历史采样证据与截止点
+
+新增 `gepa/history.py`，从可信的 seed task/condition/version/slot 引用和归一化 utility 投影历史难度，并合并已经提交的题族、成功对照、子模式和修改路径。某版本缺少任何任务重复槽位时不计为失败；有效零分保留，冲突的有效结果拒绝。显式 objective 不推导隐式历史难度。Python 不认证原始 trial，也不另建原始证据数据库。
+
+`test-contracts/gepa-history-v1.json` 固定了源提交 `420c6f2` 未修改的旧 TypeScript `samplingEvidence` 的 10 组输入/输出，覆盖无历史、完整/部分槽位、重复结果、无效观察、分数均值阈值、minimize、逐题重复清单、相同内容的独立执行版本、Unicode 诊断标签和 objective。两种语言独立比较固定结果，没有从新 Python 实现生成期望值。旧证据认证、跨运行来源和完整决策序列不在这组 fixture 的验收范围。
+
+runtime 的 seed view 投影移至 `project-view.ts`，新增可选执行身份、逐题证据引用和条件身份；内容相同的共享缓存别名去重，独立执行保留不同版本。现有 runtime identity 遍历整个 runtime 层，新模块正常进入新身份闭包；历史数据和摘要规则未改。Python worker、toy 和已有构造方式兼容新增字段，不向作者暴露原始结果或 held-out 内容。
+
+`ScopeSampler` / `StagedGEPA` 共用历史投影。分阶段计划冻结批次已知覆盖和派生元数据，当前父代仅可加入其本次 probe 的新证据。检查中修复了成功对照读取范围过宽的问题：其他 scope 准备中新获得的成功评分不再改变当前诊断。独立回归验证 cutoff/元数据稳定、缓存别名不增加难度权重、缺失或越界引用拒绝；真实 Python worker 验证新字段传递，准备阶段断线恢复保持原 decision 和采样截止点。
+
+最终本地验证：项目 128 项通过；Python 全量 348 项中 344 通过、4 跳过；7 项历史投影测试包含上述 10 组固定对照；Ruff lint/format、32 个公共模块 Mypy strict、typecheck、Biome、205 模块边界与协议生成检查通过。macOS worker sandbox 两项通过；最终源码的独立 tgz/wheel 六组模板/Target、共享应用闭环、CPU training 恢复、同步/异步 SDK、双算法 CLI 通过。文档链接、Python 示例和 README 保护检查通过。本轮无新模型调用。
+
+当前可计算运行内完整执行版本的历史难度，并接收已验证诊断元数据；完整模型诊断、跨运行历史认证/修订、process/objective 执行、多父代批次、regression proposals、全序列等价和默认切换仍待完成。
 
 ## Hitch 执行合同拆分
 

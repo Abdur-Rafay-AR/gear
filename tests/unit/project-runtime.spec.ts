@@ -471,3 +471,32 @@ describe('durable project runtime', () => {
     expect(() => canonicalDigest(NaN)).toThrow(/out of range/)
   })
 })
+
+it('projects opaque seed provenance and separates cache aliases from independent attempts', async () => {
+  const { projectView } = await import('../../src/runtime/project-view.js')
+  const f = fixture()
+  const run = await f.runtime.start(f.plan, signal())
+  const child = run.candidates.find((c) => c.id === 'next')!
+  const trial = run.trials.find((t) => t.candidate === 'next' && t.taskId === 'seed')!
+  run.candidates.push({ ...child, id: 'alias' })
+  run.trials.push({
+    ...trial,
+    candidate: 'alias',
+    reusedFrom: { runId: run.id, operationId: canonicalDigest([run.id, 'evaluation', 'next', 'seed']) },
+  })
+  const shared = projectView(run, true)
+  const original = shared.candidates.find((c) => c.id === 'next')!,
+    alias = shared.candidates.find((c) => c.id === 'alias')!
+  expect(alias.execution_digest).toBe(original.execution_digest)
+  expect(alias.score_evidence).toEqual(original.score_evidence)
+  const independent = projectView(run, false).candidates
+  expect(independent.find((c) => c.id === 'alias')!.execution_digest).not.toBe(
+    independent.find((c) => c.id === 'next')!.execution_digest,
+  )
+  expect(JSON.stringify(shared)).not.toContain('held_out')
+  expect(JSON.stringify(shared)).not.toContain('PRIVATE-HOLDOUT')
+  expect(JSON.stringify(shared)).not.toContain('wrong')
+  expect(JSON.stringify(shared)).not.toContain('correct')
+  expect(shared.evidence_condition).toMatch(/^sha256:/)
+  expect(shared.candidates.every((c) => Object.keys(c.score_evidence ?? {}).every((t) => t === 'seed'))).toBe(true)
+})

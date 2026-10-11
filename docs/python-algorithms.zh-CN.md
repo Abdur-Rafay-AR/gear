@@ -14,6 +14,7 @@
 | 何时停止 | `GEPA(stop_rule=fn)` | `gear/algorithms/gepa/stopping.py` |
 | 整个流程 | `SearchAlgorithm.step(view, state)` | `gear/algorithms/gepa/algorithm.py` |
 | local → bridge → global 流程 | `StagedGEPA(...)` | `gear/algorithms/gepa/staged.py` |
+| 历史难度与诊断标签 | `sampling_evidence`、`project_sampling_evidence` | `gear/algorithms/gepa/history.py` |
 | scope 周期更新与准入 | `EpochPolicy(...)`、`admit_scope_epoch` | `gear/algorithms/gepa/epochs.py` |
 
 一个文件就能换父代策略：
@@ -72,11 +73,19 @@ def build_algorithm():
     )))
 ```
 
-这个适配器要求父代的全部 seed 评分已观察到；缺失评分不会当成失败。它选失败最多的题族（并列按 ID 的 UTF-16 顺序），从 `view.random_seed` 确定顺序，用该题族成功题作对照、其他成功题作共享范围，另选跨题族题目。全部通过时返回完整 seed。当前 `SearchView` 没有成本和历史难度，适配器使用成本 1，不推测这些信息。它只替换局部选题，后续仍完整评测 seed，并使用项目 pass-rate gate。
+这个适配器要求父代的全部 seed 评分已观察到；缺失评分不会当成失败。它选失败最多的题族（并列按 ID 的 UTF-16 顺序），从 `view.random_seed` 确定顺序，用该题族成功题作对照、其他成功题作共享范围，另选跨题族题目。全部通过时返回完整 seed。历史难度由可信 seed 评分按完整执行版本计算，缺失评分保持未知；成本暂按 1。它只替换局部选题，后续仍完整评测 seed，并使用项目 pass-rate gate。
 
 高级策略可使用公开 `gear.algorithms.gepa.scopes` 中的 `SamplingTask`、`FailureFamily`、`ScopeConfig`、`resolve_sizing` 和 `create_scope`，传入已经核验的 seed 元数据，取得 buckets、归一化权重、guard 题目和容量不足原因；`epoch` 控制重采样。这里移植了旧 GEPA 的成功对照、难度/成本分层、模块覆盖、跨题族分配、十进制比例取整及 guard-only 零权重。`ScopeSampler` 只消费返回的任务 ID；默认 `GEPA` 仍只消费选题结果；下文的 `StagedGEPA` 接入局部权重、must-pass guard 和 bridge，多 scope archive 生命周期与 process/objective 执行仍待完整迁移。调用方不能把未验证的历史难度当成运行时证据。
 
 `test-contracts/gepa-scopes-v1.json` 固定了旧 TypeScript 在 10 组输入上的输出；两种语言各自对同一份 fixture 验证语义结果。旧摘要和 run identity 不在此比较范围，Python 不生成旧 run 的身份，也不读取旧状态。这是采样模块的迁移证据，不代表整个历史 GEPA 流程等价。
+
+`gear.algorithms.gepa.history.sampling_evidence` 接收已验证的 task contract、执行条件、版本、重复槽位、归一化 utility 和证据引用。仅当某个版本的全部任务槽位有效时，它才计入该题历史难度；有效零分不能被缺失覆盖，冲突的有效结果会拒绝。函数合并已提交诊断中的失败题、成功对照、子模式和修改路径；原始结果认证和 revision 冲突处理仍由可信运行层负责。设置 `objective=True` 时不计算隐式难度，这不表示当前项目已支持通用 objective 执行。
+
+项目适配器 `project_sampling_evidence(view)` 使用 v1 的单次 pass-rate 槽位。runtime 提供 `Candidate.execution_digest`、逐题 `score_evidence` 和 `SearchView.evidence_condition`：共享缓存别名计为同一执行版本，独立执行的相同 Target 内容分别计数。只有 `content_digest` 时不能推测证据复用；旧 toy/custom views 按候选 ID 区分版本。新增字段可省略，原来的构造参数顺序保持兼容。
+
+`ScopeSampler` 和 `StagedGEPA` 共用这个投影。Staged 在批次开始冻结采样元数据和已知题目集合，准备阶段只允许当前父代在本次探测范围内的新证据进入后续诊断，避免其他 scope 的准备结果改变当前采样。状态只保存 cutoff、派生元数据和计划，不复制原始观察。当前自动诊断仍是确定性 seed 评分分类，不生成未知的模块路径或子模式。
+
+`test-contracts/gepa-history-v1.json` 的 10 组旧实现固定样例覆盖重复槽位完整性、缓存去重、独立版本、无效观察、阈值与最小化 utility、诊断标签合并和 objective 的未知难度。它验证历史元数据投影，不替代完整 GEPA 决策序列或跨运行历史导入的验收。
 
 另一个可选完整 recipe 是 `StagedGEPA`，同样通过 `algorithm/policy.py` 的 factory 使用：
 
@@ -109,11 +118,11 @@ python -m gear algorithm test archive_policy:build_algorithm --source ./examples
 
 `ParentPlan` 保留完整父代概率、scope/父代引用、slots、draw index 与 reason codes；`validate_parent_plan` 核验范围和配额。`RandomSource.choice(distribution, index=...)` 无可变随机游标，返回选择、完整分布、索引和新 canonical 输入摘要。新算法默认按 UTF-16 ID 排序；比较历史决策时必须显式冻结旧排序。运行层继续持久化作者返回的 decision，并独立执行预算校验。
 
-`test-contracts/gepa-archive-v1.json` 的 11 组 archive 与 55 份分配计划由未修改的旧 TypeScript 实现生成，双语言分别比较固定结果。该包示例也通过真实 Python worker 接入运行层，完成生成、完整 seed、最终 gate 和终态恢复。`gepa-epochs-v1.json` 另有 13 组冻结 proposal 的旧 epoch 准入样例，覆盖普通/repair 预算、必需参与者、可选项剔除、缓存、等价和周期边界；不把这份准入 fixture 当作完整采样序列等价。周期 recipe 已验证多批次 catalog、旧 scope 保留和准备阶段断线恢复。历史证据修订、完整历史难度/诊断、process/objective、regression proposal 与默认流程切换仍未完成。
+`test-contracts/gepa-archive-v1.json` 的 11 组 archive 与 55 份分配计划由未修改的旧 TypeScript 实现生成，双语言分别比较固定结果。该包示例也通过真实 Python worker 接入运行层，完成生成、完整 seed、最终 gate 和终态恢复。`gepa-epochs-v1.json` 另有 13 组冻结 proposal 的旧 epoch 准入样例，覆盖普通/repair 预算、必需参与者、可选项剔除、缓存、等价和周期边界；不把这份准入 fixture 当作完整采样序列等价。周期 recipe 已验证多批次 catalog、旧 scope 保留和准备阶段断线恢复。历史证据修订与跨运行来源、完整诊断、process/objective、regression proposal 与默认流程切换仍未完成。
 
-`select_bridge` 接收已经冻结题族顺序的 nominees，并返回共同计划和 quota/capacity/budget 排除记录；预算回调只报价，不发起执行。`test-contracts/gepa-stages-v1.json` 固定了旧实现的 10 组 frontier 和 10 组 bridge 输出，包含重复 Target、量化平局、缺失 process、guard、轮换、缓存与额度不足。旧 JavaScript 的 locale 排序由 fixture 显式冻结；新 recipe 采用跨平台固定的 UTF-16 ID 顺序，不读取宿主 locale。此 recipe 是新版本流程，默认 `algorithm: gepa` 未切换；跨 run archive 与证据修订、process/objective 执行、完整历史难度/诊断和 regression proposal 尚待完整迁移。
+`select_bridge` 接收已经冻结题族顺序的 nominees，并返回共同计划和 quota/capacity/budget 排除记录；预算回调只报价，不发起执行。`test-contracts/gepa-stages-v1.json` 固定了旧实现的 10 组 frontier 和 10 组 bridge 输出，包含重复 Target、量化平局、缺失 process、guard、轮换、缓存与额度不足。旧 JavaScript 的 locale 排序由 fixture 显式冻结；新 recipe 采用跨平台固定的 UTF-16 ID 顺序，不读取宿主 locale。此 recipe 是新版本流程，默认 `algorithm: gepa` 未切换；跨 run archive 与证据修订、process/objective 执行、完整诊断和 regression proposal 尚待完整迁移。
 
-整套算法也只需实现公开 `SearchAlgorithm` 协议，返回 `Decision(state, operations, reason)`。`Operation` 支持 `diagnose_seed`、`generate`、`evaluate_seed`、`nominate`、`stop`；`nominate` 是提名，不能自行写 champion。最终 `paired-pass-rate-v1` gate 先要求完整 seed 改善，再要求 held-out 不退步；自定义算法也不能绕过，seed 未改善时不消耗 held-out 预算。`SearchView` 只含 seed ID、已观察评分、候选、预算、题族和固定随机种子。不得把任意路径塞进操作；runtime 校验任务范围、候选数量、同组完整证据和预算。
+整套算法也只需实现公开 `SearchAlgorithm` 协议，返回 `Decision(state, operations, reason)`。`Operation` 支持 `diagnose_seed`、`generate`、`evaluate_seed`、`nominate`、`stop`；`nominate` 是提名，不能自行写 champion。最终 `paired-pass-rate-v1` gate 先要求完整 seed 改善，再要求 held-out 不退步；自定义算法也不能绕过，seed 未改善时不消耗 held-out 预算。`SearchView` 只含 seed ID、已观察评分及不含原始内容的证据引用、候选、预算、题族和固定随机种子。不得把任意路径塞进操作；runtime 校验任务范围、候选数量、同组完整证据和预算。
 
 当前 recipe 使用完整 seed baseline、确定性父代选择、失败题局部评测、完整 seed 扩展和一次最终 gate。诊断是已观察 seed 评分投影，不产生隐式额外 LLM 调用；它以稳定操作 ID 持久化，经 `view.completed` 提供给后续策略，并传入 Meta 的生成输入。生成与 seed 评测也记录完成结果。无效候选或已终止但缺少有效输出的 Meta 操作消耗一次生成额度，算法可以据此结束或继续；runtime 不重发同一次生成。同批依赖失败的操作记为 `prerequisite-failed`，不会提交无效 Target。存储或环境故障保持待恢复状态，与候选格式错误分开处理。一个 decision 可包含最多 64 个顺序执行的操作，最终提名或停止只能在末尾。随机策略应只从 `view.random_seed` 推导。`toy_round` 用固定假执行器验证接口，不能代替真实 Target 集成或证明收益。
 

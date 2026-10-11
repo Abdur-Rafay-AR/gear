@@ -1,0 +1,2512 @@
+{
+  "source_commit": "420c6f29e77cf215922543921e982c31d30a5b5c",
+  "scope": "Normalized verified seed observation projections of the unchanged legacy samplingEvidence.",
+  "cases": [
+    {
+      "repetitions": 2,
+      "name": "no-observations",
+      "versions": [],
+      "input": {
+        "contracts": [
+          {
+            "task": {
+              "id": "task-0",
+              "stratum": "family-0",
+              "estimated_cost": 1,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-1",
+              "stratum": "family-1",
+              "estimated_cost": 2,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-2",
+              "stratum": "family-2",
+              "estimated_cost": 3,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-3",
+              "stratum": "family-3",
+              "estimated_cost": 4,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:a1255c84c4781e54a78aa5fe55cbff171efbda30de0fccd867d441e5cee28672",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          }
+        ],
+        "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+        "cutoff_identity": "sha256:42d42350671bd0496ceccea761e357b3475b3e239c4c4e4e1b99dafa65daa716",
+        "objective": false,
+        "diagnoses": [],
+        "observations": []
+      },
+      "expected": {
+        "cutoff_identity": "sha256:42d42350671bd0496ceccea761e357b3475b3e239c4c4e4e1b99dafa65daa716",
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": null
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 2,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": null
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 3,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": null
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 4,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": null
+          }
+        ]
+      }
+    },
+    {
+      "repetitions": 2,
+      "name": "complete-and-partial-repetitions",
+      "versions": [
+        {
+          "id": "a",
+          "values": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              null,
+              null
+            ]
+          ]
+        },
+        {
+          "id": "b",
+          "values": [
+            [
+              1,
+              null
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              null,
+              null
+            ]
+          ]
+        }
+      ],
+      "input": {
+        "contracts": [
+          {
+            "task": {
+              "id": "task-0",
+              "stratum": "family-0",
+              "estimated_cost": 1,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-1",
+              "stratum": "family-1",
+              "estimated_cost": 2,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-2",
+              "stratum": "family-2",
+              "estimated_cost": 3,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-3",
+              "stratum": "family-3",
+              "estimated_cost": 4,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:a1255c84c4781e54a78aa5fe55cbff171efbda30de0fccd867d441e5cee28672",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          }
+        ],
+        "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+        "cutoff_identity": "sha256:42d42350671bd0496ceccea761e357b3475b3e239c4c4e4e1b99dafa65daa716",
+        "objective": false,
+        "diagnoses": [],
+        "observations": [
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 1,
+            "evidence_identity": "sha256:c3bf4e43555376d3a24b1bc6f3fa72823944c967a0d197ff7132ad3309217fe7"
+          },
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 1,
+            "evidence_identity": "sha256:b943e532b47b39ff11968b2377e6b8084ed10f4525d8ebb5cbc084559e24c732"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 1,
+            "evidence_identity": "sha256:5d14993091828c6cdda9ab4fae5409e373788d0f9d8d9b0740b55477a14700b8"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 1,
+            "evidence_identity": "sha256:b12b0e75980807204ed76723ffdb9c3eb30b80d5d9f40614b6a4d1d14dd2d758"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 0,
+            "evidence_identity": "sha256:5e129d7ff8b2944e931a9ac348da5c990b746d0a6fd35ee0dc712e74160f5863"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 0,
+            "evidence_identity": "sha256:20ae97401cb219518dd643046d53a1b21a529ae3c902e8888ffc6ccc11e155dd"
+          },
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:04411beceb497f6451df64e1c2dfd935490c6b2113e761baedcca62b0719f4d7",
+            "slot": "0:0",
+            "utility": 1,
+            "evidence_identity": "sha256:bc5d3a9df44e46c4ce11f4207cadbca866ebb1327974f280c65961be8973ed1a"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:04411beceb497f6451df64e1c2dfd935490c6b2113e761baedcca62b0719f4d7",
+            "slot": "0:0",
+            "utility": 0,
+            "evidence_identity": "sha256:0c1f9239247a08f50e53999be9a0716eaa49bf21fe7e3a3ebeef1d44db46dbee"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:04411beceb497f6451df64e1c2dfd935490c6b2113e761baedcca62b0719f4d7",
+            "slot": "1:13",
+            "utility": 0,
+            "evidence_identity": "sha256:e82ab7d6c0294c7cdab8c0a9a2269fae4383ba4d63b3d7cfdf195ddaba9ac661"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:04411beceb497f6451df64e1c2dfd935490c6b2113e761baedcca62b0719f4d7",
+            "slot": "0:0",
+            "utility": 0,
+            "evidence_identity": "sha256:ec953f820563ca6ef5e666dcb883166927df166b4dee4855b717e2f353be0c3d"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:04411beceb497f6451df64e1c2dfd935490c6b2113e761baedcca62b0719f4d7",
+            "slot": "1:13",
+            "utility": 0,
+            "evidence_identity": "sha256:353fff17f730187a73dc90e98c41d24c30dfe32a21efd7ba7ee51a75dbfc8239"
+          }
+        ]
+      },
+      "expected": {
+        "cutoff_identity": "sha256:42d42350671bd0496ceccea761e357b3475b3e239c4c4e4e1b99dafa65daa716",
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": 0
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 2,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": 0.5
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 3,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": 1
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 4,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": null
+          }
+        ]
+      }
+    },
+    {
+      "repetitions": 2,
+      "name": "duplicate-results-do-not-reweight-history",
+      "versions": [
+        {
+          "id": "a",
+          "values": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              null,
+              null
+            ]
+          ]
+        },
+        {
+          "id": "b",
+          "values": [
+            [
+              1,
+              null
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              null,
+              null
+            ]
+          ]
+        }
+      ],
+      "copies": [
+        0,
+        0,
+        1,
+        0
+      ],
+      "input": {
+        "contracts": [
+          {
+            "task": {
+              "id": "task-0",
+              "stratum": "family-0",
+              "estimated_cost": 1,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-1",
+              "stratum": "family-1",
+              "estimated_cost": 2,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-2",
+              "stratum": "family-2",
+              "estimated_cost": 3,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-3",
+              "stratum": "family-3",
+              "estimated_cost": 4,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:a1255c84c4781e54a78aa5fe55cbff171efbda30de0fccd867d441e5cee28672",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          }
+        ],
+        "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+        "cutoff_identity": "sha256:42d42350671bd0496ceccea761e357b3475b3e239c4c4e4e1b99dafa65daa716",
+        "objective": false,
+        "diagnoses": [],
+        "observations": [
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 1,
+            "evidence_identity": "sha256:c3bf4e43555376d3a24b1bc6f3fa72823944c967a0d197ff7132ad3309217fe7"
+          },
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 1,
+            "evidence_identity": "sha256:b943e532b47b39ff11968b2377e6b8084ed10f4525d8ebb5cbc084559e24c732"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 1,
+            "evidence_identity": "sha256:5d14993091828c6cdda9ab4fae5409e373788d0f9d8d9b0740b55477a14700b8"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 1,
+            "evidence_identity": "sha256:b12b0e75980807204ed76723ffdb9c3eb30b80d5d9f40614b6a4d1d14dd2d758"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 0,
+            "evidence_identity": "sha256:5e129d7ff8b2944e931a9ac348da5c990b746d0a6fd35ee0dc712e74160f5863"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 0,
+            "evidence_identity": "sha256:20ae97401cb219518dd643046d53a1b21a529ae3c902e8888ffc6ccc11e155dd"
+          },
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 1,
+            "evidence_identity": "sha256:c3bf4e43555376d3a24b1bc6f3fa72823944c967a0d197ff7132ad3309217fe7"
+          },
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 1,
+            "evidence_identity": "sha256:b943e532b47b39ff11968b2377e6b8084ed10f4525d8ebb5cbc084559e24c732"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 1,
+            "evidence_identity": "sha256:5d14993091828c6cdda9ab4fae5409e373788d0f9d8d9b0740b55477a14700b8"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 1,
+            "evidence_identity": "sha256:b12b0e75980807204ed76723ffdb9c3eb30b80d5d9f40614b6a4d1d14dd2d758"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 0,
+            "evidence_identity": "sha256:5e129d7ff8b2944e931a9ac348da5c990b746d0a6fd35ee0dc712e74160f5863"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 0,
+            "evidence_identity": "sha256:20ae97401cb219518dd643046d53a1b21a529ae3c902e8888ffc6ccc11e155dd"
+          },
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:04411beceb497f6451df64e1c2dfd935490c6b2113e761baedcca62b0719f4d7",
+            "slot": "0:0",
+            "utility": 1,
+            "evidence_identity": "sha256:bc5d3a9df44e46c4ce11f4207cadbca866ebb1327974f280c65961be8973ed1a"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:04411beceb497f6451df64e1c2dfd935490c6b2113e761baedcca62b0719f4d7",
+            "slot": "0:0",
+            "utility": 0,
+            "evidence_identity": "sha256:0c1f9239247a08f50e53999be9a0716eaa49bf21fe7e3a3ebeef1d44db46dbee"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:04411beceb497f6451df64e1c2dfd935490c6b2113e761baedcca62b0719f4d7",
+            "slot": "1:13",
+            "utility": 0,
+            "evidence_identity": "sha256:e82ab7d6c0294c7cdab8c0a9a2269fae4383ba4d63b3d7cfdf195ddaba9ac661"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:04411beceb497f6451df64e1c2dfd935490c6b2113e761baedcca62b0719f4d7",
+            "slot": "0:0",
+            "utility": 0,
+            "evidence_identity": "sha256:ec953f820563ca6ef5e666dcb883166927df166b4dee4855b717e2f353be0c3d"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:04411beceb497f6451df64e1c2dfd935490c6b2113e761baedcca62b0719f4d7",
+            "slot": "1:13",
+            "utility": 0,
+            "evidence_identity": "sha256:353fff17f730187a73dc90e98c41d24c30dfe32a21efd7ba7ee51a75dbfc8239"
+          },
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 1,
+            "evidence_identity": "sha256:c3bf4e43555376d3a24b1bc6f3fa72823944c967a0d197ff7132ad3309217fe7"
+          },
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 1,
+            "evidence_identity": "sha256:b943e532b47b39ff11968b2377e6b8084ed10f4525d8ebb5cbc084559e24c732"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 1,
+            "evidence_identity": "sha256:5d14993091828c6cdda9ab4fae5409e373788d0f9d8d9b0740b55477a14700b8"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 1,
+            "evidence_identity": "sha256:b12b0e75980807204ed76723ffdb9c3eb30b80d5d9f40614b6a4d1d14dd2d758"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 0,
+            "evidence_identity": "sha256:5e129d7ff8b2944e931a9ac348da5c990b746d0a6fd35ee0dc712e74160f5863"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 0,
+            "evidence_identity": "sha256:20ae97401cb219518dd643046d53a1b21a529ae3c902e8888ffc6ccc11e155dd"
+          }
+        ]
+      },
+      "expected": {
+        "cutoff_identity": "sha256:42d42350671bd0496ceccea761e357b3475b3e239c4c4e4e1b99dafa65daa716",
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": 0
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 2,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": 0.5
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 3,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": 1
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 4,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": null
+          }
+        ]
+      }
+    },
+    {
+      "repetitions": 2,
+      "name": "invalid-outcomes-remain-unknown",
+      "versions": [
+        {
+          "id": "a",
+          "values": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              null,
+              null
+            ]
+          ],
+          "invalid": [
+            "task-0:0",
+            "task-1:0",
+            "task-1:1"
+          ]
+        }
+      ],
+      "input": {
+        "contracts": [
+          {
+            "task": {
+              "id": "task-0",
+              "stratum": "family-0",
+              "estimated_cost": 1,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-1",
+              "stratum": "family-1",
+              "estimated_cost": 2,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-2",
+              "stratum": "family-2",
+              "estimated_cost": 3,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-3",
+              "stratum": "family-3",
+              "estimated_cost": 4,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:a1255c84c4781e54a78aa5fe55cbff171efbda30de0fccd867d441e5cee28672",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          }
+        ],
+        "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+        "cutoff_identity": "sha256:42d42350671bd0496ceccea761e357b3475b3e239c4c4e4e1b99dafa65daa716",
+        "objective": false,
+        "diagnoses": [],
+        "observations": [
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": null,
+            "evidence_identity": "sha256:65fc8514a829fdfbbb1fd848caab2068fc9048d11ac8960e753cfdf219019b0b"
+          },
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 1,
+            "evidence_identity": "sha256:b943e532b47b39ff11968b2377e6b8084ed10f4525d8ebb5cbc084559e24c732"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": null,
+            "evidence_identity": "sha256:d385af97db01df0bdfa1e8d03d992d6d20ce6814715afc18091eaee8a7c3d803"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": null,
+            "evidence_identity": "sha256:6e31b6dc2ae034f4e227fc0f5b36c2693efef7a770b305f142b48e0ea96e9e9e"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 0,
+            "evidence_identity": "sha256:5e129d7ff8b2944e931a9ac348da5c990b746d0a6fd35ee0dc712e74160f5863"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 0,
+            "evidence_identity": "sha256:20ae97401cb219518dd643046d53a1b21a529ae3c902e8888ffc6ccc11e155dd"
+          }
+        ]
+      },
+      "expected": {
+        "cutoff_identity": "sha256:42d42350671bd0496ceccea761e357b3475b3e239c4c4e4e1b99dafa65daa716",
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": null
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 2,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": null
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 3,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": 1
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 4,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": null
+          }
+        ]
+      }
+    },
+    {
+      "repetitions": 2,
+      "name": "fractional-threshold-after-mean",
+      "threshold": 0.5,
+      "versions": [
+        {
+          "id": "a",
+          "values": [
+            [
+              0,
+              1
+            ],
+            [
+              0.2,
+              0.8
+            ],
+            [
+              0.4,
+              0.4
+            ],
+            [
+              1,
+              0
+            ]
+          ]
+        }
+      ],
+      "input": {
+        "contracts": [
+          {
+            "task": {
+              "id": "task-0",
+              "stratum": "family-0",
+              "estimated_cost": 1,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 0.5
+          },
+          {
+            "task": {
+              "id": "task-1",
+              "stratum": "family-1",
+              "estimated_cost": 2,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 0.5
+          },
+          {
+            "task": {
+              "id": "task-2",
+              "stratum": "family-2",
+              "estimated_cost": 3,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 0.5
+          },
+          {
+            "task": {
+              "id": "task-3",
+              "stratum": "family-3",
+              "estimated_cost": 4,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:a1255c84c4781e54a78aa5fe55cbff171efbda30de0fccd867d441e5cee28672",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 0.5
+          }
+        ],
+        "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+        "cutoff_identity": "sha256:42d42350671bd0496ceccea761e357b3475b3e239c4c4e4e1b99dafa65daa716",
+        "objective": false,
+        "diagnoses": [],
+        "observations": [
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 0,
+            "evidence_identity": "sha256:b056d0f6e1f079af871eafa7e8248b0f07f736e0e840d206fb21b82ef7c6de0f"
+          },
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 1,
+            "evidence_identity": "sha256:b943e532b47b39ff11968b2377e6b8084ed10f4525d8ebb5cbc084559e24c732"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 0.2,
+            "evidence_identity": "sha256:e3a9a703d093dfe5e27b95bce8127038e6e78822c471d6d869db51345b67d591"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 0.8,
+            "evidence_identity": "sha256:a938a4a6d76ba127c99de3c98006241a98f5ff5e2175b1c9425f0dc07c5fa193"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 0.4,
+            "evidence_identity": "sha256:c64f815c21fa774ef74e29d1c2a778f765f43e7f13c7139ef2435413bf7a83c1"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 0.4,
+            "evidence_identity": "sha256:68db7235b72072f610245321157358fa8f3476dc9fe301fa329ee1aaeb6ba261"
+          },
+          {
+            "task_id": "task-3",
+            "task_identity": "sha256:a1255c84c4781e54a78aa5fe55cbff171efbda30de0fccd867d441e5cee28672",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 1,
+            "evidence_identity": "sha256:0cf35cbbe67faacfe53fbe631414ed6e2aa0dde2723dc3d8acf36970707f6174"
+          },
+          {
+            "task_id": "task-3",
+            "task_identity": "sha256:a1255c84c4781e54a78aa5fe55cbff171efbda30de0fccd867d441e5cee28672",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 0,
+            "evidence_identity": "sha256:8445fd510a4dbf4aa708bdf7ea9cc6efcb27d7744b87193319c14e41e665b954"
+          }
+        ]
+      },
+      "expected": {
+        "cutoff_identity": "sha256:42d42350671bd0496ceccea761e357b3475b3e239c4c4e4e1b99dafa65daa716",
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": 0
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 2,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": 0
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 3,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": 1
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 4,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": 0
+          }
+        ]
+      }
+    },
+    {
+      "repetitions": 2,
+      "name": "minimize-normalized-utility",
+      "minimized": true,
+      "versions": [
+        {
+          "id": "a",
+          "values": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              0.2,
+              0.8
+            ],
+            [
+              0,
+              null
+            ]
+          ]
+        }
+      ],
+      "input": {
+        "contracts": [
+          {
+            "task": {
+              "id": "task-0",
+              "stratum": "family-0",
+              "estimated_cost": 1,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:13abe6343e6f4280aa91e804a1729e56589031e7e2916187e8ee02259288b470",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-1",
+              "stratum": "family-1",
+              "estimated_cost": 2,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:93de86f91e23d8156d116d669a3082b527e6e1aa1fec229aa101617f08b4b26f",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-2",
+              "stratum": "family-2",
+              "estimated_cost": 3,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:ecbb248ccacded1d9b45e4e076b47b14f6fbf9635277259ce875882e2ee06ce0",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-3",
+              "stratum": "family-3",
+              "estimated_cost": 4,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:21a24bdee582ea1772d452c8b599e394f4c6bbedc8d0fb37a22833a396ea2e2f",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          }
+        ],
+        "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+        "cutoff_identity": "sha256:42d42350671bd0496ceccea761e357b3475b3e239c4c4e4e1b99dafa65daa716",
+        "objective": false,
+        "diagnoses": [],
+        "observations": [
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:13abe6343e6f4280aa91e804a1729e56589031e7e2916187e8ee02259288b470",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 0,
+            "evidence_identity": "sha256:7cd9e7edf1caa03dc199852df9f08e050d5147a1ae7ab0600975d7b84cf4120a"
+          },
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:13abe6343e6f4280aa91e804a1729e56589031e7e2916187e8ee02259288b470",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 0,
+            "evidence_identity": "sha256:41af74211238b1f8351bbfdfbdf656cfeb799f9dbb08167962c39018497f4446"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:93de86f91e23d8156d116d669a3082b527e6e1aa1fec229aa101617f08b4b26f",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": -1,
+            "evidence_identity": "sha256:a2d5fd2e98c00599f949041b223b74f53670a81adcb0226fbc5596312c2f45ab"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:93de86f91e23d8156d116d669a3082b527e6e1aa1fec229aa101617f08b4b26f",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": -1,
+            "evidence_identity": "sha256:0864b36b599c246c81f3a29ee53e3f16a7689e866c430dd8bf58f1bcb9d15dae"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:ecbb248ccacded1d9b45e4e076b47b14f6fbf9635277259ce875882e2ee06ce0",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": -0.2,
+            "evidence_identity": "sha256:4316781bb71feb9f12d7b40a717ecbbcfdf059873336994f644648c5c8d31842"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:ecbb248ccacded1d9b45e4e076b47b14f6fbf9635277259ce875882e2ee06ce0",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": -0.8,
+            "evidence_identity": "sha256:d7a05d403b817b763744f4f38135fd00fd82e0710c69e5911822596ba3c801f6"
+          },
+          {
+            "task_id": "task-3",
+            "task_identity": "sha256:21a24bdee582ea1772d452c8b599e394f4c6bbedc8d0fb37a22833a396ea2e2f",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 0,
+            "evidence_identity": "sha256:06d6f8812cec831ad1d1427bb1c796466af84243be6f104792af180507545103"
+          }
+        ]
+      },
+      "expected": {
+        "cutoff_identity": "sha256:42d42350671bd0496ceccea761e357b3475b3e239c4c4e4e1b99dafa65daa716",
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": 1
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 2,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": 1
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 3,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": 1
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 4,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": null
+          }
+        ]
+      }
+    },
+    {
+      "repetitions": 2,
+      "name": "task-specific-repetition-manifest",
+      "perTaskSlots": [
+        [
+          0
+        ],
+        [
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "versions": [
+        {
+          "id": "a",
+          "values": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              null,
+              null
+            ]
+          ]
+        },
+        {
+          "id": "b",
+          "values": [
+            [
+              1,
+              null
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              null,
+              null
+            ]
+          ]
+        }
+      ],
+      "input": {
+        "contracts": [
+          {
+            "task": {
+              "id": "task-0",
+              "stratum": "family-0",
+              "estimated_cost": 1,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "slots": [
+              "0:0"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-1",
+              "stratum": "family-1",
+              "estimated_cost": 2,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "slots": [
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-2",
+              "stratum": "family-2",
+              "estimated_cost": 3,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-3",
+              "stratum": "family-3",
+              "estimated_cost": 4,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:a1255c84c4781e54a78aa5fe55cbff171efbda30de0fccd867d441e5cee28672",
+            "slots": [
+              "1:13"
+            ],
+            "success_utility": 1
+          }
+        ],
+        "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+        "cutoff_identity": "sha256:42d42350671bd0496ceccea761e357b3475b3e239c4c4e4e1b99dafa65daa716",
+        "objective": false,
+        "diagnoses": [],
+        "observations": [
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 1,
+            "evidence_identity": "sha256:c3bf4e43555376d3a24b1bc6f3fa72823944c967a0d197ff7132ad3309217fe7"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 1,
+            "evidence_identity": "sha256:b12b0e75980807204ed76723ffdb9c3eb30b80d5d9f40614b6a4d1d14dd2d758"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 0,
+            "evidence_identity": "sha256:5e129d7ff8b2944e931a9ac348da5c990b746d0a6fd35ee0dc712e74160f5863"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 0,
+            "evidence_identity": "sha256:20ae97401cb219518dd643046d53a1b21a529ae3c902e8888ffc6ccc11e155dd"
+          },
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:04411beceb497f6451df64e1c2dfd935490c6b2113e761baedcca62b0719f4d7",
+            "slot": "0:0",
+            "utility": 1,
+            "evidence_identity": "sha256:bc5d3a9df44e46c4ce11f4207cadbca866ebb1327974f280c65961be8973ed1a"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:04411beceb497f6451df64e1c2dfd935490c6b2113e761baedcca62b0719f4d7",
+            "slot": "1:13",
+            "utility": 0,
+            "evidence_identity": "sha256:e82ab7d6c0294c7cdab8c0a9a2269fae4383ba4d63b3d7cfdf195ddaba9ac661"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:04411beceb497f6451df64e1c2dfd935490c6b2113e761baedcca62b0719f4d7",
+            "slot": "0:0",
+            "utility": 0,
+            "evidence_identity": "sha256:ec953f820563ca6ef5e666dcb883166927df166b4dee4855b717e2f353be0c3d"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:04411beceb497f6451df64e1c2dfd935490c6b2113e761baedcca62b0719f4d7",
+            "slot": "1:13",
+            "utility": 0,
+            "evidence_identity": "sha256:353fff17f730187a73dc90e98c41d24c30dfe32a21efd7ba7ee51a75dbfc8239"
+          }
+        ]
+      },
+      "expected": {
+        "cutoff_identity": "sha256:42d42350671bd0496ceccea761e357b3475b3e239c4c4e4e1b99dafa65daa716",
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": 0
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 2,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": 0.5
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 3,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": 1
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 4,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": null
+          }
+        ]
+      }
+    },
+    {
+      "repetitions": 2,
+      "name": "same-tree-distinct-executed-versions",
+      "versions": [
+        {
+          "id": "a",
+          "values": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              null,
+              null
+            ]
+          ],
+          "tree": "1111111111111111111111111111111111111111"
+        },
+        {
+          "id": "b",
+          "values": [
+            [
+              1,
+              null
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              null,
+              null
+            ]
+          ],
+          "tree": "1111111111111111111111111111111111111111"
+        }
+      ],
+      "input": {
+        "contracts": [
+          {
+            "task": {
+              "id": "task-0",
+              "stratum": "family-0",
+              "estimated_cost": 1,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-1",
+              "stratum": "family-1",
+              "estimated_cost": 2,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-2",
+              "stratum": "family-2",
+              "estimated_cost": 3,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-3",
+              "stratum": "family-3",
+              "estimated_cost": 4,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:a1255c84c4781e54a78aa5fe55cbff171efbda30de0fccd867d441e5cee28672",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          }
+        ],
+        "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+        "cutoff_identity": "sha256:42d42350671bd0496ceccea761e357b3475b3e239c4c4e4e1b99dafa65daa716",
+        "objective": false,
+        "diagnoses": [],
+        "observations": [
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:cfa9c65599e00534877fdb2de0aae79245918ef73caa596d7a3d32005b51657a",
+            "slot": "0:0",
+            "utility": 1,
+            "evidence_identity": "sha256:e690e7960de74f9dca2c8d8c5dad7eed51c2e7b1d9a5f1109c488da2f5dbe2d9"
+          },
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:cfa9c65599e00534877fdb2de0aae79245918ef73caa596d7a3d32005b51657a",
+            "slot": "1:13",
+            "utility": 1,
+            "evidence_identity": "sha256:5f509d0505c3b79482c45bcd1a1bdbf3d1bff87dc0d4f28b088c4b30b4014bc4"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:cfa9c65599e00534877fdb2de0aae79245918ef73caa596d7a3d32005b51657a",
+            "slot": "0:0",
+            "utility": 1,
+            "evidence_identity": "sha256:a300041ac6d41f5ea1b7651a2e46438b03e6f1669edf556f9f883c96bb92b821"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:cfa9c65599e00534877fdb2de0aae79245918ef73caa596d7a3d32005b51657a",
+            "slot": "1:13",
+            "utility": 1,
+            "evidence_identity": "sha256:318829db36e78e3aba87cd0401b1a8216d21d6486af8a6c03d79a3f55c105421"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:cfa9c65599e00534877fdb2de0aae79245918ef73caa596d7a3d32005b51657a",
+            "slot": "0:0",
+            "utility": 0,
+            "evidence_identity": "sha256:f2a08c2a6c5665fca1f1c5c82a66794c50b62e9dde5fad89e9efd269a42f81dd"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:cfa9c65599e00534877fdb2de0aae79245918ef73caa596d7a3d32005b51657a",
+            "slot": "1:13",
+            "utility": 0,
+            "evidence_identity": "sha256:8fd8722adcea862588690d600dccfea1852c499d8ca019ef20196aa14311932e"
+          },
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:59d6f5d09e6bb682c88851ce4e77e8f8db762399e97e9bd34e48222c4bad9d9a",
+            "slot": "0:0",
+            "utility": 1,
+            "evidence_identity": "sha256:db97bd433cbd095fbf946d7558815b46f26c063fcd6c15a684329cc7ad8cc2d1"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:59d6f5d09e6bb682c88851ce4e77e8f8db762399e97e9bd34e48222c4bad9d9a",
+            "slot": "0:0",
+            "utility": 0,
+            "evidence_identity": "sha256:a9439114d4fc8210eaaf9a567beacd102ce0834fb2ad8de92e0a9bbd5a58fa5f"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:59d6f5d09e6bb682c88851ce4e77e8f8db762399e97e9bd34e48222c4bad9d9a",
+            "slot": "1:13",
+            "utility": 0,
+            "evidence_identity": "sha256:396bd1a78d0f637e45f924f23de95c54f3b54980f9166fcc879505223262c748"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:59d6f5d09e6bb682c88851ce4e77e8f8db762399e97e9bd34e48222c4bad9d9a",
+            "slot": "0:0",
+            "utility": 0,
+            "evidence_identity": "sha256:8110c974e5ed87f8eb5d91598cba5923a28880c22b613a510e73a750efe6d869"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:59d6f5d09e6bb682c88851ce4e77e8f8db762399e97e9bd34e48222c4bad9d9a",
+            "slot": "1:13",
+            "utility": 0,
+            "evidence_identity": "sha256:4244be59b3441360ef7749715c77d0d1802d77aadcfefa8349d847791c73db98"
+          }
+        ]
+      },
+      "expected": {
+        "cutoff_identity": "sha256:42d42350671bd0496ceccea761e357b3475b3e239c4c4e4e1b99dafa65daa716",
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": 0
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 2,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": 0.5
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 3,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": 1
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 4,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": null
+          }
+        ]
+      }
+    },
+    {
+      "repetitions": 2,
+      "name": "merge-family-control-and-feature-labels",
+      "versions": [
+        {
+          "id": "a",
+          "values": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              null,
+              null
+            ]
+          ]
+        }
+      ],
+      "diagnoses": [
+        {
+          "family": "f1",
+          "tasks": [
+            0,
+            1
+          ],
+          "controls": [
+            2
+          ],
+          "paths": [
+            "shared"
+          ],
+          "features": [
+            {
+              "task": 0,
+              "modes": [
+                "unicode-模式",
+                "check"
+              ],
+              "paths": [
+                "parser"
+              ]
+            }
+          ]
+        },
+        {
+          "family": "f2",
+          "tasks": [
+            0,
+            3
+          ],
+          "controls": [
+            2
+          ],
+          "paths": [
+            "workflow"
+          ],
+          "features": [
+            {
+              "task": 0,
+              "modes": [
+                "check"
+              ],
+              "paths": []
+            }
+          ]
+        }
+      ],
+      "input": {
+        "contracts": [
+          {
+            "task": {
+              "id": "task-0",
+              "stratum": "family-0",
+              "estimated_cost": 1,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-1",
+              "stratum": "family-1",
+              "estimated_cost": 2,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-2",
+              "stratum": "family-2",
+              "estimated_cost": 3,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-3",
+              "stratum": "family-3",
+              "estimated_cost": 4,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:a1255c84c4781e54a78aa5fe55cbff171efbda30de0fccd867d441e5cee28672",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          }
+        ],
+        "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+        "cutoff_identity": "sha256:42d42350671bd0496ceccea761e357b3475b3e239c4c4e4e1b99dafa65daa716",
+        "objective": false,
+        "diagnoses": [
+          {
+            "family_id": "f1",
+            "task_ids": [
+              "task-0",
+              "task-1"
+            ],
+            "successful_control_task_ids": [
+              "task-2"
+            ],
+            "modification_paths": [
+              "shared"
+            ],
+            "features": {
+              "task-0": {
+                "submodes": [
+                  "unicode-模式",
+                  "check"
+                ],
+                "modification_paths": [
+                  "parser"
+                ]
+              }
+            }
+          },
+          {
+            "family_id": "f2",
+            "task_ids": [
+              "task-0",
+              "task-3"
+            ],
+            "successful_control_task_ids": [
+              "task-2"
+            ],
+            "modification_paths": [
+              "workflow"
+            ],
+            "features": {
+              "task-0": {
+                "submodes": [
+                  "check"
+                ],
+                "modification_paths": []
+              }
+            }
+          }
+        ],
+        "observations": [
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 1,
+            "evidence_identity": "sha256:c3bf4e43555376d3a24b1bc6f3fa72823944c967a0d197ff7132ad3309217fe7"
+          },
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 1,
+            "evidence_identity": "sha256:b943e532b47b39ff11968b2377e6b8084ed10f4525d8ebb5cbc084559e24c732"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 1,
+            "evidence_identity": "sha256:5d14993091828c6cdda9ab4fae5409e373788d0f9d8d9b0740b55477a14700b8"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 1,
+            "evidence_identity": "sha256:b12b0e75980807204ed76723ffdb9c3eb30b80d5d9f40614b6a4d1d14dd2d758"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 0,
+            "evidence_identity": "sha256:5e129d7ff8b2944e931a9ac348da5c990b746d0a6fd35ee0dc712e74160f5863"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 0,
+            "evidence_identity": "sha256:20ae97401cb219518dd643046d53a1b21a529ae3c902e8888ffc6ccc11e155dd"
+          }
+        ]
+      },
+      "expected": {
+        "cutoff_identity": "sha256:42d42350671bd0496ceccea761e357b3475b3e239c4c4e4e1b99dafa65daa716",
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1,
+            "family_ids": [
+              "f1",
+              "f2"
+            ],
+            "submodes": [
+              "check",
+              "unicode-模式"
+            ],
+            "modification_paths": [
+              "parser"
+            ],
+            "historical_difficulty": 0
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 2,
+            "family_ids": [
+              "f1"
+            ],
+            "submodes": [],
+            "modification_paths": [
+              "shared"
+            ],
+            "historical_difficulty": 0
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 3,
+            "family_ids": [
+              "f1",
+              "f2"
+            ],
+            "submodes": [],
+            "modification_paths": [
+              "shared",
+              "workflow"
+            ],
+            "historical_difficulty": 1
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 4,
+            "family_ids": [
+              "f2"
+            ],
+            "submodes": [],
+            "modification_paths": [
+              "workflow"
+            ],
+            "historical_difficulty": null
+          }
+        ]
+      }
+    },
+    {
+      "repetitions": 2,
+      "name": "objective-has-no-implicit-outcome-difficulty",
+      "objective": true,
+      "versions": [
+        {
+          "id": "a",
+          "values": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              null,
+              null
+            ]
+          ]
+        },
+        {
+          "id": "b",
+          "values": [
+            [
+              1,
+              null
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              null,
+              null
+            ]
+          ]
+        }
+      ],
+      "input": {
+        "contracts": [
+          {
+            "task": {
+              "id": "task-0",
+              "stratum": "family-0",
+              "estimated_cost": 1,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-1",
+              "stratum": "family-1",
+              "estimated_cost": 2,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-2",
+              "stratum": "family-2",
+              "estimated_cost": 3,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          },
+          {
+            "task": {
+              "id": "task-3",
+              "stratum": "family-3",
+              "estimated_cost": 4,
+              "family_ids": [],
+              "submodes": [],
+              "modification_paths": [],
+              "historical_difficulty": null
+            },
+            "identity": "sha256:a1255c84c4781e54a78aa5fe55cbff171efbda30de0fccd867d441e5cee28672",
+            "slots": [
+              "0:0",
+              "1:13"
+            ],
+            "success_utility": 1
+          }
+        ],
+        "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+        "cutoff_identity": "sha256:42d42350671bd0496ceccea761e357b3475b3e239c4c4e4e1b99dafa65daa716",
+        "objective": true,
+        "diagnoses": [],
+        "observations": [
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 1,
+            "evidence_identity": "sha256:0e027e3e8463ef746a48a44a8f4d793386fd08733d9044c402b681ffbad6027a"
+          },
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 1,
+            "evidence_identity": "sha256:4b98ed95460a512aaa27cf731562305118d0c0b5f4bc71c6ed8318ae2144644a"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 1,
+            "evidence_identity": "sha256:4e7c5b1e053774550e1b1951b86fe75cbf3084daeeb044f311ae429f4aca4cfd"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 1,
+            "evidence_identity": "sha256:491938fdb537e8d40392e95124acc25af090dd1d99eecd0877a2984ac4e08faf"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "0:0",
+            "utility": 0,
+            "evidence_identity": "sha256:d572fb0191fec5e9a7224dd496d8b20641ed46e13a7d789429561d7b269ec777"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:b077f8df17a0c5b32b2f6754bd32ecce4c8bc5b9c85807481fd8b8e010f0cee2",
+            "slot": "1:13",
+            "utility": 0,
+            "evidence_identity": "sha256:ddecd6900c340e276ce04e67a026afd977fc99bfbc6d0e60ac1ec61d64b00e70"
+          },
+          {
+            "task_id": "task-0",
+            "task_identity": "sha256:5f4a4cd6b1537eccbb93b09d3308d5307167ba9c793dd92a993129b109d8aa12",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:04411beceb497f6451df64e1c2dfd935490c6b2113e761baedcca62b0719f4d7",
+            "slot": "0:0",
+            "utility": 1,
+            "evidence_identity": "sha256:815733e4d65eaae1a48cb635d27792eb84368df251295fbe4fa3c5d036b6933a"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:04411beceb497f6451df64e1c2dfd935490c6b2113e761baedcca62b0719f4d7",
+            "slot": "0:0",
+            "utility": 0,
+            "evidence_identity": "sha256:4ee9861b4843b8b47fff493cd09394e2a3076f40eedb93c74b6f3734a47a5ee0"
+          },
+          {
+            "task_id": "task-1",
+            "task_identity": "sha256:fcb59f001049ebf420f98f0a22f29ab82f7137dcff7b1d26b416bb06a5dfe718",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:04411beceb497f6451df64e1c2dfd935490c6b2113e761baedcca62b0719f4d7",
+            "slot": "1:13",
+            "utility": 0,
+            "evidence_identity": "sha256:251159d20667f373a40885027a847d839c9dabd79a4c035e1f0cd934369b42cf"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:04411beceb497f6451df64e1c2dfd935490c6b2113e761baedcca62b0719f4d7",
+            "slot": "0:0",
+            "utility": 0,
+            "evidence_identity": "sha256:644332daf9e602559b59610cd5e7cfbab314c2db76d4dc36c96bddffa5d4fe38"
+          },
+          {
+            "task_id": "task-2",
+            "task_identity": "sha256:9ad06e3f0b931ea4cf31b4b02f870c827c66c96034e386ce7c951121ef66bc56",
+            "condition_identity": "sha256:90125d99cc605560c9f67457b20071756b16e36c93060e5b0ecd65ef0c0de74a",
+            "version_identity": "sha256:04411beceb497f6451df64e1c2dfd935490c6b2113e761baedcca62b0719f4d7",
+            "slot": "1:13",
+            "utility": 0,
+            "evidence_identity": "sha256:0d5a3f194eda2c899bca42ab051b0b03c27dc67fe251e74ac99bab0ac0c6fef2"
+          }
+        ]
+      },
+      "expected": {
+        "cutoff_identity": "sha256:42d42350671bd0496ceccea761e357b3475b3e239c4c4e4e1b99dafa65daa716",
+        "tasks": [
+          {
+            "id": "task-0",
+            "stratum": "family-0",
+            "estimated_cost": 1,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": null
+          },
+          {
+            "id": "task-1",
+            "stratum": "family-1",
+            "estimated_cost": 2,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": null
+          },
+          {
+            "id": "task-2",
+            "stratum": "family-2",
+            "estimated_cost": 3,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": null
+          },
+          {
+            "id": "task-3",
+            "stratum": "family-3",
+            "estimated_cost": 4,
+            "family_ids": [],
+            "submodes": [],
+            "modification_paths": [],
+            "historical_difficulty": null
+          }
+        ]
+      }
+    }
+  ]
+}
