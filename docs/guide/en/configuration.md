@@ -23,13 +23,19 @@ editing a file cannot silently change a running experiment.
 | Field | Current meaning |
 | --- | --- |
 | `target.adapter` | `dsh` or `pi` |
-| `algorithm` | `gepa`, `random-search` or a Python entrypoint; the SDK also accepts configured policy instances |
+| `algorithm` | `gepa`, `random-search`, a Python entrypoint, or `{name: gepa, options: {promotion_widths: [2, 1]}}`; the SDK also accepts configured policy instances |
 | `objective.metric` | `{metric: pass_rate}` is the default shorthand; advanced objectives use `objective.terms` and `objective.constraints` |
 | `validation.mode` | `holdout` requires independent tasks; explicit `research` labels shared-set research |
 | `budget.rounds` | Defaults to 1 |
 | `budget.max_candidates` | Candidate limit for the entire run, default 2 |
 | `budget.repetitions` | Repetitions per task, default 1 |
 | `budget.max_evaluations` | Physical attempt limit for the entire run, default 40, including baseline, candidates, final validation and failure repair |
+
+GEPA's default `promotion_widths: [2, 1]` limits bridge and global candidates
+within each parent batch. It does not set the generation budget or the number
+of parent batches. The [4 → 2 → 1 example](example-algorithm.md)
+sets `max_candidates: 4` explicitly; the project default remains 2. Algorithm
+options are frozen at admission and preserved on resume.
 
 Submissions with unknown outcomes keep their reservations. Resume keeps the
 same ledger. The project API currently has no hard dollar limit; missing

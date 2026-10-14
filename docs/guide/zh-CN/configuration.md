@@ -19,13 +19,15 @@ budget: {rounds: 1, max_evaluations: 40}
 | 字段 | 当前含义 |
 | --- | --- |
 | `target.adapter` | `dsh` 或 `pi` |
-| `algorithm` | `gepa`、`random-search` 或 Python entrypoint；SDK 可传可替换策略实例 |
+| `algorithm` | `gepa`、`random-search`、Python entrypoint，或 `{name: gepa, options: {promotion_widths: [2, 1]}}`；SDK 可传可替换策略实例 |
 | `objective.metric` | `{metric: pass_rate}` 为默认简写；高级目标使用 `objective.terms` 和 `objective.constraints` |
 | `validation.mode` | `holdout` 要求独立任务；显式 `research` 标记同集研究 |
 | `budget.rounds` | 默认 1 |
 | `budget.max_candidates` | 整个 run 的候选上限，默认 2 |
 | `budget.repetitions` | 每题重复数，默认 1 |
 | `budget.max_evaluations` | 整个 run 的物理 attempt 上限，默认 40，包含 baseline、候选、最终验证和失败修补 |
+
+GEPA 默认的 `promotion_widths: [2, 1]` 限制每个父代批次进入 bridge、global 的候选数，不设置生成预算或父代批数。[4 → 2 → 1 示例](example-algorithm.md)显式设置 `max_candidates: 4`；项目默认生成上限仍为 2。算法选项在 admission 时冻结，恢复沿用原值。
 
 未知是否已执行的请求占用预留；resume 沿用原账本。当前项目入口没有美元硬上限，缺失用量不能当成零。报告只在所有可能已执行的操作都提供同一字段时合计该字段；任何缺失、null 或仍未返回的提交使总值保持 null。尚未提交的预约不计入已消耗用量，运行层完全复用当前 run 证据而未调用 provider 时明确记录新增用量为零。费用估算和实际账单分别保存。决策步数上限按整个 run 计数，resume 不重置。
 
