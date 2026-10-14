@@ -170,7 +170,9 @@ and durably implement submit/inspect/cancel. Naming an executable alone is not
 a working provider. `passEnv` lists variable names; values do not enter project locks.
 
 A Target may instead use a `kind: "hitch"` profile with `executable`, `root`,
-`harnessRef`, `model`, `baseImage`, `passEnv` and `timeoutMs`. New Target profiles default to DSH `0.1.5-rc.3` or Pi `0.84.1`; existing profiles retain their exact revision. The current DSH release pins its HMR dependency upstream, without a Gear-only override. DSH requires an
+`harnessRef`, `model`, `baseImage`, `passEnv`, `timeoutMs` and optional `maxConcurrent`.
+`maxConcurrent` is a positive integer and defaults to `1`; set it to `4` (or use `gear profile create … --max-concurrent 4`) to request up to four concurrent trials per evaluation. Hitch may admit fewer trials when CPU, memory or container capacity is insufficient. Concurrency is part of the frozen provider identity and verified execution conditions, so changing it requires a new run and does not permit reuse of evidence under the old identity.
+New Target profiles default to DSH `0.1.5-rc.3` or Pi `0.84.1`; existing profiles retain their exact revision. The current DSH release pins its HMR dependency upstream, without a Gear-only override. DSH requires an
 exact `deepseek@version:...` or commit; Pi uses `pi@version:...` or commit.
 The image must use an OCI sha256 digest. Gear checks the resolved harness source
 identity, capabilities and daemon status before execution. Fresh worker observation v2
