@@ -3,7 +3,8 @@ import { configuredCancellation } from '../../src/application/cancellation.js'
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import { afterEach, expect, it } from 'vitest'
+import { afterEach, expect, it, vi } from 'vitest'
+import * as hitchTransport from '../../src/adapters/hitch/transport.js'
 import { datasetDigest } from '../../src/adapters/hitch/dataset.js'
 import { canonicalDigest } from '../../src/domain/canonical.js'
 import { HitchOperationProvider } from '../../src/adapters/hitch/provider.js'
@@ -379,7 +380,7 @@ it('projects independent assertions from the original trial without inferring th
   expect(decodeHitchTrials(result, evaluate, ['a'], 0).evidence[0]!.assertions?.[0]?.status).toBe('missing')
 })
 
-async function controlledProvider(initial: Record<string, unknown> = {}) {
+async function controlledProvider(initial: Record<string, unknown> = {}, options: { maxConcurrent?: number; setupTimeoutMs?: number; preparationTimeoutMs?: number } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'gear-ordered-hitch-'))
   roots.push(root)
   const executable = join(root, 'hitch.mjs'),
@@ -403,6 +404,7 @@ async function controlledProvider(initial: Record<string, unknown> = {}) {
       baseImage: 'python@sha256:' + '1'.repeat(64),
       passEnv: [],
       timeoutMs: 3000,
+      ...options,
     },
     {
       directory: join(root, 'submissions'),
@@ -433,6 +435,23 @@ const repeatedRequest = (): OperationRequest => ({
   ],
 })
 
+it('submits configured concurrency and setup budgets and allows preparation during admission', async () => {
+  const calls = vi.spyOn(hitchTransport, 'hitchJson')
+  try {
+    const settings = { maxConcurrent: 16, setupTimeoutMs: 2000, preparationTimeoutMs: 123456 }
+    const f = await controlledProvider({}, settings)
+    await f.provider.submit(request, f.signal)
+    expect((await f.state()).job.request).toMatchObject({ max_concurrent: 16, setup_timeout_ms: 2000 })
+    const submission = calls.mock.calls.find((call) => call[2][0] === 'eval' && call[2][1] === 'submit')
+    const binding = calls.mock.calls.find((call) => call[2][0] === 'eval' && call[2][1] === 'bind')
+    expect(submission?.[4]).toBe(settings.preparationTimeoutMs)
+    expect(binding?.[4]).toBe(settings.preparationTimeoutMs)
+    expect(f.provider.profile).toMatchObject(settings)
+  } finally {
+    calls.mockRestore()
+  }
+})
+
 it.each([
   { path: ['plan', 'controller_runtime', 'runtime_id'], value: canonicalDigest('another-controller') },
   { path: ['execution_plan', 'provider'], value: 'another-provider' },
@@ -452,6 +471,7 @@ it.each([
   { path: ['request', 'max_concurrent'], value: 2 },
   { path: ['request', 'infrastructure_retries'], value: 1 },
   { path: ['request', 'timeout_ms'], value: 9999 },
+  { path: ['request', 'setup_timeout_ms'], value: 9999 },
   { path: ['request', 'harness_ref'], value: 'pi@version:0.84.1' },
   { path: ['request'], value: null },
   { path: ['resolution', 'identity'], value: canonicalDigest('different-runtime') },
@@ -537,7 +557,7 @@ import {writeFile,access} from 'node:fs/promises';import {join} from 'node:path'
 import {runOrderedHitchFixture} from ${JSON.stringify(new URL('../fixtures/ordered-hitch.mjs', import.meta.url).href)};
 import {trajectoryFixture} from ${JSON.stringify(new URL('../fixtures/trajectory-hitch.mjs', import.meta.url).href)};
 const args=process.argv.slice(2);
-if(args.includes('capabilities')) process.stdout.write(JSON.stringify({schema_version:'1',ordered_eval_control:'2',controller_runtime_observation:'2',local_execution_observation:'2',evaluation_environment_binding:'3',evaluation_artifact_pins:'1',trajectory_events_page:'1'}));
+if(args.includes('capabilities')) process.stdout.write(JSON.stringify({schema_version:'1',ordered_eval_control:'2',controller_runtime_observation:'2',local_execution_observation:'2',evaluation_environment_binding:'3',evaluation_preparation:'1',evaluation_artifact_pins:'1',trajectory_events_page:'1'}));
 else if(args.includes('trajectory')) {
  const file=join(args[1],args[args.indexOf('events')+1]+'.json');
  try {await access(file)} catch {await writeFile(file,JSON.stringify([{seq:0,type:'assistant/message',data:'seed execution'}]))}

@@ -1,6 +1,7 @@
 import { GearError } from '../../domain/errors.js'
 import { hitchPreparedArtifacts, type HitchArtifactPin } from './artifacts.js'
 import { canonicalDigest } from '../../domain/canonical.js'
+import { executedHarnessReference } from './reference.js'
 
 export interface HitchExecutionConditions {
   evalId: string
@@ -12,6 +13,8 @@ export interface HitchExecutionConditions {
   revisionIdentity: string
   model: string
   timeoutMs: number
+  setupTimeoutMs: number
+  maxConcurrent: number
   agentArgs: string[]
   passEnv: string[]
   environmentBinding: string
@@ -65,9 +68,10 @@ export function assertHitchExecutionConditions(
     !expected.artifactPins.length ||
     canonicalDigest(request.artifact_pins) !== canonicalDigest(expected.artifactPins) ||
     request.attempts !== 1 ||
-    request.max_concurrent !== 1 ||
+    request.max_concurrent !== expected.maxConcurrent ||
     request.infrastructure_retries !== 0 ||
     request.timeout_ms !== expected.timeoutMs ||
+    request.setup_timeout_ms !== expected.setupTimeoutMs ||
     !strings(request.agent_args, expected.agentArgs) ||
     !strings(request.pass_env, expected.passEnv, true) ||
     'local_inference' in request ||
@@ -78,7 +82,7 @@ export function assertHitchExecutionConditions(
     candidate?.revision_identity !== expected.revisionIdentity ||
     candidate.model !== expected.model ||
     candidate.harness_id !== expected.harnessRef.split('@')[0] ||
-    candidate.harness_ref !== expected.harnessRef ||
+    candidate.harness_ref !== executedHarnessReference(expected.harnessRef) ||
     candidate.requested_harness_ref !== expected.harnessRef ||
     'inference_id' in candidate ||
     'model_node' in candidate ||
