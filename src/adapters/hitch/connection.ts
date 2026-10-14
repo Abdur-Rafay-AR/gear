@@ -23,7 +23,7 @@ export async function inspectHitchConnection(
   )
     throw new GearError(
       'unlocked-target-runtime',
-      'Hitch profiles require the matching exact harness version/commit and an OCI image digest',
+      'Hitch profiles require the matching exact harness version or 40-character SHA-1 commit and an OCI image digest',
     )
   const runtime = await hitchJson(
     profile.executable,

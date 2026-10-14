@@ -2,7 +2,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { resolve } from 'node:path'
 
 const exactVersion = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u
-const fullCommit = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u
+// Hitch's Git cache and artifact builder initialize SHA-1 repositories.
+// Admit SHA-256 only when resolution, transport and building all support it.
+const fullCommit = /^[a-f0-9]{40}$/u
 
 /** Hitch retains the requested source separately and records the executed OID. */
 export function executedHarnessReference(value: string): string {

@@ -128,7 +128,7 @@ process 必须报告真实实现身份和能力，并持久实现 submit/inspect
 
 Target 也可使用 `kind: "hitch"` profile，字段为 `executable`、`root`、`harnessRef`、`model`、`baseImage`、`passEnv`、`timeoutMs`，以及可选的 `maxConcurrent`、`setupTimeoutMs`、`preparationTimeoutMs`。新建 Target profile 默认使用 DSH `0.1.5-rc.3` 或 Pi `0.84.1`；既有 profile 保留其精确版本。当前 DSH 版本由上游固定 HMR 依赖，无需 Gear 专用覆盖。DSH 的 harnessRef 必须是确切 `deepseek@version:...` 或 commit，Pi 使用 `pi@version:...` 或 commit；baseImage 固定 OCI sha256。运行前核对解析后的 harness 源码身份、能力和 daemon 状态，并用 fresh worker observation v2 绑定 Hitch controller、Harbor 可执行文件和 Docker 引擎的观测身份。评估明确提交到 `local-docker`；新提交前和保存回执前重新观测，变化时拒绝继续接纳。回包还必须匹配 controller runtime 和执行 provider。接纳回包及补取原材料时，还核对实际请求中的模型、载体参数、凭据变量名范围、重复/并发/重试次数和超时；不一致的结果不会接纳。计划、结果及 work item 的 prepared artifact、入口/目录摘要、任务映射和平台/Node 合同也必须一致；同一评估的重复试验不能使用不同依赖。原材料补取保留原始 artifact 证据。
 
-自定义运行时仓库可使用 `deepseek@git+file:///absolute/repository#<full-commit>` 或对应的 `pi@` 引用。Git 必须指定完整的小写 40 或 64 位提交号，拒绝分支和短哈希；file URL 必须规范化，空格需百分号编码。Hitch 导出并构建固定提交及其锁定依赖，因此可加载自定义 provider 插件，无需修改 Gear 或依赖可变的已安装运行时。
+自定义运行时仓库可使用 `deepseek@git+file:///absolute/repository#<full-commit>` 或对应的 `pi@` 引用。Git 必须指定完整的小写 40 位 SHA-1 提交号；profile 校验会拒绝分支、短哈希及 64 位 SHA-256 提交号。Hitch 当前的 Git 缓存和制品构建器仅支持 SHA-1 仓库。file URL 必须规范化，空格需百分号编码。Hitch 导出并构建固定提交及其锁定依赖，因此可加载自定义 provider 插件，无需修改 Gear 或依赖可变的已安装运行时。
 
 运行计划连接 provider 时，Gear 通过该 Hitch 安装的公开 SDK 编译任务平台声明并准备对应的 Harbor artifact。准备前后核对 SDK 与 daemon 观测到的 controller 和 Docker/Harbor 环境；实际 artifact、入口/目录摘要与逐任务平台绑定进入 provider/evaluation identity，供跨 run baseline 比较。新物理提交前再次校验缓存文件，回执必须匹配事先冻结的绑定。首次准备可能下载包和运行 Docker 构建器，单次准备/复核由 profile 的 `preparationTimeoutMs` 控制，默认 30 分钟；不创建评估作业或模型请求。`doctor` 保持只读，不执行 artifact 构建。
 

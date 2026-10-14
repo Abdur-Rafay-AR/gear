@@ -82,7 +82,7 @@ export function validateProfile(input: unknown): Profile {
       )
         throw new GearError(
           'invalid-profile',
-          'Hitch requires an absolute root, pinned harness revision and OCI image digest',
+          'Hitch requires an absolute root, pinned harness revision (exact version or 40-character SHA-1 commit) and OCI image digest',
         )
     } else if (
       !Array.isArray(value.command) ||
