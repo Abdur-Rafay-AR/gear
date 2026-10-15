@@ -19,13 +19,15 @@ budget: {rounds: 1, max_evaluations: 40}
 | 字段 | 当前含义 |
 | --- | --- |
 | `target.adapter` | `dsh` 或 `pi` |
-| `algorithm` | `gepa`、`random-search` 或 Python entrypoint；SDK 可传可替换策略实例 |
+| `algorithm` | `gepa`、`random-search`、Python entrypoint，或 `{name: gepa, options: {promotion_widths: [2, 1]}}`；SDK 可传可替换策略实例 |
 | `objective.metric` | `{metric: pass_rate}` 为默认简写；高级目标使用 `objective.terms` 和 `objective.constraints` |
 | `validation.mode` | `holdout` 要求独立任务；显式 `research` 标记同集研究 |
 | `budget.rounds` | 默认 1 |
 | `budget.max_candidates` | 整个 run 的候选上限，默认 2 |
 | `budget.repetitions` | 每题重复数，默认 1 |
 | `budget.max_evaluations` | 整个 run 的物理 attempt 上限，默认 40，包含 baseline、候选、最终验证和失败修补 |
+
+GEPA 默认的 `promotion_widths: [2, 1]` 限制每个父代批次进入 bridge、global 的候选数，不设置生成预算或父代批数。[4 → 2 → 1 示例](example-algorithm.md)显式设置 `max_candidates: 4`；项目默认生成上限仍为 2。算法选项在 admission 时冻结，恢复沿用原值。
 
 未知是否已执行的请求占用预留；resume 沿用原账本。当前项目入口没有美元硬上限，缺失用量不能当成零。报告只在所有可能已执行的操作都提供同一字段时合计该字段；任何缺失、null 或仍未返回的提交使总值保持 null。尚未提交的预约不计入已消耗用量，运行层完全复用当前 run 证据而未调用 provider 时明确记录新增用量为零。费用估算和实际账单分别保存。决策步数上限按整个 run 计数，resume 不重置。
 
@@ -134,7 +136,7 @@ Target 也可使用 `kind: "hitch"` profile，字段为 `executable`、`root`、
 
 还要求 Hitch 提供 `evaluation_environment_binding: "3"` 与 `evaluation_preparation: "1"` 能力；现有 0.2.16 发布版本本身不保证支持。Gear 调用 daemon 的 `eval bind`，将实际驻留环境、模型、变量名、冻结 helper 输出、Harbor Python 内容及受支持的环境引用文件的私有 HMAC 绑定加入运行身份；新准入与 Harbor 启动前由 Hitch 复核，回执必须携带同一绑定。Python 版本不变但依赖文件变化也会使旧绑定失效；正常生成的字节码缓存不会改变身份。标准证书和凭据配置文件自动检查；自定义主机文件变量在 daemon 环境中通过 `HITCH_EVALUATION_FILE_ENV_JSON='["MY_PROVIDER_CONFIG"]'` 声明，使用绝对文件路径。凭据不进入 Gear 项目锁或公开回执，失效时需要准备新运行。当前配套实现与文件范围见[环境文件绑定说明](../../testing/hitch-environment-files.zh-CN.md)。
 
-新建 Hitch profile 显式保存 `maxConcurrent: 4`，与 Hitch 默认值一致；没有该字段的既有 profile 保留并发 1。创建时用 `--max-concurrent N` 请求更高的任务并发，实际接纳仍受 daemon 资源容量约束。接纳结果前会核对实际执行并发与冻结配置一致。
+新建 Hitch profile 显式保存 `maxConcurrent: 4`，与 Hitch 默认值一致；没有该字段的既有 profile 保留并发 1。创建时用 `--max-concurrent N` 请求更高的任务并发，实际接纳仍受 daemon 资源容量约束。接纳结果前会核对实际执行并发与冻结配置一致。并发属于冻结的 provider 身份，修改后须新建运行，不能复用旧身份下的评测证据。
 
 `--preparation-timeout-ms` 同时控制 artifact 准备/复核、环境绑定及提交准入（其中也会校验 Python 运行时）。`--setup-timeout-ms` 控制逐任务环境准备预算，默认 1800000 毫秒；它与任务 `timeoutMs` 之和须符合 Hitch 的 24 小时限制，完整 24 小时任务应显式设置 setup 为 0。其余时间配置使用正整数毫秒，准备期限须在 Node 定时器范围内。等待整组评测时为每个任务保留 setup 与执行预算，兼容实际 daemon 容量低于请求并发的情况。取消与响应丢失后的恢复保留原评估身份。
 

@@ -12,6 +12,7 @@ import { DshHarnessAdapter } from '../../src/adapters/dsh/harness.js'
 import { decodeHitchTrials } from '../../src/adapters/hitch/evidence.js'
 import type { OperationRequest } from '../../src/ports/operations.js'
 import { resolveProjectObjective } from '../../src/application/objective.js'
+import { validateProfile } from '../../src/application/profile-store.js'
 
 const roots: string[] = []
 afterEach(async () => {
@@ -450,6 +451,32 @@ it('submits configured concurrency and setup budgets and allows preparation duri
   } finally {
     calls.mockRestore()
   }
+})
+
+it.each([undefined, 4])('submits and accepts the configured Hitch concurrency %s', async (maxConcurrent) => {
+  const f = await controlledProvider({}, maxConcurrent === undefined ? {} : { maxConcurrent })
+  expect(validateProfile(f.provider.profile)).toEqual(f.provider.profile)
+  const receipt = await f.provider.submit(request, f.signal)
+  expect(receipt.physicalAttempts).toBe(1)
+  expect((await f.state()).job.request.max_concurrent).toBe(maxConcurrent ?? 1)
+  expect(await f.provider.inspect(request, f.signal)).toMatchObject({ state: 'complete' })
+})
+
+it('binds concurrency to provider identity and rejects a downgraded execution', async () => {
+  const f = await controlledProvider({ inspectionMutations: [{ path: ['request', 'max_concurrent'], value: 1 }] }, { maxConcurrent: 4 })
+  const sequential = await HitchOperationProvider.connect({ ...f.provider.profile, maxConcurrent: 1 }, f.provider.context)
+  expect(sequential.identity).not.toBe(f.provider.identity)
+  await expect(f.provider.submit(request, f.signal)).rejects.toMatchObject({ code: 'hitch-result-identity' })
+  await expect(readFile(join(f.provider.context.directory, request.operationId.slice(7), 'receipt.json')))
+    .rejects.toMatchObject({ code: 'ENOENT' })
+})
+
+it.each([0, -1, 1.5, '4', null, true, Number.MAX_SAFE_INTEGER + 1])('rejects invalid Hitch profile concurrency %s', (maxConcurrent) => {
+  expect(() => validateProfile({
+    kind: 'hitch', executable: '/bin/hitch', root: '/tmp/hitch',
+    harnessRef: 'deepseek@version:0.1.5-rc.3', model: 'fixture',
+    baseImage: 'python@sha256:' + '1'.repeat(64), passEnv: [], timeoutMs: 3000, maxConcurrent,
+  })).toThrow(expect.objectContaining({ code: 'invalid-profile' }))
 })
 
 it.each([
