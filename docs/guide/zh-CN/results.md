@@ -1,5 +1,7 @@
 # 阅读报告
 
+Hitch 的终态失败会在操作结果中保留上游错误，私有回执 provenance 保留未经改写的 provider 原始结果。已认证评分（包括零分）继续有效；终态结果缺失的请求槽位记录为 `score: null` 和 `environment_failed`。由于证据收集失败前可能已经执行，缺失槽位的尝试用量按预留上限保守计费。旧版异常结果缺少 dataset/candidate/artifact 字段时，可使用匹配的冻结计划校验身份；已报告字段矛盾或成功结果不完整时仍拒绝接纳。这不会修改旧账本，也不会认证缺少镜像证据的试验。
+
 Hitch 声明 `verifier_evidence: "1"` 时，Gear 在评测回执中冻结独立 verifier 观测，核对 run、eval、trial、attempt、任务 reward 和结构化过程组件。Python 负责组件权重/计数一致性、失败代码筛选与摘要。`score` 仍表示任务得分；过程指标只有通过 `metrics[].source.path`（例如 `verifier.process.score`）显式声明并被 objective/保护规则引用时才参与决策。失败代码支持调查假设，不代表已确定根因。
 
 报告的 `verifier` 汇总区分 available、missing、invalid、unsupported、unavailable 与 not_captured。过程指标按名称分别汇总；只有当前范围全部任务/重复槽位都有有效过程观测时，`value` 才返回按任务权重计算的分数。`observed_trial_mean` 只描述已有试验，不能用来代替全范围结果。有效任务零分不会因次级材料缺失而改为执行失败。
