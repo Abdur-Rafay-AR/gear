@@ -35,9 +35,25 @@ def summary_body(record: dict[str, Any]) -> dict[str, Any]:
 
 
 def verify_record(record: dict[str, Any], run_id: str | None = None) -> None:
+    if record["version"] == 2:
+        # Preserve the historical v2 shape; stricter metadata requirements belong to v3.
+        checked_digest(record)
+        source = record.get("source")
+        if (
+            record["scope"]["partition"] != "seed"
+            or record["candidate"]["parent_id"] != record["parent"]["id"]
+            or (
+                run_id is not None
+                and isinstance(source, dict)
+                and "run_id" in source
+                and source["run_id"] != run_id
+            )
+        ):
+            raise ValueError("experience seed scope or lineage mismatch")
+        return
     scope = record["scope"]
     if (
-        record["version"] not in (2, 3)
+        record["version"] != 3
         or scope["partition"] != "seed"
         or not isinstance(scope["task_ids"], list)
         or not scope["task_ids"]
@@ -51,6 +67,7 @@ def verify_record(record: dict[str, Any], run_id: str | None = None) -> None:
         or not valid_digest(record["candidate"]["digest"])
         or not valid_digest(record["parent"]["digest"])
         or not isinstance(record["source"], dict)
+        or not isinstance(record["source"].get("run_id"), str)
         or (run_id is not None and record["source"].get("run_id") != run_id)
         or not isinstance(record["proposal"]["rationale"], str)
         or not isinstance(record["proposal"]["hypothesis"], str)
@@ -62,14 +79,7 @@ def verify_record(record: dict[str, Any], run_id: str | None = None) -> None:
         or not isinstance(record["classification"], dict)
     ):
         raise ValueError("experience seed scope or lineage mismatch")
-    if record["version"] == 2:
-        checked_digest(record)
-        if any(
-            not isinstance(record[key], list)
-            for key in ("task_results", "verifier_trials", "trajectory_refs")
-        ):
-            raise ValueError("invalid experience record arrays")
-    elif (
+    if (
         not valid_digest(record["digest"])
         or not valid_digest(record["descriptor_digest"])
         or digest(summary_body(record)) != record["summary_digest"]
@@ -82,9 +92,14 @@ def verify_snapshot(snapshot: dict[str, Any]) -> None:
     records = snapshot["records"]
     if (
         snapshot["version"] not in (2, 3)
-        or not isinstance(snapshot["run_id"], str)
-        or not valid_digest(snapshot["source_archive_digest"])
-        or not isinstance(snapshot["implementation_identity"], str)
+        or (
+            snapshot["version"] == 3
+            and (
+                not isinstance(snapshot.get("run_id"), str)
+                or not valid_digest(snapshot.get("source_archive_digest"))
+                or not isinstance(snapshot.get("implementation_identity"), str)
+            )
+        )
         or not isinstance(records, list)
         or len(records) > 4096
         or len({record["candidate"]["id"] for record in records}) != len(records)
@@ -93,7 +108,7 @@ def verify_snapshot(snapshot: dict[str, Any]) -> None:
     for record in records:
         if record["version"] != snapshot["version"]:
             raise ValueError("experience record encoding mismatch")
-        verify_record(record, snapshot["run_id"])
+        verify_record(record, snapshot.get("run_id"))
 
 
 def evidence_owner(record: dict[str, Any]) -> dict[str, Any]:

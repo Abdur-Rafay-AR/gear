@@ -28,7 +28,21 @@ export function summaryBody(record: ExperienceIndexEntry) {
   return body
 }
 export function verifyRecord(record: ExperienceRecord | ExperienceIndexEntry, runId?: string): void {
-  if (![2, 3].includes(record.version)) fail()
+  if (record.version === 2) {
+    // Historical v2 validation did not require source/proposal/detail fields that v3 indexes need.
+    checkedDigest(record)
+    if (
+      record.scope?.partition !== 'seed' ||
+      record.candidate?.parent_id !== record.parent?.id ||
+      (runId !== undefined &&
+        record.source &&
+        Object.hasOwn(record.source, 'run_id') &&
+        record.source.run_id !== runId)
+    )
+      fail()
+    return
+  }
+  if (record.version !== 3) fail()
   const scope = record.scope
   if (
     !scope ||
@@ -47,6 +61,7 @@ export function verifyRecord(record: ExperienceRecord | ExperienceIndexEntry, ru
     !validExperienceDigest(record.candidate.digest) ||
     !validExperienceDigest(record.parent.digest) ||
     !record.source ||
+    typeof record.source.run_id !== 'string' ||
     (runId !== undefined && record.source.run_id !== runId) ||
     !record.proposal ||
     typeof record.proposal.rationale !== 'string' ||
@@ -61,10 +76,7 @@ export function verifyRecord(record: ExperienceRecord | ExperienceIndexEntry, ru
     !experienceObject(record.classification)
   )
     fail()
-  if (record.version === 2) {
-    checkedDigest(record)
-    if (![record.task_results, record.verifier_trials, record.trajectory_refs].every(Array.isArray)) fail()
-  } else if (
+  if (
     !validExperienceDigest(record.digest) ||
     !validExperienceDigest(record.descriptor_digest) ||
     record.summary_digest !== canonicalDigest(summaryBody(record))
@@ -75,9 +87,10 @@ export function verifyExperience(snapshot: ExperienceSnapshot, digest: string): 
   checkedDigest(snapshot, digest)
   if (
     ![2, 3].includes(snapshot.version) ||
-    typeof snapshot.run_id !== 'string' ||
-    !validExperienceDigest(snapshot.source_archive_digest) ||
-    typeof snapshot.implementation_identity !== 'string' ||
+    (snapshot.version === 3 &&
+      (typeof snapshot.run_id !== 'string' ||
+        !validExperienceDigest(snapshot.source_archive_digest) ||
+        typeof snapshot.implementation_identity !== 'string')) ||
     !Array.isArray(snapshot.records) ||
     snapshot.records.length > 4096 ||
     new Set(snapshot.records.map((record) => record.candidate?.id)).size !== snapshot.records.length

@@ -151,6 +151,64 @@ it('keeps legacy v2 record refs, pages and cursor bindings without migrating the
   })
 })
 
+it('reads historical v2 records with omitted optional metadata while enforcing explicit and v3 run ownership', async () => {
+  const { store, application, journal, entries } = await fixture()
+  const { digest: _recordDigest, verifier_trials: _verifier, ...historicalBody } = logical('historical')
+  // Historical v2 accepted these empty mappings and records predating the verifier view.
+  const recordBody = { ...historicalBody, source: {}, proposal: {} }
+  const record = { ...recordBody, digest: canonicalDigest(recordBody) }
+  const body = {
+    version: 2 as const,
+    run_id: 'run',
+    source_archive_digest: canonicalDigest('historical'),
+    implementation_identity: builtinPolicyImplementationDigest,
+    records: [record],
+  }
+  const snapshot = { ...body, digest: canonicalDigest(body) },
+    path = snapshotPath(store, snapshot)
+  await writeFile(path, JSON.stringify(snapshot))
+  const original = await readFile(path)
+  expect(await store.read(snapshot.digest)).toEqual(snapshot)
+  expect(await application.access(journal, { snapshot_digest: snapshot.digest })).toMatchObject({
+    total: 1,
+    items: [{ card: { ref: ref(record), rationale: '', hypothesis: '' } }],
+  })
+  const first = await gateway(path, { action: 'read', ref: ref(record), view: 'task-results', limit: 1 })
+  expect(first).toMatchObject({ code: 0, value: { total: 2, items: [{ task_id: 'seed-a' }] } })
+  expect(
+    await gateway(path, {
+      action: 'read',
+      ref: ref(record),
+      view: 'task-results',
+      limit: 1,
+      cursor: first.value.next_cursor,
+    }),
+  ).toMatchObject({ code: 0, value: { items: [{ task_id: 'seed-b' }] } })
+  await store.save(await store.read(snapshot.digest))
+  expect(await readFile(path)).toEqual(original)
+  for (const run_id of ['another-run', null]) {
+    const contradictoryBody = { ...recordBody, source: { run_id } }
+    const contradictory = { ...contradictoryBody, digest: canonicalDigest(contradictoryBody) }
+    const invalidBody = { ...body, records: [contradictory] },
+      invalid = { ...invalidBody, digest: canonicalDigest(invalidBody) }
+    const invalidPath = snapshotPath(store, invalid)
+    await writeFile(invalidPath, JSON.stringify(invalid))
+    await expect(store.read(invalid.digest)).rejects.toMatchObject({ code: 'experience-identity-mismatch' })
+    expect(await gateway(invalidPath, { action: 'query' })).toMatchObject({ code: 1 })
+  }
+  const indexedEntry = structuredClone(entries[0]!)
+  delete indexedEntry.source.run_id
+  const { summary_digest: _summary, descriptor_digest: _descriptor, ...summary } = indexedEntry
+  indexedEntry.summary_digest = canonicalDigest(summary)
+  const invalidIndex = indexed([indexedEntry], 'missing-index-owner'),
+    invalidPath = snapshotPath(store, invalidIndex)
+  await writeFile(invalidPath, JSON.stringify(invalidIndex))
+  await expect(store.read(invalidIndex.digest)).rejects.toMatchObject({
+    code: 'experience-identity-mismatch',
+  })
+  expect(await gateway(invalidPath, { action: 'query' })).toMatchObject({ code: 1 })
+})
+
 it('publishes dependencies before the index, retries idempotently and rejects immutable replacement', async () => {
   const { store, snapshot, entries } = await fixture()
   const descriptor = await store.descriptor(snapshot, entries[0]!),
