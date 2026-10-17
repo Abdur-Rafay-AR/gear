@@ -10,7 +10,11 @@ import type { CodexJob } from './contracts.js'
 import { trajectoryGateway } from './trajectory-gateway.js'
 
 /** Copy only verified, sanitized bytes into the operation sandbox. No private directory mount. */
-export async function stageExperience(job: CodexJob, root: string) {
+export async function stageExperience(
+  job: CodexJob,
+  root: string,
+  registerDispose?: (dispose: () => Promise<void>) => void,
+) {
   const { context, request } = job.input
   const empty = {
     readPaths: [] as string[],
@@ -57,6 +61,7 @@ export async function stageExperience(job: CodexJob, root: string) {
         snapshot,
         context.artifactReader,
         python.executable,
+        registerDispose,
       )
     : undefined
   return {
