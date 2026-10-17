@@ -12,7 +12,22 @@ Seed edit experiences use a separate immutable snapshot. `gear experience query 
 
 Python exposes `experience_query` / `aexperience_query` and `experience_read` / `aexperience_read`; pass the response's `snapshot_digest` as `snapshot`. Core freezes the snapshot and at most three cards before each Meta diagnosis/generation. Resume reuses that exact input. Native Codex stages the sanitized snapshot and frozen Python query/read code inside its sandbox. It never mounts private journals or the research archive. Snapshots exclude held-out data, gates and raw receipts/provenance; provider artifact locators become digests. Python owns classification, retrieval and automatic card selection.
 
-Snapshots are limited to 4096 records and 12 MiB, cards to 2048 bytes, and query/read pages to 64 KiB. Diff chunks preserve UTF-8 characters. Bounds fail explicitly; the raw research archive retains the original facts. Export includes `experience-snapshots.json` with the final snapshot and every snapshot reserved by Meta. The `trajectory` view lists the historical seed sources authorized by that record. Missing capture is `not_captured`; failed capture is `unavailable`. Neither proves that no trajectory exists.
+New snapshots use a version 3 index with immutable record descriptors and content-addressed detail chunks. Query and automatic cards read only index summaries; a detail read opens the selected record, view and page. Shared parent verifier trials are stored once per full observation and run/evaluation/task identity, and unchanged objects are reused across snapshots. Candidate/parent comparisons, scores, card selection and detailed values retain their logical meaning. Capture processes one candidate at a time; it does not assemble all detailed records into one JSON reply.
+
+| Boundary | Limit |
+| --- | --- |
+| Snapshot index / records | 4 MiB / 4096 |
+| Record descriptor | 2 MiB |
+| Detail object / individual read item | 256 KiB / 61 KiB |
+| Unique files in one authorized snapshot closure | 100,000, including its index |
+| Card / automatic context | 2048 bytes / 12 KiB |
+| Query or read reply | 64 KiB |
+
+There is no aggregate 12 MiB limit on version 3 evidence. Each item must also fit its page together with the view summary; an oversized indivisible item fails explicitly. Large arrays use chunks, and diff parts preserve UTF-8 characters. Hashes, schema, ownership and admitted seed scope are validated. File sizes are checked before bounded reads; symbolic links, hardlinks and special files are rejected. Dependencies are published durably before the immutable index becomes visible. Interrupted publication can be retried without changing committed observations.
+
+Native Codex receives exactly the authorized index/object closure and frozen Python sources. Staging and export verify every dependency; ordinary queries do not open unrelated detail files. Export's version 3 `experience-snapshots.json` lists `latest_snapshot_digest` and `snapshot_digests`; `experience/<digest>.json` and `experience/objects/<digest>.json` contain the final snapshot, all Meta-reserved snapshots and their shared object union. It does not reconstruct an aggregate detailed JSON snapshot. The `trajectory` view still lists only sources authorized by the selected record. Missing capture is `not_captured`; failed capture is `unavailable`.
+
+Historical version 2 monolithic files retain their 12 MiB file bound, original record digests, `experience:` refs and snapshot-bound cursors; reads do not migrate or rewrite them. New version 3 snapshot digests identify the index, while record refs still identify the complete logical version 2 record. A cursor remains bound to its original snapshot, record and view (or query). Updating the frozen Python sources changes implementation identities: this format update does not automatically resume an old frozen run. Use its matching runtime; no journal or historical evidence is silently migrated.
 
 When Hitch advertises `trajectory_events_page: "1"`, Gear captures the canonical digest with the accepted seed receipt and binds each source to its original execution, candidate and task/repetition slot:
 
