@@ -138,7 +138,7 @@ Target 也可使用 `kind: "hitch"` profile，字段为 `executable`、`root`、
 
 新建 Hitch profile 显式保存 `maxConcurrent: 4`，与 Hitch 默认值一致；没有该字段的既有 profile 保留并发 1。创建时用 `--max-concurrent N` 请求更高的任务并发，实际接纳仍受 daemon 资源容量约束。接纳结果前会核对实际执行并发与冻结配置一致。并发属于冻结的 provider 身份，修改后须新建运行，不能复用旧身份下的评测证据。
 
-`--preparation-timeout-ms` 同时控制 artifact 准备/复核、环境绑定及提交准入（其中也会校验 Python 运行时）。`--setup-timeout-ms` 控制逐任务环境准备预算，默认 1800000 毫秒；它与任务 `timeoutMs` 之和须符合 Hitch 的 24 小时限制，完整 24 小时任务应显式设置 setup 为 0。其余时间配置使用正整数毫秒，准备期限须在 Node 定时器范围内。等待整组评测时为每个任务保留 setup 与执行预算，兼容实际 daemon 容量低于请求并发的情况。取消与响应丢失后的恢复保留原评估身份。
+`--preparation-timeout-ms` 同时控制 artifact 准备/复核、环境绑定及提交准入（其中也会校验 Python 运行时）。`--setup-timeout-ms` 设置 Harbor 的 Agent setup 覆盖值（`agent.override_setup_timeout_sec`），默认 1800000 毫秒。任务环境的构建/启动期限独立使用编译后任务的 `task.config.environment.build_timeout_sec`，未声明时使用 Harbor 默认值；增加 Agent setup 不会延长环境启动期限。Gear 保留任务声明的原生期限，未声明的默认值在冻结任务合同中仍为未知。任务 `timeoutMs` 与 Agent `setupTimeoutMs` 之和须符合 Hitch 的 24 小时限制，完整 24 小时任务应显式设置 Agent setup 为 0。其余时间配置使用正整数毫秒，准备期限须在 Node 定时器范围内。等待整组评测时为每个任务保留 setup 与执行预算，兼容实际 daemon 容量低于请求并发的情况。取消与响应丢失后的恢复保留原评估身份。
 
 Gear 同时要求 `evaluation_artifact_pins: "1"`：每次提交携带当前任务平台的产物 ID、目录摘要和入口摘要。Hitch 在产物准备后和 Harbor 执行前强制核对，恢复与重试保留原 pins；回执仍须匹配。协议和验证范围见[执行前产物约束](../../testing/hitch-artifact-pins.zh-CN.md)。
 

@@ -82,19 +82,26 @@ export function providerEnvironment(
   const harbor = object(environment.harbor),
     docker = object(environment.docker),
     buildx = object(environment.buildx)
-  requireContract(
-    harbor.status === 'available' &&
-      version(harbor.version) &&
-      digest(harbor.executable_digest) &&
-      docker.status === 'available' &&
-      version(docker.version) &&
-      digest(docker.executable_digest) &&
-      text(docker.engine_id) &&
-      docker.os === 'linux' &&
-      text(docker.architecture),
-    'provider-environment-unavailable',
-    'selected execution provider must observe a working Harbor executable and Linux Docker engine',
-  )
+  const checks = {
+    'harbor.status': harbor.status === 'available',
+    'harbor.version': version(harbor.version),
+    'harbor.executable_digest': digest(harbor.executable_digest),
+    'docker.status': docker.status === 'available',
+    'docker.version': version(docker.version),
+    'docker.executable_digest': digest(docker.executable_digest),
+    'docker.engine_id': text(docker.engine_id),
+    'docker.os': docker.os === 'linux',
+    'docker.architecture': text(docker.architecture),
+  }
+  const failed = Object.keys(checks).filter((key) => !checks[key as keyof typeof checks])
+  if (failed.length) {
+    // Only fixed check names and normalized states are public; raw tool errors may contain secrets.
+    const status = (value: unknown) => (value === 'available' || value === 'unavailable' ? value : 'invalid')
+    throw new GearError(
+      'provider-environment-unavailable',
+      `selected execution provider must observe a working Harbor executable and Linux Docker engine; failed checks: ${failed.join(', ')}; harbor=${status(harbor.status)}, docker=${status(docker.status)}`,
+    )
+  }
   requireContract(
     ((buildx.status === 'available' && version(buildx.version)) ||
       (buildx.status === 'unavailable' && buildx.version === null)) &&

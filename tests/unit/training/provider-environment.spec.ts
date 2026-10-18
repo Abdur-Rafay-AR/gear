@@ -65,6 +65,23 @@ describe('fresh provider environment admission', () => {
     response.environment_digest = digestJson(response.environment)
     expect(() => providerEnvironment(response, expected)).toThrow(expect.objectContaining({ code: 'invalid-provider-environment' }))
   })
+  it('identifies failed environment checks without publishing raw diagnostics or malformed values', () => {
+    const { expected, response } = fixture()
+    const unavailable = {
+      ...response.environment,
+      harbor: { status: 'unavailable', version: null, executable_digest: null, error: 'private-token' },
+      docker: { ...response.environment.docker, status: 'private-status', os: 'private-os' },
+    }
+    let failure: Error | undefined
+    try {
+      providerEnvironment({ ...response, environment: unavailable, environment_digest: digestJson(unavailable) }, expected)
+    } catch (error) { failure = error as Error }
+    expect(failure).toMatchObject({ code: 'provider-environment-unavailable' })
+    expect(failure!.message).toContain('failed checks: harbor.status, harbor.version, harbor.executable_digest, docker.status, docker.os')
+    expect(failure!.message).toContain('harbor=unavailable, docker=invalid')
+    expect(failure!.message).not.toContain('private-')
+    expect(failure!.message.length).toBeLessThan(500)
+  })
   it('pins remote generation and accepts an identical payload from a source-less worker package', () => {
     const { expected, response } = fixture()
     const worker = { ...expected.controller, node_version: 'v24.0.0', source: { kind: 'unavailable', commit: null, dirty: null } }
