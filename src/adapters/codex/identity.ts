@@ -68,6 +68,8 @@ export async function describeCodex(config: CodexConfiguration): Promise<{
       '../python/packaged-policy',
       '../python/builtin-policy',
       '../storage/experience',
+      '../storage/experience-files',
+      '../storage/experience-format',
       '../python/runtime',
       '../python/interpreter',
       '../storage/atomic',
