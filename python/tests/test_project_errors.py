@@ -27,6 +27,24 @@ class ProjectErrorTests(unittest.TestCase):
                 self.assertNotIn("TimeoutNegativeWarning", str(error))
         self.assertIsNone(ProjectError("local-error", "local").stderr)
 
+    def test_safe_probe_metadata_in_message_preserves_the_existing_error_contract(self):
+        diagnostics = {
+            "schema_version": "1",
+            "probes": [{
+                "probe": "docker_info", "attempt": 1, "stage": "command", "outcome": "timed_out",
+                "elapsed_ms": 10000, "exit_code": None, "signal": "SIGTERM",
+            }],
+        }
+        message = "Docker unavailable; diagnostics=" + json.dumps(diagnostics, separators=(",", ":"))
+        raw = WARNING + json.dumps({
+            "code": "provider-environment-unavailable", "message": message, "retryable": False,
+        }).encode() + b"\n"
+        error = ProjectError.from_stderr(raw)
+        self.assertEqual(error.code, "provider-environment-unavailable")
+        self.assertEqual(str(error), message)
+        self.assertEqual(json.loads(str(error).split("; diagnostics=", 1)[1]), diagnostics)
+        self.assertEqual(error.stderr, raw)
+
     def test_known_optional_gear_fields_are_accepted(self):
         detail = {
             "code": "operation-needs-recovery",

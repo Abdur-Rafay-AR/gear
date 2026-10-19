@@ -132,6 +132,8 @@ Target 也可使用 `kind: "hitch"` profile，字段为 `executable`、`root`、
 
 自定义运行时仓库可使用 `deepseek@git+file:///absolute/repository#<full-commit>` 或对应的 `pi@` 引用。Git 必须指定完整的小写 40 位 SHA-1 提交号；profile 校验会拒绝分支、短哈希及 64 位 SHA-256 提交号。Hitch 当前的 Git 缓存和制品构建器仅支持 SHA-1 仓库。file URL 必须规范化，空格需百分号编码。Hitch 导出并构建固定提交及其锁定依赖，因此可加载自定义 provider 插件，无需修改 Gear 或依赖可变的已安装运行时。
 
+Hitch 可附带可选的探测诊断；Gear 严格校验有界的阶段、结果、耗时、退出码和信号字段。Harbor 或 Docker 不可用时，包括 SDK 准备检查，返回 `provider-environment-unavailable`，并在持久化错误消息中保留这些安全元数据，不包含工具原始输出。诊断不进入环境身份，controller 或引擎身份变化仍被拒绝；没有诊断字段的旧观测继续兼容。
+
 运行计划连接 provider 时，Gear 通过该 Hitch 安装的公开 SDK 编译任务平台声明并准备对应的 Harbor artifact。准备前后核对 SDK 与 daemon 观测到的 controller 和 Docker/Harbor 环境；实际 artifact、入口/目录摘要与逐任务平台绑定进入 provider/evaluation identity，供跨 run baseline 比较。新物理提交前再次校验缓存文件，回执必须匹配事先冻结的绑定。首次准备可能下载包和运行 Docker 构建器，单次准备/复核由 profile 的 `preparationTimeoutMs` 控制，默认 30 分钟；不创建评估作业或模型请求。`doctor` 保持只读，不执行 artifact 构建。
 
 还要求 Hitch 提供 `evaluation_environment_binding: "3"` 与 `evaluation_preparation: "1"` 能力；现有 0.2.16 发布版本本身不保证支持。Gear 调用 daemon 的 `eval bind`，将实际驻留环境、模型、变量名、冻结 helper 输出、Harbor Python 内容及受支持的环境引用文件的私有 HMAC 绑定加入运行身份；新准入与 Harbor 启动前由 Hitch 复核，回执必须携带同一绑定。Python 版本不变但依赖文件变化也会使旧绑定失效；正常生成的字节码缓存不会改变身份。标准证书和凭据配置文件自动检查；自定义主机文件变量在 daemon 环境中通过 `HITCH_EVALUATION_FILE_ENV_JSON='["MY_PROVIDER_CONFIG"]'` 声明，使用绝对文件路径。凭据不进入 Gear 项目锁或公开回执，失效时需要准备新运行。当前配套实现与文件范围见[环境文件绑定说明](../../testing/hitch-environment-files.zh-CN.md)。
