@@ -1,4 +1,4 @@
-import { chmod, mkdir, mkdtemp, readFile, realpath, rename, rm, writeFile } from 'node:fs/promises'
+import { chmod, mkdir, mkdtemp, readFile, readdir, realpath, rename, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
@@ -25,9 +25,41 @@ import { ExperienceStore } from '../../src/adapters/storage/experience.js'
 import { builtinPolicy, builtinPolicyImplementationDigest } from '../../src/adapters/python/builtin-policy.js'
 import type { ExperienceRecord, ExperienceContext } from '../../src/domain/experience.js'
 
-const roots: string[] = []
+const roots: string[] = [], operationRoots: string[] = []
+const workerGroups = new Set<number>()
+async function rememberWorker(directory: string) {
+  try {
+    const { pid } = JSON.parse(await readFile(join(directory, 'started.json'), 'utf8')) as { pid: number }
+    expect(Number.isSafeInteger(pid) && pid > 0).toBe(true)
+    workerGroups.add(pid)
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+  }
+}
 afterEach(async () => {
   vi.unstubAllEnvs()
+  // A receipt precedes cleanup: keep operation and sandbox roots until their writer exits.
+  for (const namespace of operationRoots.splice(0)) {
+    const entries = await readdir(namespace, { withFileTypes: true }).catch(error => {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+      return []
+    })
+    for (const entry of entries.filter(entry => entry.isDirectory())) {
+      const directory = join(namespace, entry.name)
+      await rememberWorker(directory)
+      if ((await readdir(directory)).includes('execution.lock'))
+        await expect.poll(() => fileLockHeld(join(directory, 'execution.lock')), { timeout: 8000 }).toBe(false)
+    }
+  }
+  const groups = new Set(workerGroups); workerGroups.clear()
+  if (groups.size)
+    await expect.poll(async () => {
+      const { stdout } = await promisify(execFile)('/bin/ps', ['-axo', 'pgid=,stat='])
+      return stdout.split('\n').filter(line => {
+        const [group, state] = line.trim().split(/\s+/u)
+        return groups.has(Number(group)) && !state?.startsWith('Z')
+      })
+    }, { timeout: 8000 }).toEqual([])
   for (const root of roots.splice(0)) await rm(root, { recursive: true, force: true })
 })
 async function fixture(mode = 'success', adapter: 'pi' | 'dsh' = 'pi', prepare = true) {
@@ -38,6 +70,7 @@ async function fixture(mode = 'success', adapter: 'pi' | 'dsh' = 'pi', prepare =
     directory = join(privateRoot, 'operations')
   await mkdir(join(targets, 'anchor'), { recursive: true })
   await mkdir(directory)
+  operationRoots.push(directory)
   await writeFile(join(privateRoot, 'held-out.json'), 'HELD_OUT_PRIVATE_CANARY')
   const harness = adapter === 'pi' ? new PiHarnessAdapter() : new DshHarnessAdapter()
   await harness.prepare(join(targets, 'anchor'))
@@ -220,7 +253,11 @@ async function modelProcessIds(directory: string): Promise<number[]> {
 async function untilStarted(directory: string) {
   for (let index = 0; index < 120; index++) {
     try {
-      if ((await readFile(join(directory, 'events.jsonl'), 'utf8')).includes('test.started')) return
+      if ((await readFile(join(directory, 'events.jsonl'), 'utf8')).includes('test.started')) {
+        // Some cases deliberately remove started.json after this point.
+        await rememberWorker(directory)
+        return
+      }
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
     }
