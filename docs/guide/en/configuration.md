@@ -174,6 +174,16 @@ A Target may instead use a `kind: "hitch"` profile with `executable`, `root`,
 exact `deepseek@version:...` or commit; Pi uses `pi@version:...` or commit.
 Custom runtime repositories may use `deepseek@git+file:///absolute/repository#<full-commit>` or the corresponding `pi@` reference. Git selectors require a full lowercase 40-character SHA-1 commit ID; branches, short hashes and 64-character SHA-256 IDs are rejected when validating the profile. Hitch's current Git cache and artifact builder support SHA-1 repositories only. The file URL must be canonical (percent-encode spaces). Hitch exports and builds the pinned tree, including its locked dependencies. This supports custom provider plugins without changing Gear or relying on a mutable installed runtime.
 
+Hitch profiles may also set `agentArgs`, a JSON array of native argument strings.
+Gear appends these after the Target adapter's own arguments; it keeps the DSH
+Target patch and then applies additional overlays in their supplied order.
+For example, add `--agent-args-json '["--patch","/opt/provider.json"]'` to profile
+creation, or include `"agentArgs": ["--patch", "/opt/provider.json"]` in an imported
+profile. The referenced file must already exist inside the task image. Argument
+order enters the frozen provider identity and result checks, so changes require
+a new run. Arguments are public execution configuration: keep secret values in
+environment variables named by `passEnv`, never in `agentArgs` or image files.
+
 The image must use an OCI sha256 digest. Gear checks the resolved harness source
 identity, capabilities and daemon status before execution. Fresh worker observation v2
 binds the observed Hitch controller, Harbor executable and Docker engine. Evaluations

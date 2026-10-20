@@ -381,7 +381,7 @@ it('projects independent assertions from the original trial without inferring th
   expect(decodeHitchTrials(result, evaluate, ['a'], 0).evidence[0]!.assertions?.[0]?.status).toBe('missing')
 })
 
-async function controlledProvider(initial: Record<string, unknown> = {}, options: { maxConcurrent?: number; setupTimeoutMs?: number; preparationTimeoutMs?: number } = {}) {
+async function controlledProvider(initial: Record<string, unknown> = {}, options: { maxConcurrent?: number; setupTimeoutMs?: number; preparationTimeoutMs?: number; agentArgs?: string[] } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'gear-ordered-hitch-'))
   roots.push(root)
   const executable = join(root, 'hitch.mjs'),
@@ -451,6 +451,32 @@ it('submits configured concurrency and setup budgets and allows preparation duri
   } finally {
     calls.mockRestore()
   }
+})
+
+it('preserves Target patch arguments before native overlays and freezes them across recovery', async () => {
+  const agentArgs = ['--patch', '/opt/provider.json']
+  const expected = ['--patch', '/opt/gear-target.patch.yml', ...agentArgs]
+  const f = await controlledProvider({ loseSubmitReply: true }, { agentArgs })
+  // A caller cannot mutate the already-observed profile through its original array.
+  agentArgs.push('--unexpected')
+  expect(f.provider.profile.agentArgs).toEqual(['--patch', '/opt/provider.json'])
+  await expect(f.provider.submit(request, f.signal)).rejects.toThrow('did not complete')
+  expect((await f.state()).job.request.agent_args).toEqual(expected)
+  const directory = join(f.provider.context.directory, request.operationId.slice(7))
+  const plan = JSON.parse(await readFile(join(directory, 'plan.json'), 'utf8'))
+  expect(plan.groups[0].agentArgs).toEqual(expected)
+  const targetPatch = await readFile(join(directory, 'dataset-0/a/environment/gear-target.patch.yml'), 'utf8')
+  expect(targetPatch).toContain('gear-target-resources')
+  expect(targetPatch).toContain('policy: never')
+  expect(await readFile(join(directory, 'dataset-0/a/environment/gear-target/preset/agent.cordis.yml'), 'utf8')).toContain('gear-policy')
+  const recovered = await HitchOperationProvider.connect({ ...f.provider.profile }, f.provider.context)
+  expect(recovered.identity).toBe(f.provider.identity)
+  expect(await recovered.inspect(request, f.signal)).toMatchObject({ state: 'complete' })
+  await recovered.submit(request, f.signal)
+  expect((await f.state()).jobs).toBe(1)
+  const changed = await HitchOperationProvider.connect({ ...f.provider.profile, agentArgs: ['--patch', '/opt/changed.json'] }, f.provider.context)
+  expect(changed.identity).not.toBe(f.provider.identity)
+  await expect(changed.inspect(request, f.signal)).rejects.toMatchObject({ code: 'hitch-operation-identity' })
 })
 
 it.each([undefined, 4])('submits and accepts the configured Hitch concurrency %s', async (maxConcurrent) => {

@@ -35,6 +35,7 @@ import {
   hitchControlTimeoutMs,
   hitchEnvironmentTimeoutMs,
   hitchSettings,
+  hitchAgentArgs,
   type HitchSettings,
 } from './settings.js'
 import {
@@ -51,6 +52,8 @@ export interface HitchProfile extends Partial<HitchSettings> {
   model: string
   baseImage: string
   passEnv: string[]
+  /** Additional native arguments, appended after the Target adapter's own arguments. */
+  agentArgs?: string[]
   timeoutMs: number
 }
 interface Group {
@@ -168,7 +171,12 @@ export class HitchOperationProvider implements OperationProvider {
     signal: AbortSignal = new AbortController().signal,
   ): Promise<HitchOperationProvider> {
     signal.throwIfAborted()
-    let profile = { ...input, ...hitchSettings(input) }
+    const agentArgs = hitchAgentArgs(input)
+    let profile = {
+      ...input,
+      ...hitchSettings(input),
+      ...(input.agentArgs === undefined ? {} : { agentArgs }),
+    }
     const connection = await inspectHitchConnection(profile, context.adapter, signal)
     const { capabilities, executionEnvironment, revisionIdentity } = connection
     profile = { ...profile, executable: await findExecutable(profile.executable) }
@@ -465,7 +473,7 @@ export class HitchOperationProvider implements OperationProvider {
         dataset,
         taskIds,
         repetition,
-        agentArgs,
+        agentArgs: [...agentArgs, ...(this.profile.agentArgs ?? [])],
         digest: await datasetDigest(dataset),
         evalId: null,
         submissionStarted: false,
