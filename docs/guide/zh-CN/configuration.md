@@ -130,6 +130,8 @@ process 必须报告真实实现身份和能力，并持久实现 submit/inspect
 
 Target 也可使用 `kind: "hitch"` profile，字段为 `executable`、`root`、`harnessRef`、`model`、`baseImage`、`passEnv`、`timeoutMs`，以及可选的 `maxConcurrent`、`setupTimeoutMs`、`preparationTimeoutMs`。新建 Target profile 默认使用 DSH `0.1.5-rc.3` 或 Pi `0.84.1`；既有 profile 保留其精确版本。当前 DSH 版本由上游固定 HMR 依赖，无需 Gear 专用覆盖。DSH 的 harnessRef 必须是确切 `deepseek@version:...` 或 commit，Pi 使用 `pi@version:...` 或 commit；baseImage 固定 OCI sha256。运行前核对解析后的 harness 源码身份、能力和 daemon 状态，并用 fresh worker observation v2 绑定 Hitch controller、Harbor 可执行文件和 Docker 引擎的观测身份。评估明确提交到 `local-docker`；新提交前和保存回执前重新观测，变化时拒绝继续接纳。回包还必须匹配 controller runtime 和执行 provider。接纳回包及补取原材料时，还核对实际请求中的模型、载体参数、凭据变量名范围、重复/并发/重试次数和超时；不一致的结果不会接纳。计划、结果及 work item 的 prepared artifact、入口/目录摘要、任务映射和平台/Node 合同也必须一致；同一评估的重复试验不能使用不同依赖。原材料补取保留原始 artifact 证据。
 
+Hitch profile 还可设置 `agentArgs`，内容为原生参数的 JSON 字符串数组。Gear 将它追加在 Target adapter 自己的参数之后，保留 DSH Target patch，再按传入顺序应用其他 overlay。创建时可附加 `--agent-args-json '["--patch","/opt/provider.json"]'`，导入 profile 时可写 `"agentArgs": ["--patch", "/opt/provider.json"]`。引用文件必须已存在于任务镜像内。参数顺序进入冻结的 provider 身份与回包核对，修改后需要新建运行。参数属于公开执行配置；密钥值应通过 `passEnv` 指定的环境变量提供，不得放入 `agentArgs` 或镜像文件。
+
 自定义运行时仓库可使用 `deepseek@git+file:///absolute/repository#<full-commit>` 或对应的 `pi@` 引用。Git 必须指定完整的小写 40 位 SHA-1 提交号；profile 校验会拒绝分支、短哈希及 64 位 SHA-256 提交号。Hitch 当前的 Git 缓存和制品构建器仅支持 SHA-1 仓库。file URL 必须规范化，空格需百分号编码。Hitch 导出并构建固定提交及其锁定依赖，因此可加载自定义 provider 插件，无需修改 Gear 或依赖可变的已安装运行时。
 
 Hitch 可附带可选的探测诊断；Gear 严格校验有界的阶段、结果、耗时、退出码和信号字段。Harbor 或 Docker 不可用时，包括 SDK 准备检查，返回 `provider-environment-unavailable`，并在持久化错误消息中保留这些安全元数据，不包含工具原始输出。诊断不进入环境身份，controller 或引擎身份变化仍被拒绝；没有诊断字段的旧观测继续兼容。
