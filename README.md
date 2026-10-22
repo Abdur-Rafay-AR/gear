@@ -2,7 +2,7 @@
 
 # Gear
 
-**Adapt your agent to real-world tasks.**
+**A modular evolutionary framework for recursive self-improvement of agent harnesses.**
 
 [![GitHub release](https://img.shields.io/github/v/release/rsi-gear/gear?cacheSeconds=300)](https://github.com/rsi-gear/gear/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
