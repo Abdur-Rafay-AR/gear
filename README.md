@@ -127,10 +127,22 @@ Optimization is limited to the components you authorize Gear to modify.
 | Tools and hooks | Tool implementations and hooks that run before or after tool execution. | Supported |
 | Skills and workflows | Reusable procedures, helper scripts, and execution order. | Supported |
 | Context management | Context selection and conversation history summarization. | Supported |
-| Harness composition | Plugin and provider selection and configuration. | Supported |
 | Model weights | Model parameters updated through training using task feedback. | Experimental; full training and evaluation loop under development |
 
-You can also customize the **optimization algorithm**: how it proposes changes, selects tasks, executes and scores task attempts, compares candidates, and determines which versions to retain. [Example 2](docs/guide/en/example-algorithm.md) demonstrates these configurable components in a GEPA-based search.
+### Customizable algorithm components
+
+Gear's built-in **GEPA** and **RandomSearch** use the same Python component interfaces. You can replace individual strategies or implement a complete search workflow.
+
+| Component | What you can customize |
+| --- | --- |
+| Parent selection (`ParentPolicy`) | Which eligible harness versions to use as parents and how many candidates to generate from each. |
+| Task sampling (`TaskSampler`) | Which tasks to evaluate at each stage and how to weight their scores. |
+| Candidate proposal (`ProposalPlanner`) | How to use diagnostic feedback to plan candidate modifications. |
+| Candidate ranking (`CandidateRanker`) | How to compare candidates tested on the same tasks under matching evaluation conditions. |
+| Search workflow (`SearchAlgorithm`) | The order of search stages, when to expand evaluation, and how many candidates advance. |
+| Stopping rules (`StopRule`) | When to end the search based on progress, remaining budget, or custom conditions. |
+
+The runtime handles task execution, evidence storage, and final acceptance checks. See the [algorithm example](docs/guide/en/example-algorithm.md) and [Python component interfaces](python/gear/algorithms/__init__.py) to build on these components.
 
 Gear records each harness version and its evaluation results, so you can inspect the changes and reuse the resulting harness.
 
