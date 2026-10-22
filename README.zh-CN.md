@@ -2,7 +2,7 @@
 
 # Gear
 
-**面向 Agent harness 递归自我改进的模块化进化框架。**
+**面向 harness 递归进化的模块化框架。**
 
 [![GitHub release](https://img.shields.io/github/v/release/rsi-gear/gear?cacheSeconds=300)](https://github.com/rsi-gear/gear/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
