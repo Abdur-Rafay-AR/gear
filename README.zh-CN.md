@@ -7,8 +7,9 @@
 [![GitHub release](https://img.shields.io/github/v/release/rsi-gear/gear?cacheSeconds=300)](https://github.com/rsi-gear/gear/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Discord](https://img.shields.io/badge/Discord-加入讨论-5865F2?logo=discord)](https://discord.gg/ZduvAtS2k)
+[![项目主页](https://img.shields.io/badge/Project-website-2F6F5E)](https://rsi-gear.github.io/)
 
-[English](README.md) | [简体中文](README.zh-CN.md) · [项目主页](https://rsi-gear.github.io/) · [用户指南](https://rsigear.xyz/docs/gear/zh) · [案例](https://rsigear.xyz/docs/gear/zh/examples/evolution-search) · [引用](#引用)
+[English](README.md) | [简体中文](README.zh-CN.md) · [用户指南](https://rsigear.xyz/docs/gear/zh) · [案例](https://rsigear.xyz/docs/gear/zh/examples/evolution-search)
 
 </div>
 
