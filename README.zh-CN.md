@@ -131,22 +131,19 @@ Gear 采用受 **meta-learning（元学习）** 启发的双层架构，将任�
 
 ### 可定制的算法组件
 
-Gear 内置的 **GEPA** 和 **RandomSearch** 使用相同的 Python 组件接口。你可以替换单个策略，也可以实现完整的搜索流程。
+Gear 的进化循环包含 **Diagnose（诊断）→ Evolve（进化）→ Evaluate（评测）→ Promote（晋升）** 四个阶段。你可以定制各阶段中的以下模块。
 
-| 组件 | 可以定制什么 |
-| --- | --- |
-| 父代选择（`ParentPolicy`） | 从符合条件的 harness 版本中选择父代，并分配每个父代的候选生成数量。 |
-| 任务采样（`TaskSampler`） | 每个阶段评测哪些任务，以及如何设置任务得分的权重。 |
-| 候选提案（`ProposalPlanner`） | 如何利用诊断反馈，规划候选修改。 |
-| 候选排序（`CandidateRanker`） | 如何比较在相同任务和评测条件下运行的候选。 |
-| 搜索流程（`SearchAlgorithm`） | 搜索阶段的顺序、何时扩大评测范围，以及晋级的候选数量。 |
-| 停止规则（`StopRule`） | 根据搜索进展、剩余预算或自定义条件，决定何时结束搜索。 |
+| 阶段 | 模块 | 可以定制什么 |
+| --- | --- | --- |
+| Diagnose（诊断） | Parent selection（父代选择） | 从符合条件的 harness 版本中选择父代，并分配每个父代的候选生成数量。 |
+| Evolve（进化） | Proposal planning（提案规划） | 如何利用诊断反馈，规划候选修改。 |
+| Evaluate（评测） | Task sampling（任务采样） | 每个阶段评测哪些任务，以及如何设置任务得分的权重。 |
+| Evaluate（评测） | Scoring rule（评分规则） | 如何对任务结果评分，并通过可配置的权重与约束组合评测指标。 |
+| Promote（晋升） | Candidate ranking（候选排序） | 如何比较在相同任务和评测条件下运行的候选。 |
 
 运行层负责执行任务、保存评测证据和完成最终验收。你可以参考[算法示例](docs/guide/zh-CN/example-algorithm.md)和 [Python 组件接口](python/gear/algorithms/__init__.py)，基于这些组件开发算法。
 
-Gear 记录每一版 harness 及其评测结果，你可以检查改动并复用优化后的 harness。
-
-你可以[定义加权优化目标](docs/refine-objectives.zh-CN.md)，组合已声明的通过率、过程分、费用或 token，并保留所有原始计量。
+你可以[定义加权优化目标](docs/guide/zh-CN/configuration.md#加权目标和保护任务)，组合已声明的通过率、过程分、费用或 token，并保留所有原始计量。
 
 ## 看看两个完整案例
 

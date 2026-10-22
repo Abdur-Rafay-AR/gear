@@ -131,22 +131,19 @@ Optimization is limited to the components you authorize Gear to modify.
 
 ### Customizable algorithm components
 
-Gear's built-in **GEPA** and **RandomSearch** use the same Python component interfaces. You can replace individual strategies or implement a complete search workflow.
+Gear's evolution loop follows **Diagnose → Evolve → Evaluate → Promote**. You can customize the following modules within these stages.
 
-| Component | What you can customize |
-| --- | --- |
-| Parent selection (`ParentPolicy`) | Which eligible harness versions to use as parents and how many candidates to generate from each. |
-| Task sampling (`TaskSampler`) | Which tasks to evaluate at each stage and how to weight their scores. |
-| Candidate proposal (`ProposalPlanner`) | How to use diagnostic feedback to plan candidate modifications. |
-| Candidate ranking (`CandidateRanker`) | How to compare candidates tested on the same tasks under matching evaluation conditions. |
-| Search workflow (`SearchAlgorithm`) | The order of search stages, when to expand evaluation, and how many candidates advance. |
-| Stopping rules (`StopRule`) | When to end the search based on progress, remaining budget, or custom conditions. |
+| Stage | Module | What you can customize |
+| --- | --- | --- |
+| Diagnose | Parent selection | Which eligible harness versions to use as parents and how many candidates to generate from each. |
+| Evolve | Proposal planning | How to use diagnostic feedback to plan candidate modifications. |
+| Evaluate | Task sampling | Which tasks to evaluate at each stage and how to weight their scores. |
+| Evaluate | Scoring rule | How to score task outcomes and combine evaluation metrics with configurable weights and constraints. |
+| Promote | Candidate ranking | How to compare candidates tested on the same tasks under matching evaluation conditions. |
 
 The runtime handles task execution, evidence storage, and final acceptance checks. See the [algorithm example](docs/guide/en/example-algorithm.md) and [Python component interfaces](python/gear/algorithms/__init__.py) to build on these components.
 
-Gear records each harness version and its evaluation results, so you can inspect the changes and reuse the resulting harness.
-
-[Define a weighted objective](docs/refine-objectives.md) to combine declared pass rate, process scores, cost or tokens while retaining the original measurements.
+[Define a weighted objective](docs/guide/en/configuration.md#weighted-objectives-and-protected-tasks) to combine declared pass rate, process scores, cost or tokens while retaining the original measurements.
 
 ## Explore the examples
 
