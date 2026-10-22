@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Discord](https://img.shields.io/badge/Discord-Join_chat-5865F2?logo=discord&logoColor=white)](https://discord.gg/ZduvAtS2k)
 
-[English](README.md) | [简体中文](README.zh-CN.md) · [User guide](https://rsigear.xyz/docs/gear) · [Examples](https://rsigear.xyz/docs/gear/examples/evolution-search)
+[English](README.md) | [简体中文](README.zh-CN.md) · [Project website](https://rsi-gear.github.io/) · [User guide](https://rsigear.xyz/docs/gear) · [Examples](https://rsigear.xyz/docs/gear/examples/evolution-search) · [Citation](#citation)
 
 </div>
 
@@ -39,34 +39,48 @@ The two examples below compare Luna Max with a Gear-optimized harness against As
   </tr>
 </table>
 
-## Competitive performance with a smaller model
+## Experimental results
 
-On AutomationBench's 100 public Marketing tasks, GPT 5.6 Luna at max reasoning effort achieved **88.88% objective completion** with Gear's optimized DSH harness, compared with **84.08%** for GPT 6 Astra at max effort in Codex. Luna's task pass rate was **53%**.
+The [project website](https://rsi-gear.github.io/#results) reports results across AutomationBench Marketing, AutomationBench Support, and Terminal-Bench 2.1. The tables below reflect the **October 22, 2026** update.
 
-With both models using the same optimized DSH harness (`a0740800`), **Luna max's API cost averaged $0.0568 per task, versus $1.1858 for Astra max — 95.21% lower**.
+![GPT 5.6 Luna + DSH task pass rates for Coding, Marketing, and Support, comparing the baseline at medium effort with Gear at medium and max effort; Marketing evolution is shown at medium effort.](https://rsi-gear.github.io/assets/marketing-evolution-overview.svg)
 
-![Harness optimization and GEPA-based search, starting from the original DSH harness: GPT 5.6 Luna at max effort achieves 88.88% objective completion and a 53% task pass rate, compared with 84.08% and 57%, respectively, for GPT 6 Astra at max effort in Codex.](docs/guide/assets/marketing-evolution-overview.png)
+### Same-model, same-effort harness comparison
 
-### Benchmark results
+Each group keeps the model and reasoning effort fixed. Luna compares the base DSH harness with Gear's optimized DSH harness; Astra compares Codex with Gear's optimized DSH harness.
 
-Given our limited compute budget, our evaluations currently cover the benchmarks below. We report results before and after optimization and welcome additional experiments and results from the community.
+| Model (effort) | Harness | Marketing pass rate | Marketing objective completion | Support pass rate | Support objective completion | Terminal-Bench 2.1 pass rate |
+| --- | --- | --- | --- | --- | --- | --- |
+| GPT 5.6 Luna (medium) | DSH (Base) | 27.0% | 75.4% | 17.0% | 72.9% | 52.9% |
+| GPT 5.6 Luna (medium) | DSH + Gear | **40.0%** | **83.9%** | **25.0%** | **81.3%** | **62.9%** |
+| Δ (percentage points) | | +13.0 | +8.5 | +8.0 | +8.4 | +10.1 |
+| GPT 6 Astra (max) | Codex | 57.0% | 84.1% | 35.0% | 88.4% | 86.7% |
+| GPT 6 Astra (max) | DSH + Gear | **61.0%** | **86.3%** | **39.0%** | **88.7%** | **89.3%** |
+| Δ (percentage points) | | +4.0 | +2.2 | +4.0 | +0.3 | +2.6 |
 
-| Benchmark | Before | After | Gain | Setup | Metric |
-| --- | --- | --- | --- | --- | --- |
-| AutomationBench / Marketing | 27% | **53%** | **+96.30%** | GPT 5.6 Luna + DSH | [Task pass rate](https://github.com/zapier/AutomationBench#scoring) |
-| AutomationBench / Marketing | 75.37% | **88.88%** | **+17.92%** | GPT 5.6 Luna + DSH | [Objective completion (`partial_credit`)](https://github.com/zapier/AutomationBench#scoring) |
-| AutomationBench / Marketing | 57% | **61%** | **+7.02%** | GPT 6 Astra (max) | [Task pass rate](https://github.com/zapier/AutomationBench#scoring) |
-| AutomationBench / Marketing | 84.08% | **86.30%** | **+2.64%** | GPT 6 Astra (max) | [Objective completion (`partial_credit`)](https://github.com/zapier/AutomationBench#scoring) |
-| Terminal-Bench 2.1 | 52.87% | **84.26%** | **+59.37%** | GPT 5.6 Luna + DSH | [Task pass rate](https://www.tbench.ai/?version=2.1) |
-| Terminal-Bench 2.1 | 87.4% | — | — | [GPT 6 Astra (high) + Codex](https://www.tbench.ai/?version=2.1) | [Task pass rate](https://www.tbench.ai/?version=2.1) |
-| Terminal-Bench 2.1 | 83.8% | — | — | [Fable 5 (xhigh) + Claude Code](https://www.tbench.ai/?version=2.1) | [Task pass rate](https://www.tbench.ai/?version=2.1) |
-| Terminal-Bench 2.1 | 83.2% | — | — | [GPT-5.5 (xhigh) + Codex](https://www.tbench.ai/?version=2.1) | [Task pass rate](https://www.tbench.ai/?version=2.1) |
+Task pass rate is the percentage of tasks passing all scored checks. Objective completion is the mean fraction of scored assertions satisfied per task. Δ is the absolute improvement in percentage points, not a relative percentage gain. Values are rounded to one decimal place.
 
-Gain is the relative improvement: (After − Before) / Before × 100%, calculated from the displayed values. Objective completion is the average fraction of scored assertions satisfied per task.
+### Additional evaluation: Luna at max effort
 
-For Luna, the comparison is between the original harness at medium reasoning effort and the optimized harness at max effort. Astra's Marketing results compare [native Codex](examples/evolution-search/codex-astra-max-evaluation.json) with the [optimized DSH harness](docs/guide/en/example-algorithm.md), both at max effort. The optimized harness was evaluated with Astra without an additional optimization round. Terminal-Bench reference configurations were not optimized with Gear; their scores appear in the Before column, while After and Gain are not applicable. Reasoning effort for these reference configurations is listed in Setup.
+The optimized DSH harness was also evaluated with GPT 5.6 Luna at max reasoning effort:
 
-[Scoring and sources](docs/guide/en/results.md) · [Token usage and cost methodology](docs/marketing-token-cost.md) · [Full experiment](docs/guide/en/example-algorithm.md)
+| Benchmark | Task pass rate | Objective completion |
+| --- | --- | --- |
+| AutomationBench / Marketing | **53.0%** | **88.9%** |
+| AutomationBench / Support | **27.0%** | **82.4%** |
+| Terminal-Bench 2.1 | **84.3%** | — |
+
+These are separate evaluations at a higher reasoning effort; improvements over Luna's medium baseline include both harness and effort changes. The dash means the metric is not reported.
+
+On Marketing, Luna max with Gear achieved **88.88% objective completion**, compared with **84.08%** for Astra max in Codex; their task pass rates were **53%** and **57%**, respectively. In a separate cost comparison with both models using the same optimized DSH harness (`a0740800`), **Luna max's API cost averaged $0.0568 per task, versus $1.1858 for Astra max — 95.21% lower**. See the [token usage and cost methodology](docs/marketing-token-cost.md).
+
+### Evaluation scope and sources
+
+Marketing uses the same **100 public tasks** for optimization and evaluation; these results do not establish independent held-out generalization and should not be compared directly with the official private leaderboard. Luna's medium results include the earlier harness optimization and staged continuation. Astra's Marketing evaluation reused the optimized harness without an additional optimization round.
+
+The published summary does not specify Support's benchmark version or scored task count, Terminal-Bench's scored task count, or independent held-out validation for Support and Terminal-Bench. The [result data](https://rsi-gear.github.io/assets/paper-results.json) records these limits and links to the historical evidence.
+
+[Latest results](https://rsi-gear.github.io/#results) · [Result data and provenance](https://rsi-gear.github.io/assets/paper-results.json) · [Historical Marketing experiment](examples/evolution-search/README.md)
 
 ## Quick start
 
@@ -148,6 +162,22 @@ Gear supports harness optimization today. Two components of the broader learning
 
 - [ ] **Iterative model training and evaluation.** Use task feedback to train the model, evaluate the updated model, and repeat. An [experimental training workflow](docs/guide/en/training.md) is available; the full model iteration loop is not yet complete.
 - [ ] **Automatic seed task generation.** Generate targeted practice tasks, or *seed tasks*, from task failures and incorporate them into subsequent optimization rounds. This automatic task generation loop is not yet complete.
+
+## Citation
+
+If you use Gear in your research, please cite the following preprint. The [project website](https://rsi-gear.github.io/#citation) lists the current citation; the arXiv link is not yet available.
+
+```bibtex
+@unpublished{tang2026gear,
+  title  = {{GEAR}: An Open General Evolutionary Architecture for
+            Recursive Self-Improvement of {LLM} Agent Harness},
+  author = {Tang, Yehui and Zhu, Guanqi and Xia, Shao-Jun and
+            Chen, Xin and Geng, Mengzhe and Du, Hongyang and Tang, Yuhao},
+  year   = {2026},
+  note   = {Preprint},
+  url    = {https://github.com/rsi-gear/gear}
+}
+```
 
 ## Build with us
 

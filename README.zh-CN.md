@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Discord](https://img.shields.io/badge/Discord-加入讨论-5865F2?logo=discord)](https://discord.gg/ZduvAtS2k)
 
-[English](README.md) | [简体中文](README.zh-CN.md) · [用户指南](https://rsigear.xyz/docs/gear/zh) · [案例](https://rsigear.xyz/docs/gear/zh/examples/evolution-search)
+[English](README.md) | [简体中文](README.zh-CN.md) · [项目主页](https://rsi-gear.github.io/) · [用户指南](https://rsigear.xyz/docs/gear/zh) · [案例](https://rsigear.xyz/docs/gear/zh/examples/evolution-search) · [引用](#引用)
 
 </div>
 
@@ -39,34 +39,48 @@ Gear 是一套开源优化框架，用于提升 AI Agent 在真实世界任务�
   </tr>
 </table>
 
-## 小模型也可以和 SOTA 模型掰手腕
+## 实验结果
 
-在 AutomationBench 的 100 个公开 Marketing 任务上，GPT 5.6 Luna 使用 max 推理档位和经过 Gear 优化的 DSH harness，取得了 **88.88% 的目标完成率**，高于 GPT 6 Astra 使用 max 档位和 Codex 时的 **84.08%**。Luna 的任务通过率为 **53%**。
+[项目主页](https://rsi-gear.github.io/#results) 公布了 AutomationBench Marketing、AutomationBench Support 和 Terminal-Bench 2.1 的实验结果。以下表格同步自 **2026 年 10 月 22 日**的更新。
 
-两种模型使用同一版优化后的 DSH harness（`a0740800`）时，**Luna max 平均每题 API 等价费用约为 $0.0568，Astra max 为 $1.1858，Luna 低 95.21%**。
+![GPT 5.6 Luna + DSH 在 Coding、Marketing 和 Support 上的任务通过率，对比原始 harness 的 medium 档位与 Gear 优化后的 medium、max 档位；右侧展示 medium 档位下的 Marketing 进化过程。](https://rsi-gear.github.io/assets/marketing-evolution-overview.svg)
 
-![从原始 DSH harness 开始的 harness 优化与 GEPA 搜索：GPT 5.6 Luna 使用 max 档位，目标完成率达到 88.88%、任务通过率为 53%；GPT 6 Astra 使用 max 档位和 Codex 时，对应结果为 84.08% 和 57%。](docs/guide/assets/marketing-evolution-overview.png)
+### 同模型、同推理档位的 harness 对比
 
-### 基准评测结果
+每组对比固定模型和推理档位。Luna 对比原始 DSH harness 与 Gear 优化后的 DSH harness；Astra 对比 Codex 与 Gear 优化后的 DSH harness。
 
-受限于当前算力预算，我们的评测目前覆盖下列基准，并公开优化前后的结果。欢迎社区贡献更多实验与结果。
+| 模型（推理档位） | Harness | Marketing 通过率 | Marketing 目标完成率 | Support 通过率 | Support 目标完成率 | Terminal-Bench 2.1 通过率 |
+| --- | --- | --- | --- | --- | --- | --- |
+| GPT 5.6 Luna (medium) | DSH (Base) | 27.0% | 75.4% | 17.0% | 72.9% | 52.9% |
+| GPT 5.6 Luna (medium) | DSH + Gear | **40.0%** | **83.9%** | **25.0%** | **81.3%** | **62.9%** |
+| Δ（百分点） | | +13.0 | +8.5 | +8.0 | +8.4 | +10.1 |
+| GPT 6 Astra (max) | Codex | 57.0% | 84.1% | 35.0% | 88.4% | 86.7% |
+| GPT 6 Astra (max) | DSH + Gear | **61.0%** | **86.3%** | **39.0%** | **88.7%** | **89.3%** |
+| Δ（百分点） | | +4.0 | +2.2 | +4.0 | +0.3 | +2.6 |
 
-| 任务集 | 优化前 | 优化后 | 提升 | 配置 | 指标 |
-| --- | --- | --- | --- | --- | --- |
-| AutomationBench / Marketing | 27% | **53%** | **+96.30%** | GPT 5.6 Luna + DSH | [任务通过率](https://github.com/zapier/AutomationBench#scoring) |
-| AutomationBench / Marketing | 75.37% | **88.88%** | **+17.92%** | GPT 5.6 Luna + DSH | [目标完成率（`partial_credit`）](https://github.com/zapier/AutomationBench#scoring) |
-| AutomationBench / Marketing | 57% | **61%** | **+7.02%** | GPT 6 Astra (max) | [任务通过率](https://github.com/zapier/AutomationBench#scoring) |
-| AutomationBench / Marketing | 84.08% | **86.30%** | **+2.64%** | GPT 6 Astra (max) | [目标完成率（`partial_credit`）](https://github.com/zapier/AutomationBench#scoring) |
-| Terminal-Bench 2.1 | 52.87% | **84.26%** | **+59.37%** | GPT 5.6 Luna + DSH | [任务通过率](https://www.tbench.ai/?version=2.1) |
-| Terminal-Bench 2.1 | 87.4% | — | — | [GPT 6 Astra (high) + Codex](https://www.tbench.ai/?version=2.1) | [任务通过率](https://www.tbench.ai/?version=2.1) |
-| Terminal-Bench 2.1 | 83.8% | — | — | [Fable 5 (xhigh) + Claude Code](https://www.tbench.ai/?version=2.1) | [任务通过率](https://www.tbench.ai/?version=2.1) |
-| Terminal-Bench 2.1 | 83.2% | — | — | [GPT-5.5 (xhigh) + Codex](https://www.tbench.ai/?version=2.1) | [任务通过率](https://www.tbench.ai/?version=2.1) |
+任务通过率是通过全部计分项的任务占比。目标完成率先计算每题满足的计分目标比例，再对任务取平均。Δ 表示绝对提升的百分点，不是相对提升百分比。表中数值保留一位小数。
 
-相对提升 =（优化后 − 优化前）/ 优化前 × 100%，按表中展示值计算。目标完成率先计算每题满足的计分目标比例，再对任务取平均。
+### 补充评测：Luna 的 max 推理档位
 
-Luna 对比的是原始 harness 的 medium 推理档位与优化后 harness 的 max 档位。Astra 的 Marketing 成绩对比[原生 Codex](examples/evolution-search/codex-astra-max-evaluation.json) 与[优化后的 DSH harness](docs/guide/zh-CN/example-algorithm.md)，均使用 max 档位。优化后的 harness 直接使用 Astra 评测，没有新增优化轮次。Terminal-Bench 对照配置未经过 Gear 优化，成绩列在「优化前」，「优化后」与「提升」不适用；这些对照配置的推理档位见「配置」。
+优化后的 DSH harness 还使用 GPT 5.6 Luna 的 max 推理档位进行了评测：
 
-[评分方式与来源](docs/guide/zh-CN/results.md) · [Token 消耗与计费口径](docs/marketing-token-cost.zh-CN.md) · [完整实验](docs/guide/zh-CN/example-algorithm.md)
+| 任务集 | 任务通过率 | 目标完成率 |
+| --- | --- | --- |
+| AutomationBench / Marketing | **53.0%** | **88.9%** |
+| AutomationBench / Support | **27.0%** | **82.4%** |
+| Terminal-Bench 2.1 | **84.3%** | — |
+
+这些结果来自另行开展的更高推理档位评测；相对 Luna medium 基线的提升同时包含 harness 和推理档位的变化。破折号表示该指标未报告。
+
+在 Marketing 上，Luna max 搭配 Gear 的目标完成率为 **88.88%**，Astra max 搭配 Codex 为 **84.08%**；两者任务通过率分别为 **53%** 和 **57%**。另一次费用对比中，两种模型使用同一版优化后的 DSH harness（`a0740800`），**Luna max 平均每题 API 等价费用约为 $0.0568，Astra max 为 $1.1858，Luna 低 95.21%**。详见 [Token 消耗与计费口径](docs/marketing-token-cost.zh-CN.md)。
+
+### 评测范围与来源
+
+Marketing 使用同一组 **100 个公开任务**进行优化与评测；这些结果不构成独立 held-out 泛化验证，也不应与官方私有排行榜直接比较。Luna medium 的结果包含早期 harness 优化和后续分阶段搜索。Astra 的 Marketing 评测直接复用优化后的 harness，没有新增优化轮次。
+
+已发布的汇总没有提供 Support 的 benchmark 版本和计分任务数、Terminal-Bench 的计分任务数，以及 Support 和 Terminal-Bench 的独立 held-out 验证情况。[结果数据](https://rsi-gear.github.io/assets/paper-results.json)记录了这些边界，并链接到历史证据。
+
+[最新结果](https://rsi-gear.github.io/#results) · [结果数据与来源](https://rsi-gear.github.io/assets/paper-results.json) · [历史 Marketing 实验](examples/evolution-search/README.zh-CN.md)
 
 ## 快速开始
 
@@ -148,6 +162,22 @@ Gear 目前已支持 harness 优化。完整学习循环中的两个组件仍在
 
 - [ ] **迭代模型训练与评测。** 利用任务反馈训练模型、评测更新后的模型，并重复这一过程。已有[实验性训练流程](docs/guide/zh-CN/training.md)，但完整的模型迭代闭环尚未完成。
 - [ ] **自动生成 seed tasks。** 根据任务失败情况，构造有针对性的练习任务，即 *seed tasks*，并将其纳入后续优化轮次。这套自动生成任务的闭环尚未完成。
+
+## 引用
+
+如果在研究中使用 Gear，请引用以下预印本。[项目主页](https://rsi-gear.github.io/#citation)提供当前引用信息；arXiv 链接尚未发布。
+
+```bibtex
+@unpublished{tang2026gear,
+  title  = {{GEAR}: An Open General Evolutionary Architecture for
+            Recursive Self-Improvement of {LLM} Agent Harness},
+  author = {Tang, Yehui and Zhu, Guanqi and Xia, Shao-Jun and
+            Chen, Xin and Geng, Mengzhe and Du, Hongyang and Tang, Yuhao},
+  year   = {2026},
+  note   = {Preprint},
+  url    = {https://github.com/rsi-gear/gear}
+}
+```
 
 ## 一起完善 Gear
 
