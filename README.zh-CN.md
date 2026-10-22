@@ -42,8 +42,6 @@ Gear 是一套开源优化框架，用于提升 AI Agent 在真实世界任务�
 
 ## 实验结果
 
-[项目主页](https://rsi-gear.github.io/#results) 公布了 AutomationBench Marketing、AutomationBench Support 和 Terminal-Bench 2.1 的实验结果。以下表格同步自 **2026 年 10 月 22 日**的更新。
-
 ![GPT 5.6 Luna + DSH 在 Coding、Marketing 和 Support 上的任务通过率，对比原始 harness 的 medium 档位与 Gear 优化后的 medium、max 档位；右侧展示 medium 档位下的 Marketing 进化过程。](https://rsi-gear.github.io/assets/marketing-evolution-overview.svg)
 
 ### 同模型、同推理档位的 harness 对比
@@ -74,14 +72,6 @@ Gear 是一套开源优化框架，用于提升 AI Agent 在真实世界任务�
 这些结果来自另行开展的更高推理档位评测；相对 Luna medium 基线的提升同时包含 harness 和推理档位的变化。破折号表示该指标未报告。
 
 在 Marketing 上，Luna max 搭配 Gear 的目标完成率为 **88.88%**，Astra max 搭配 Codex 为 **84.08%**；两者任务通过率分别为 **53%** 和 **57%**。另一次费用对比中，两种模型使用同一版优化后的 DSH harness（`a0740800`），**Luna max 平均每题 API 等价费用约为 $0.0568，Astra max 为 $1.1858，Luna 低 95.21%**。详见 [Token 消耗与计费口径](docs/marketing-token-cost.zh-CN.md)。
-
-### 评测范围与来源
-
-Marketing 使用同一组 **100 个公开任务**进行优化与评测；这些结果不构成独立 held-out 泛化验证，也不应与官方私有排行榜直接比较。Luna medium 的结果包含早期 harness 优化和后续分阶段搜索。Astra 的 Marketing 评测直接复用优化后的 harness，没有新增优化轮次。
-
-已发布的汇总没有提供 Support 的 benchmark 版本和计分任务数、Terminal-Bench 的计分任务数，以及 Support 和 Terminal-Bench 的独立 held-out 验证情况。[结果数据](https://rsi-gear.github.io/assets/paper-results.json)记录了这些边界，并链接到历史证据。
-
-[最新结果](https://rsi-gear.github.io/#results) · [结果数据与来源](https://rsi-gear.github.io/assets/paper-results.json) · [历史 Marketing 实验](examples/evolution-search/README.zh-CN.md)
 
 ## 快速开始
 

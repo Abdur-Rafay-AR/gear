@@ -42,8 +42,6 @@ The two examples below compare Luna Max with a Gear-optimized harness against As
 
 ## Experimental results
 
-The [project website](https://rsi-gear.github.io/#results) reports results across AutomationBench Marketing, AutomationBench Support, and Terminal-Bench 2.1. The tables below reflect the **October 22, 2026** update.
-
 ![GPT 5.6 Luna + DSH task pass rates for Coding, Marketing, and Support, comparing the baseline at medium effort with Gear at medium and max effort; Marketing evolution is shown at medium effort.](https://rsi-gear.github.io/assets/marketing-evolution-overview.svg)
 
 ### Same-model, same-effort harness comparison
@@ -74,14 +72,6 @@ The optimized DSH harness was also evaluated with GPT 5.6 Luna at max reasoning 
 These are separate evaluations at a higher reasoning effort; improvements over Luna's medium baseline include both harness and effort changes. The dash means the metric is not reported.
 
 On Marketing, Luna max with Gear achieved **88.88% objective completion**, compared with **84.08%** for Astra max in Codex; their task pass rates were **53%** and **57%**, respectively. In a separate cost comparison with both models using the same optimized DSH harness (`a0740800`), **Luna max's API cost averaged $0.0568 per task, versus $1.1858 for Astra max — 95.21% lower**. See the [token usage and cost methodology](docs/marketing-token-cost.md).
-
-### Evaluation scope and sources
-
-Marketing uses the same **100 public tasks** for optimization and evaluation; these results do not establish independent held-out generalization and should not be compared directly with the official private leaderboard. Luna's medium results include the earlier harness optimization and staged continuation. Astra's Marketing evaluation reused the optimized harness without an additional optimization round.
-
-The published summary does not specify Support's benchmark version or scored task count, Terminal-Bench's scored task count, or independent held-out validation for Support and Terminal-Bench. The [result data](https://rsi-gear.github.io/assets/paper-results.json) records these limits and links to the historical evidence.
-
-[Latest results](https://rsi-gear.github.io/#results) · [Result data and provenance](https://rsi-gear.github.io/assets/paper-results.json) · [Historical Marketing experiment](examples/evolution-search/README.md)
 
 ## Quick start
 
