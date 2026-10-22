@@ -50,12 +50,12 @@ Each group keeps the model and reasoning effort fixed. Luna compares the base DS
 
 | Model (effort) | Harness | Marketing pass rate | Marketing objective completion | Support pass rate | Support objective completion | Terminal-Bench 2.1 pass rate |
 | --- | --- | --- | --- | --- | --- | --- |
-| GPT 5.6 Luna (medium) | DSH (Base) | 27.0% | 75.4% | 17.0% | 72.9% | 52.9% |
+| GPT 5.6 Luna (medium) | DSH (Base) | 27.0% | 75.4% | 17.0% | 72.9% | 52.8% |
 | GPT 5.6 Luna (medium) | DSH + Gear | **40.0%** | **83.9%** | **25.0%** | **81.3%** | **62.9%** |
 | Δ (percentage points) | | +13.0 | +8.5 | +8.0 | +8.4 | +10.1 |
 | GPT 6 Astra (max) | Codex | 57.0% | 84.1% | 35.0% | 88.4% | 86.7% |
 | GPT 6 Astra (max) | DSH + Gear | **61.0%** | **86.3%** | **39.0%** | **88.7%** | **87.6%** |
-| Δ (percentage points) | | +4.0 | +2.2 | +4.0 | +0.3 | +1.1 |
+| Δ (percentage points) | | +4.0 | +2.2 | +4.0 | +0.3 | +0.9 |
 
 Task pass rate is the percentage of tasks passing all scored checks. Objective completion is the mean fraction of scored assertions satisfied per task. Δ is the absolute improvement in percentage points, not a relative percentage gain. Values are rounded to one decimal place.
 
