@@ -42,7 +42,9 @@ The two examples below compare Luna Max with a Gear-optimized harness against As
 
 ## Experimental results
 
-![GPT 5.6 Luna + DSH task pass rates for Coding, Marketing, and Support, comparing the baseline at medium effort with Gear at medium and max effort; Marketing evolution is shown at medium effort.](https://rsi-gear.github.io/assets/marketing-evolution-overview.svg)
+![GPT 5.6 Luna + DSH task pass rates for Coding, Marketing, and Support, comparing Base (medium), Gear (medium), and Gear (max); Marketing task pass rate and objective completion across evaluated harness rounds.](https://rsi-gear.github.io/assets/marketing-evolution-overview.svg?v=f0a2e5849038)
+
+[SVG](docs/guide/assets/marketing-evolution-overview.svg) · Data: [Coding](docs/guide/assets/coding-results.json), [Marketing](docs/guide/assets/marketing-results.json), [Support](docs/guide/assets/support-results.json)
 
 ### Same-model, same-effort harness comparison
 

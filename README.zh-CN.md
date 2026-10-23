@@ -42,7 +42,9 @@ Gear 是一套开源优化框架，用于提升 AI Agent 在真实世界任务�
 
 ## 实验结果
 
-![GPT 5.6 Luna + DSH 在 Coding、Marketing 和 Support 上的任务通过率，对比原始 harness 的 medium 档位与 Gear 优化后的 medium、max 档位；右侧展示 medium 档位下的 Marketing 进化过程。](https://rsi-gear.github.io/assets/marketing-evolution-overview.svg)
+![GPT 5.6 Luna + DSH 在 Coding、Marketing 和 Support 上的任务通过率，对比 Base（medium）、Gear（medium）和 Gear（max）；右侧展示 Marketing 各已评测 harness 轮次的任务通过率和目标完成率。](https://rsi-gear.github.io/assets/marketing-evolution-overview.svg?v=f0a2e5849038)
+
+[SVG](docs/guide/assets/marketing-evolution-overview.svg) · 数据：[Coding](docs/guide/assets/coding-results.json)、[Marketing](docs/guide/assets/marketing-results.json)、[Support](docs/guide/assets/support-results.json)
 
 ### 同模型、同推理档位的 harness 对比
 
