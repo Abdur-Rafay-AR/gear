@@ -4,7 +4,7 @@
 
 **面向 harness 递归进化的模块化框架。**
 
-[![GitHub release](https://img.shields.io/github/v/release/rsi-gear/gear?cacheSeconds=300)](https://github.com/rsi-gear/gear/releases)
+[![npm version](https://img.shields.io/npm/v/rsi-gear/latest?cacheSeconds=300)](https://www.npmjs.com/package/rsi-gear)
 [![项目主页](https://img.shields.io/badge/Project-website-2F6F5E)](https://rsi-gear.github.io/)
 [![Hugging Face](https://img.shields.io/badge/Hugging_Face-Paper-FFD21E?logo=huggingface&logoColor=black)](https://huggingface.co/spaces/WizardTY/GEAR)
 ![arXiv: Coming soon](https://img.shields.io/badge/arXiv-Coming_soon-B31B1B?logo=arxiv&logoColor=white)
