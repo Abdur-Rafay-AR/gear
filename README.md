@@ -44,8 +44,6 @@ The two examples below compare Luna Max with a Gear-optimized harness against As
 
 ![GPT 5.6 Luna + DSH task pass rates for Coding, Marketing, and Support, comparing Base (medium), Gear (medium), and Gear (max); Marketing task pass rate and objective completion across evaluated harness rounds.](https://rsi-gear.github.io/assets/marketing-evolution-overview.svg?v=f0a2e5849038)
 
-[SVG](docs/guide/assets/marketing-evolution-overview.svg) · Data: [Coding](docs/guide/assets/coding-results.json), [Marketing](docs/guide/assets/marketing-results.json), [Support](docs/guide/assets/support-results.json)
-
 ### Same-model, same-effort harness comparison
 
 Each group keeps the model and reasoning effort fixed. Luna compares the base DSH harness with Gear's optimized DSH harness; Astra compares Codex with Gear's optimized DSH harness.
@@ -58,8 +56,6 @@ Each group keeps the model and reasoning effort fixed. Luna compares the base DS
 | GPT 6 Astra (max) | Codex | 57.0% | 84.1% | 35.0% | 88.4% | 86.7% |
 | GPT 6 Astra (max) | DSH + Gear | **61.0%** | **86.3%** | **39.0%** | **88.7%** | **87.6%** |
 | Δ (percentage points) | | +4.0 | +2.2 | +4.0 | +0.3 | +0.9 |
-
-Task pass rate is the percentage of tasks passing all scored checks. Objective completion is the mean fraction of scored assertions satisfied per task. Δ is the absolute improvement in percentage points, not a relative percentage gain. Values are rounded to one decimal place.
 
 ### Additional evaluation: Luna at max effort
 

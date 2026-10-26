@@ -44,8 +44,6 @@ Gear 是一套开源优化框架，用于提升 AI Agent 在真实世界任务�
 
 ![GPT 5.6 Luna + DSH 在 Coding、Marketing 和 Support 上的任务通过率，对比 Base（medium）、Gear（medium）和 Gear（max）；右侧展示 Marketing 各已评测 harness 轮次的任务通过率和目标完成率。](https://rsi-gear.github.io/assets/marketing-evolution-overview.svg?v=f0a2e5849038)
 
-[SVG](docs/guide/assets/marketing-evolution-overview.svg) · 数据：[Coding](docs/guide/assets/coding-results.json)、[Marketing](docs/guide/assets/marketing-results.json)、[Support](docs/guide/assets/support-results.json)
-
 ### 同模型、同推理档位的 harness 对比
 
 每组对比固定模型和推理档位。Luna 对比原始 DSH harness 与 Gear 优化后的 DSH harness；Astra 对比 Codex 与 Gear 优化后的 DSH harness。
@@ -58,8 +56,6 @@ Gear 是一套开源优化框架，用于提升 AI Agent 在真实世界任务�
 | GPT 6 Astra (max) | Codex | 57.0% | 84.1% | 35.0% | 88.4% | 86.7% |
 | GPT 6 Astra (max) | DSH + Gear | **61.0%** | **86.3%** | **39.0%** | **88.7%** | **87.6%** |
 | Δ（百分点） | | +4.0 | +2.2 | +4.0 | +0.3 | +0.9 |
-
-任务通过率是通过全部计分项的任务占比。目标完成率先计算每题满足的计分目标比例，再对任务取平均。Δ 表示绝对提升的百分点，不是相对提升百分比。表中数值保留一位小数。
 
 ### 补充评测：Luna 的 max 推理档位
 
