@@ -8,6 +8,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Discord](https://img.shields.io/badge/Discord-加入讨论-5865F2?logo=discord)](https://discord.gg/ZduvAtS2k)
 [![项目主页](https://img.shields.io/badge/Project-website-2F6F5E)](https://rsi-gear.github.io/)
+[![Hugging Face](https://img.shields.io/badge/Hugging_Face-Paper-FFD21E?logo=huggingface&logoColor=black)](https://huggingface.co/spaces/WizardTY/GEAR)
+![arXiv: Coming soon](https://img.shields.io/badge/arXiv-Coming_soon-B31B1B?logo=arxiv&logoColor=white)
 
 [English](README.md) | [简体中文](README.zh-CN.md) · [用户指南](https://rsigear.xyz/docs/gear/zh) · [案例](https://rsigear.xyz/docs/gear/zh/examples/evolution-search)
 
