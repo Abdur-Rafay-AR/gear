@@ -474,5 +474,6 @@ it.each([8, 12] as const)(
     expect(await exportedStore.verifyClosure(independentSnapshot)).toEqual(closure)
     await staged.dispose()
   },
-  240_000,
+  // Durable object writes, staged Python reads and independent exports need CI runtime headroom.
+  480_000,
 )
