@@ -18,10 +18,12 @@
 表中路径相对于 [`python/gear/algorithms`](../python/gear/algorithms)。合同在 [`contracts.py`](../python/gear/algorithms/contracts.py)，可复用流程在 [`workflow.py`](../python/gear/algorithms/workflow.py)。新增算法可以组合这些合同，也可以直接实现 `step`，不需要修改 TS 的操作类型或状态机。
 
 RRSI 将退火编辑预算、噪声带和候选历史保存在 JSON 算法状态中，并把本轮指令放入
-`generate_candidate` 的 payload。现有公共操作合同没有独立的 critic 操作、编辑清单或策略
-token 成本字段，因此 `rrsi/ranking.py` 保留完整的成本/新颖性判定公式供有这些证据的调用方
-使用，而运行层仍负责可信的候选评测和最终提名。完整 RRSI 基准复现仍需要外部 benchmark
-adapter；[`examples/algorithms/rrsi.py`](../examples/algorithms/rrsi.py) 是无需凭据的离线合同示例。
+`generate_candidate` 和 `evaluate_seed` 的 payload。运行层的私有评测屏幕在 benchmark
+执行前检查 RRSI 候选 diff；拒绝会生成零物理尝试的失败证据，接受才会提交 provider。
+现有公共操作合同仍没有独立的 critic 操作、编辑清单或策略 token 成本字段，因此
+`rrsi/ranking.py` 保留完整的成本/新颖性判定公式供有这些证据的调用方使用，而运行层继续
+负责可信的候选评测和最终提名。完整 RRSI 基准复现仍需要外部 benchmark adapter；
+[`examples/algorithms/rrsi.py`](../examples/algorithms/rrsi.py) 是无需凭据的离线合同示例。
 
 ## 一个文件替换策略
 

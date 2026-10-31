@@ -22,7 +22,7 @@ from .config import RRSIConfig
 from .history import COMPONENTS, measured_history, prune_components, stalled, tried_components
 from .parents import select_parent
 from .proposal import RRSIProposalPlanner
-from .ranking import rank_candidates
+from .ranking import RRSIRanker
 from .sampling import sample_tasks
 from .stopping import configured_stop_reason
 
@@ -30,10 +30,9 @@ from .stopping import configured_stop_reason
 class RRSI(StagedSearch):
     """Configurable RRSI policy recipe.
 
-    Gear deliberately keeps candidate screening, evaluation and nomination in
-    the trusted runtime. The generated operation payload carries RRSI's
-    regularization directives so a compatible runtime can enforce them without
-    changing the public operation vocabulary.
+    Gear keeps candidate screening, evaluation and nomination in the trusted
+    runtime. RRSI evaluation payloads opt into the runtime's private critic
+    screen without changing the public operation vocabulary.
     """
 
     def __init__(
@@ -43,11 +42,12 @@ class RRSI(StagedSearch):
         parent_policy: ParentPolicy = select_parent,
         sampler: TaskSampler = sample_tasks,
         proposal_planner: ProposalPlanner | None = None,
-        ranker: CandidateRanker = rank_candidates,
+        ranker: CandidateRanker | None = None,
         stop_rule: StopRule | None = None,
     ) -> None:
         self.config = config or RRSIConfig()
         planner = proposal_planner or RRSIProposalPlanner(self.config)
+        ranking = ranker or RRSIRanker(self.config)
         stopping = stop_rule or (
             lambda view, state: configured_stop_reason(view, state, self.config)
         )
@@ -55,7 +55,7 @@ class RRSI(StagedSearch):
             parent_policy,
             sampler,
             planner,
-            ranker,
+            ranking,
             stopping,
             ("global",),
             (),
@@ -83,6 +83,7 @@ class RRSI(StagedSearch):
             "config": cast(JSON, self.config.to_json()),
             "edit_budget": self.config.edit_budget(round_index),
             "noise_delta": self.config.noise_delta,
+            "critic": {"enabled": True, "diff_field": "candidate_diff"},
             "history": cast(JSON, history),
             "stall": stalled(
                 score_trajectory,
@@ -100,9 +101,15 @@ class RRSI(StagedSearch):
                 payload={
                     **(operation.payload if isinstance(operation.payload, dict) else {}),
                     "rrsi": directives,
+                    **(
+                        {"candidate_diff": diff}
+                        if operation.kind == "evaluate_seed"
+                        and isinstance(diff := self._candidate_diff(view, operation.candidate_id), str)
+                        else {}
+                    ),
                 },
             )
-            if operation.kind == "generate_candidate"
+            if operation.kind in ("generate_candidate", "evaluate_seed")
             else operation
             for operation in decision.operations
         )
@@ -111,3 +118,18 @@ class RRSI(StagedSearch):
             {**decision.state.data, "rrsi": directives, "rrsi_history": history},
         )
         return replace(decision, state=type(decision.state)(data=data), operations=operations)
+
+    @staticmethod
+    def _candidate_diff(view: SearchView, candidate_id: str | None) -> str | None:
+        if not candidate_id:
+            return None
+        for result in reversed(view.completed):
+            if result.kind != "generate_candidate" or result.candidate_id != candidate_id:
+                continue
+            if not isinstance(result.data, dict):
+                return None
+            for key in ("candidate_diff", "diff"):
+                value = result.data.get(key)
+                if isinstance(value, str):
+                    return value
+        return None

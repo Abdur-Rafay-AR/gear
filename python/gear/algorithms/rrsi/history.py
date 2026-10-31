@@ -34,6 +34,8 @@ def measured_history(
             scores.setdefault(cell.candidate_id, []).append(cell.score)
         if isinstance(cell.raw_metrics, dict):
             value = cell.raw_metrics.get("policy_tokens")
+            if isinstance(value, dict):
+                value = value.get("value")
             if isinstance(value, (int, float)):
                 costs.setdefault(cell.candidate_id, []).append(float(value))
     result = list(history)
